@@ -1,30 +1,39 @@
 module.exports = function(grunt) {
 
-    var noJS = [];
+    var _rs = 'public/src', rs = 'public/js', noJS = [];
+
     ['start', 'resolve', 'loader', 'define', 'config', 'use', 'exports', 'init', 'end'].forEach(function(i){
-        noJS.push('src/lib/src/'+i+'.js');
+        noJS.push(_rs+'/lib/nojs/src/'+i+'.js');
     });
+    var concatnoJS = {}, concatConf = {};
+    concatnoJS[rs+'/lib/nojs/noJS.js'] = noJS;
+    concatConf[rs+'/conf.js'] = _rs+'/conf.js';
    
 	grunt.initConfig({
 		pkg : grunt.file.readJSON('package.json'),
         transport: {
             dialog: {
             	options : {
-            		paths : ['src'],
+            		paths : [_rs],
                     alias: {
-                        '$' : 'lib/jquery',
-                        'ui' : 'lib/ui',
+                        '$' : 'lib/jquery/jquery',
+                        'ui' : 'lib/nojs/ui',
                         '$b' : 'pj/b'
                     }
 		        },
                 files : [
                     {	
                     	expand: true,
-                    	cwd: 'src/',
+                    	cwd: _rs+'/',
                         src : '**/*.js',
                         dest : '.build',
+                        //接受匹配到的文件名，和匹配的目标位置，返回一个新的目标路径
+                        rename1 : function(a,b,c){
+                            console.log(a,b,c);
+                            return 'rename';
+                        },
                         filter : function(file){
-                            if( file.indexOf('\\lib\\src')>=0 ){
+                            if( file.indexOf('\\lib\\nojs\\src')>=0 ){
                                 return false;
                             }else{
                                 return true;
@@ -45,7 +54,7 @@ module.exports = function(grunt) {
 		        		expand: true,
 		        		cwd: '.build/',
 		        		src : '**/*.js',
-		        		dest : 'js'
+		        		dest : rs
 		        	}
 		        ]
             },
@@ -53,13 +62,17 @@ module.exports = function(grunt) {
                 options : {
                     noncmd : true
                 },
-                files : {
-                    'src/lib/noJS.js' : noJS
-                }
+                files : concatnoJS
+            },
+            conf : {
+                options : {
+                    noncmd : true
+                },
+                files : concatConf
             }
         },
         clean : {
-			build : ['.build','js/**/*-debug.js']
+			build : ['.build',rs+'/**/*-debug.js']
 		},
         uglify : {
         	options: {
@@ -88,7 +101,7 @@ module.exports = function(grunt) {
                 }
             },
             noJS : {
-                files: ['src/lib/src/*.js'],
+                files: [_rs+'/lib/nojs/src/*.js'],
                 tasks: ['concat:noJS'],
                 options: {
                     livereload: 1335,
@@ -100,7 +113,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-cmd-transport');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-cmd-concat');
-    grunt.loadNpmTasks('grunt-contrib-uglify');    
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-watch');

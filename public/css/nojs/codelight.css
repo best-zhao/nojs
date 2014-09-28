@@ -1,0 +1,19 @@
+/*code light*/
+.codelight_box{border:1px solid #D1D7DC;margin:8px 0;position:relative;font:12px/1.6 'Courier New','Monospace';background:#fff}
+.codelight_box .rs_item{padding-left:50px;list-style:decimal;color:#333}
+.codelight_box li{background:#FAFAFA;list-style-type:decimal;border-left:1px solid #D1D7DC;padding:0 4px;list-style-position:outside}
+.codelight_box li:hover{background:#fff;border-color:#444;color:#000;box-shadow:-1px 0 0 #444,inset 0 1px 0 #ddd}
+.codelight_box .lt{color:blue}
+.codelight_box .property{color:red}
+.codelight_box .tag{color:#A31515}
+.codelight_box .jskey{color:blue;font-weight:800}
+.codelight_box .key{color:red;text-shadow:1px 1px 1px #F3CFC4}
+.codelight_box .note,.codelight_box .note *{font-weight:400;color:#008000}
+.codelight_box .set_opt{position:absolute;top:-1px;right:0;padding:0 8px;font:12px/1.6 'arial';display:none;background:#ededed;box-shadow:-2px 2px 5px #ddd;border-bottom-left-radius:3px}
+.codelight_box .set_opt a{padding:0 4px;vertical-align:top;color:#666}
+.codelight_box .set_opt .copy{position:relative}
+.code_hide{height:22px;overflow:hidden;background:#fafafa}
+.code_hide .rs_item{display:none}
+.codelight_box .open{color:#666;padding:1px 9px;cursor:default;display:none}
+.codelight_box .edit{box-shadow:inset 1px 1px 1px #999;cursor:text;padding-top:1px}
+.codelight_box .edit li{background:#fff;border-bottom:1px dotted #ddd;line-height:18px}

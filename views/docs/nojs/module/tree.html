@@ -1,0 +1,367 @@
+
+<h4 class="p_tit">tree</h4>
+<h6 class="p_tit">说明：</h6>
+<div class="text_info">
+	树形菜单
+	<p>依赖模块：'nojs/module/tree'</p>
+</div>
+<h6 class="p_tit">使用：</h6>
+<div class="text_info">
+	<script type="text/codelight" code="javascript" key="tree">
+	noJS.use('nojs.module/tree', function(tree,$,ui){
+		var testTree = new tree(dom, options);
+	})	
+	</script>	
+</div>
+<h6 class="p_tit">参数：</h6>
+<div class="text_info">
+	<table width="100%" cellpadding="0" cellspacing="0" class="arg_list">
+		<tr>
+			<th>参数名</th>
+			<th>类型</th>
+			<th>描述</th>
+			<th>默认值</th>
+		</tr>
+		<tr class="required">
+			<td>dom</td>
+			<td>string | element</td>
+			<td>容器id或容器对象</td>
+			<td></td>
+		</tr>
+		<tr class="required">
+			<td>options</td>
+			<td>object</td>
+			<td>options选项</td>
+			<td></td>
+		</tr>
+	</table>
+	<br />
+	<p class="mb10">options选项：</p>
+	<table width="100%" cellpadding="0" cellspacing="0" class="arg_list">
+		<tr>
+			<th>参数名</th>
+			<th>类型</th>
+			<th>描述</th>
+			<th>默认值</th>
+		</tr>
+		<tr>
+			<td class="required">data</td>
+			<td>object | string</td>
+			<td>传入的json Array数据, ajax模式时传入url地址</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>defaultNode</td>
+			<td>string</td>
+			<td>设置默认选中的节点id</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>isCheck</td>
+			<td>boolean</td>
+			<td>是否为checkbox模式</td>
+			<td>false</td>
+		</tr>
+		<tr>
+			<td>onCheck</td>
+			<td>function</td>
+			<td>checkbox回调，返回一个参数为当前所选节点id,	通过this.checked可获取所有被选id的一个数组</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>onSelect</td>
+			<td>function</td>
+			<td>当选择节点时的回调，返回一个参数为当前选择节点的data</td>
+			<td></td>
+		</tr>
+	</table>
+	
+	<p class="mb10 mt10">非ajax模式下可接受2种形式的数据格式，且均为json Array对象</p>
+	<p>1. 树状结构</p>
+	<script type="text/codelight" code="javascript" expand="0">
+	data = [
+		{id:1,name:'一级根节点',children:[
+			{id:11,name:'二级节点'}
+		]},
+		{id:2,name:'一级根节点',children:[
+			{id:21,name:'二级节点'},
+			{id:22,name:'二级节点'}
+		]},
+		{id:3,name:'一级根节点'}
+	]
+	</script>
+	<p>2. 并列结构，必须为每个节点指定parent即父id，根节点默认使用-1(可通过公共属性tree.rootID更改)</p>
+	<script type="text/codelight" code="javascript" expand="0">
+	data = [
+		{id:1,name:'一级根节点',parent:-1},
+		{id:11,name:'二级节点',parent:1},
+		{id:12,name:'二级节点',parent:1},
+		{id:2,name:'一级根节点',parent:-1}
+	]
+	</script>
+</div>
+<h6 class="p_tit">公共属性：</h6>
+<div class="text_info">
+	<p>1. <b>tree.rootID</b> 指定根节点的父id，默认-1 </p>
+	<p>2. <b>tree.key</b> 统一key名</p>
+	<script type="text/codelight" code="javascript" key="key" expand="0">
+	tree.key = {
+		'id' : 'tid',			//节点id
+		'name' : 'text',		//节点名称
+		'parent' : 'parentID',	//父节点
+		'open' : 'isopen',		//节点是否默认打开
+		'link' : 'href'			//节点指向的链接
+	}
+	</script>
+	<p>3. <b>tree.max</b> 设置一次最多能处理的节点数，默认100,表示同一级一次最多处理的数目，如果其中有默认打开的节点，不包含在此数目中</p>
+</div>
+<h6 class="p_tit">公共方法：</h6>
+<div class="text_info">
+	<p>1. <b>tree.format</b> 格式化数据，一般不会用，new tree的时候内部会自动执行此方法</p>
+	<script type="text/codelight" code="javascript" key="format">
+	//@data: 原始数据
+	//@Data: 在已经格式化的数据上追加	
+	var newData = tree.format(data[, Data]);
+	</script>
+	<p class="mb10">格式化后的数据包含2个对象，newData = { all:{}, level:[] }; all存放所有数据，通过id可快速索引任何节点；level为一个2维数组，分别存放每级的节点，如level[0]就是所有根节点的一个Array.</p>
+	<p>2. <b>tree.parents</b> 通过一个节点id找到其所有父节点的id集合，可设置查询终止条件</p>
+	<script type="text/codelight" code="javascript" key="parents" expand="0">
+	//@node: 当前节点id
+	//@data: newData.all
+	//@until: fn,通过return false来终止查询，带一个参数为当前查询到的父节点data
+	var Parents = tree.parents(node, data[, until]);
+	</script>
+	<p>3. <b>tree.select</b> 生成一个树状select或者级联菜单</p>
+	<script type="text/codelight" code="javascript" key="select">
+	tree.select(dom, options);//参数同tree
+	</script>
+	<p>options选项：</p>
+	<table width="100%" cellpadding="0" cellspacing="0" class="arg_list">
+		<tr>
+			<th>参数名</th>
+			<th>类型</th>
+			<th>描述</th>
+			<th>默认值</th>
+		</tr>
+		<tr class="required">
+			<td>data</td>
+			<td>object | string</td>
+			<td>传入的json Array数据, ajax模式时传入url地址</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>level</td>
+			<td>number</td>
+			<td>设为0时会生成一个树状select<a href="" data-action="demo" data-index="3">[示例3]</a>, 否则为级联菜单<a href="" data-action="demo" data-index="4">[示例4]</a></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>selected</td>
+			<td>Array</td>
+			<td>默认选中的节点id</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>empty</td>
+			<td>string</td>
+			<td>缺省项空id</td>
+			<td>''</td>
+		</tr>
+	</table>
+</div>
+
+<script type="text/templete" id="demo_style">
+<link rel="stylesheet" href="css/tree.css" />    
+<style>
+/*demo style*/
+.test_tree{font-size:12px;width:47%;min-width:170px;border:1px solid #ddd;margin:0 1% 9px 0;padding:9px 0;overflow:auto;height:400px}	
+.test_tree select{padding:5px;margin:4px 0 0 15px;width:80%}
+.test_tree h6{text-indent:1em;font-weight:400;color:#999}
+.p_txt .t{margin:0}
+</style>
+</script>
+
+<script type="text/templete" id="demo_tmpl">
+<div class="test_tree fl">
+	<div id="set_tree_data" class="clearfix gray9" style="padding:0 9px 9px">
+		<span class="p_txt">
+			<input value="4000" style="width:50px;text-align:center" class="text" id="data_number" />
+			<i class="t"> *5(层级)= </i><b class="t orange" id="total_number"></b><i class="t">(节点数)</i>
+		</span>
+		<input type="button" id="render_tree" value="生成" class="nj_btn" />
+	</div>
+	<div id="tree_test2" class="nj_tree"></div>
+</div>
+<div class="test_tree fl">
+    <div id="tree_test22" class="nj_tree"></div>
+</div>
+</script>
+
+<script type="text/templete" id="demo_tmpl2">
+<p class="mb10">ajax tree：</p>
+<div class="nj_tree test_tree fl">
+	<div id="tree_test1"></div>
+</div>
+</script>
+
+<script type="text/templete" id="demo_tmpl3">
+<p class="mb10">树状select：</p>
+<div class="test_tree fl">
+	<div id="tree_test3"></div>
+</div>
+</script>
+
+<script type="text/templete" id="demo_tmpl4">
+<p class="mb10">级联菜单：</p>
+<div id="tree_test4" class="test_tree fl"></div>
+<div class="test_tree fl">
+	<h6>ajax级联：</h6>
+	<div id="tree_test5"></div>
+</div>	
+</script>
+
+<script>
+noJS.use(function($,ui){
+	window.demoAction = {
+		item : [
+			{content : $('#demo_tmpl').html(), callback : function(){
+				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
+					//tree.max = 20;
+					function testData(number){
+						//模拟数据 number*s.length 个节点
+						var rect = [], i, j, p, s = ['a','b','c','d','e'];
+						for( j=0; j<s.length; j++ ){
+							for( i=0; i<number; i++ ){
+								rect.push({
+									'id' : s[j]+i,'name':s[j]+i,'parent':j==0?-1:(s[j-1]+i)
+								})
+							}
+						}
+						return rect;
+					}
+					
+					var number = $('#data_number'),
+						total = $('#total_number'),
+						btn = $('#render_tree'),
+						first;
+					
+					number.keyup(function(){
+						if( isNaN(this.value) ){
+							this.value = parseInt(this.value,10);
+						}
+						setTotal(this.value);
+						first = false;
+					}).keyup();	
+					function setTotal(n){
+						n *= 5;	
+						n = n>=10000 ? n/10000+'万' : n;
+						total.text( n );
+					}	
+					var n = parseInt(number.val(),10),
+                        testdata = testData(n);
+                        
+                    setTotal(n);
+                    first = true;
+                    
+					btn.click(function(){
+						$('#tree_test2').empty();
+						setTimeout(function(){
+							date1 = (+new Date);
+							if( !first ){
+							    n = parseInt(number.val(),10);
+    						    testdata = testData(n);
+    							setTotal(n);
+							}							
+							new tree( 'tree_test2', {
+								data : testdata,
+								isCheck : true,
+								onCheck : function(id){
+									//console.log(this.checked);
+								}
+							});							
+						},0)
+						return false;
+					});
+				    
+				    $.getJSON(domain.static+'/config.json', function(json){
+                        new tree('tree_test22', {
+                            data : json.nojs.data,
+                            isCheck : true,
+                            //radio : 's',
+                            //relationChildren : false,
+                            //relationParent : false,
+                            onCheckBefore : function(){
+                                return true;    
+                            },
+                            onCheck : function(id){
+                                //console.log(this.checked);
+                            }
+                        })
+                    })
+				}, {globalAfter:true})
+			}},
+			{content : $('#demo_tmpl2').html(), callback : function(){
+				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
+						
+					var key = 'tree_test2_data',
+					    _data = $.localStorage.get(key);
+					    
+					Tree = new tree( 'tree_test1', {
+						data : 'tree.php?id=',
+						//openAll : true,
+						formatData : _data && JSON.parse(_data),
+						level : 4,
+						ajaxSuccess : function(){
+						   //console.log(Tree.data.level)
+						    $.localStorage.set(key, JSON.stringify(this.data));
+						}
+					});	
+					//console.log(Tree.data.level)				
+				}, {globalAfter:true});
+			}},
+			{content : $('#demo_tmpl3').html(), callback : function(){
+				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
+					$.getJSON(domain.static+'/config.json', function(json){
+                        tree.select( $('#tree_test3'), {level:0,data:json.nojs.data} );
+                    })
+				}, {globalAfter:true});
+			}},
+			{content : $('#demo_tmpl4').html(), callback : function(){
+				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
+					$.getJSON(domain.static+'/config.json', function(json){
+                        tree.select( $('#tree_test4'), {
+                            data : json.nojs.data, 
+                            level : 3,                            
+                            select : ['nj_ui','ui_core','ui_msg'],
+                            onSelect : function(id){
+                                //console.log(id)
+                            },
+                            ui : {
+                                init : function(item, options){
+                                    options.defaultEvent = options.value && true;
+                                    return new ui.select(item, options);
+                                },
+                                event : 'onSelect',
+                                element : 'nearby'
+                            }
+                        });
+                    })
+					
+					var key = 'tree_test5_data',
+                        _data = $.localStorage.get(key);
+                        
+					tree.select( $('#tree_test5'), {
+					    formatData : _data && JSON.parse(_data),
+						data : 'tree.php?act=select&id=',
+                        ajaxSuccess : function(data, parent, Data){
+                            $.localStorage.set(key, JSON.stringify(Data));
+                        }
+					});
+				}, {globalAfter:true});
+			}}
+		],
+		html : $('#demo_style').html()
+	}
+});
+
+</script>

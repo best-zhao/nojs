@@ -1,0 +1,135 @@
+/*
+ * 侧栏导航菜单
+ */
+
+define(function(require){
+    
+    var $ = require('$'),
+        ui = require('ui'),
+        url = require('./url'),
+        tree = require('lib/nojs/mods/tree'),
+        side = $('#side_menu'),
+        setUrl = url.setUrl,
+        first = 0,
+        menu = {items:[]},
+        G;
+    
+    url.onHashChange.push(function(e, data){
+        var id = data.id, m,
+            key = data.key;
+        
+        if( id && (key=='id'||key=='url') && menu.items.length ){
+            for( var i=0;i<menu.items.length;i++ ){
+                m = menu.items[i];
+                if( m.data.all[id] ){
+                    first = 2;
+                    m.select(id);
+                    first = 1;
+                    break;
+                }
+            }            
+        }       
+    })
+        
+    var treeOptions = {
+        onSelect : function(data){
+            if( !first ){//页面首次加载
+                treeSelect.call(this, data);
+            }
+            if( first==2 ){//onhashchange
+                treeSelect.call(this, data); 
+            }else{
+                var _data = {id:data.id};                
+                if( first ){//tree click 通过hash变化来触发onSelect事件
+                    _data['url'] = null;
+                }
+                setUrl(_data);
+                first = 1;
+            }             
+        }
+    }
+    /*
+     * #url直接加载url指定地址
+     * id和url同时出现时 id高亮 url为真实页面 可用于url是id下的子页面
+     */
+    function treeSelect(data){
+        var link = data.link,
+            id = data.id;
+        
+        if(!link){
+            return;
+        }
+        var _url = setUrl('url');
+        
+        var _id = this.box[0].id,
+            name = _id.substring(_id.indexOf('_')+1,_id.length),
+            url = _url || this.box.data('id')+'/'+link,
+            title = document.title,
+            _data = {
+                title : data.name,
+                url : url
+            };
+        
+        title = title.indexOf(' - ')>-1 ? title.split(' - ')[1] : title;  
+        
+        G.beforeSend && G.beforeSend(_data);
+        
+        document.title = data.name+' - '+title; 
+        this.box.siblings('.nj_tree').find('a.current').removeClass('current');
+        
+        menu.load(_data);
+        
+        //记录最后访问的节点
+        $.localStorage.set('lastNode', id);
+    }
+    menu.load = function(data){
+        data = data || G.data;
+        
+        $.ajax({
+            url : data.url,
+            type : 'get',
+            dataType : 'html',
+            headers : {noAjax:true},
+            success : function(html){
+                G.$content.html(html);
+                ui.init(G.$content);
+                G.complete && G.complete(data);                
+            }
+        })
+    };
+    
+    function treeInit(){
+        var menu = G.options.menu;
+        typeof menu=='string' ? $.getJSON(menu, call) : call(menu);
+
+        function call(json){
+            for( var i in json ){            
+                createProject( i, json[i] );
+            }
+        }
+    }
+
+    function createProject(name, p){
+        var data = p.data, _tree, id;
+        
+        if( p.disable=='true' || !data ){return;}
+        id = 'menu_'+name;
+        _tree = $('<div id="'+id+'" class="nj_tree"></div>');
+        side.append(_tree); 
+        _tree.data('id', name); 
+        var t = new tree( id, {
+            data : data,
+            onSelect : treeOptions.onSelect,
+            defaultNode : treeOptions.defaultNode
+        });
+        menu.items.push(t);
+    }
+    
+    menu.init = function(global){
+        G = global;
+        treeOptions.defaultNode = setUrl() || G.options.defaultNode;//设置默认节点
+        treeInit();
+    }
+    
+    return menu;    
+});

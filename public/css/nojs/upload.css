@@ -1,0 +1,18 @@
+.nj_up_btn{position:relative;overflow:hidden}
+.nj_up_btn input{opacity:0;filter:alpha(opacity=0);position:absolute;right:-8px;bottom:-2px;cursor:pointer;width:120%\9;font-size:2em;*vertical-align:-5px}
+
+.upload_preview{margin:10px 0}
+.upload_preview li{position:relative;height:140px;width:150px;background:#DB552D;float:left;font-size:12px;margin:5px 5px 0 0;color:#fff}
+.upload_preview li:hover .pic img{opacity:.8}
+.upload_preview li:hover .cancel{display:block}
+.upload_preview .pic{padding:5px;width:140px;height:90px;display:table-cell;vertical-align:middle;*display:block;overflow:hidden;text-align:center}
+.upload_preview .pic img{max-width:140px;max-height:90px;vertical-align:middle}
+.upload_preview .pic div{width:100%;height:100%}
+.upload_preview .cancel{position:absolute;right:0;top:0;display:none}
+.upload_preview .info{padding:5px 0 0;text-align:center;line-height:1.5;white-space: nowrap}
+.up_progress .progress{line-height:12px;height:12px;background:#6A7F8D}
+.up_progress .progress .p{height:12px;background:#411CD7}
+.up_progress .progress .n{margin-top:-11px;text-align:center;white-space:nowrap}
+
+#drag_up{border:3px dotted #ccc;background:#f9f9f9;width:200px;height:100px;display:none}
+#drag_up .tip{height:100%;text-align:center;color:#bbb;font:14px/100px arial} 

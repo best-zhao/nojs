@@ -1,0 +1,14 @@
+.face_menu{width:362px}
+.nj_face{padding:10px;font-family:'microsoft yahei'}
+.nj_face .nj_s_menu{padding:0 0 5px}
+.nj_face .nj_s_m{float:left;padding-right:9px}
+.nj_face .nj_s_menu .current{color:#FD8712;font-weight:400}
+.nj_face .list li{float:left;border:1px solid #fff;cursor:pointer;width:24px;height:24px}
+.nj_face .list li:hover{border-color:#555}
+.nj_face .mdb li{width:32px;height:32px;padding:4px}
+.nj_face .mdb img{width:100%;height:100%}
+.nj_face .a{position:absolute;z-index:22;top:-8px;left:14px}
+.nj_face .a *{color:#999;font-size:30px;position:absolute;top:0;left:0;line-height:18px;height:10px;overflow:hidden}
+.nj_face .a i{color:#fff;top:1px}
+
+.nj_face_image{max-width:80px;max-height:80px}

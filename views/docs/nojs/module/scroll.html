@@ -1,0 +1,77 @@
+<h4 class="p_tit">scroll</h4>
+<h6 class="p_tit">说明：</h6>
+<div class="text_info">
+	设置元素滚动效果
+	<p>依赖模块：'nojs/module/scroll'</p>
+</div>
+<h6 class="p_tit">使用：</h6>
+<div class="text_info">
+	<script type="text/codelight" code="javascript" key="menu">
+	noJS.use('lib/nojs/module/scroll', function(scroll,$,ui){
+		new scroll( element, options );		
+	});	
+	</script>	
+</div>
+<h6 class="p_tit">实例：</h6>
+<div class="text_info clearfix">
+	<div id="test1" class="scroll_test">
+		<div class="nj_g_wrap">
+			<ul class="nj_g_con">
+				<li>1231313132</li>
+				<li>21231313132</li>
+				<li>3231313132</li>
+				<li>4231313132</li>
+				<li>5231313132</li>
+			</ul>	
+		</div>	
+	</div>	
+	<div id="test2" class="scroll_test">
+	    <div class="page"><a href="" class="prev">prev</a> <a href="" class="next">next</a></div>
+		<div class="nj_g_wrap">
+			<ul class="nj_g_con">
+				<li>1231313132</li>
+				<li>21231313132</li>
+				<li>3231313132</li>
+				<li>4231313132</li>
+				<li>5231313132</li>
+			</ul>	
+		</div>	
+	</div>	
+	<div id="test3" class="scroll_test">
+		<div class="nj_g_wrap">
+			<ul class="nj_g_con">
+				<li>1231313132</li>
+				<li>21231313132</li>
+				<li>3231313132</li>
+				<li>4231313132</li>
+			</ul>	
+		</div>	
+	</div>	
+</div>
+<style>
+.scroll_test{overflow:hidden;float:left;margin:0 20px 20px 0}
+.scroll_test .nj_g_wrap{border:1px solid #ccc;width:200px;height:48px;overflow:hidden}
+.scroll_test li{line-height:2;font-size:12px}	
+#test2 .nj_g_wrap{height:96px}
+#test3 .nj_g_wrap{height:24px}
+#test3 li{float:left;width:200px}
+</style>	
+<script>
+noJS.use('$,ui,lib/nojs/mods/scroll',function($,ui,scroll){
+	new scroll('test1', {
+		step : 0
+	});
+	var s2 = new scroll('test2', {
+		//direction : 'y',
+		//time : 2500,
+		auto : false,
+		step : 4
+	});
+	s2.element.find('div.page a').click(function(){
+	    s2.scroll($(this).hasClass('next') ? true: false);
+	    return false;
+	})
+	
+    new scroll( 'test3');
+});
+</script>

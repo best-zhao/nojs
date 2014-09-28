@@ -1,0 +1,82 @@
+<style type="text/css">
+</style>
+<h4 class="p_tit">ui.select</h4>
+<h6 class="p_tit">说明：</h6>
+<div class="text_info">
+	select美化组件,html与原select相同，继承至ui.overlay
+</div>
+<h6 class="p_tit">使用：</h6>
+<div class="text_info">
+	<script type="text/codelight" code="javascript" key="select|batch">
+	var Select = new ui.select(options);		
+	</script>
+	
+	<div class="mb10">设置默认选中项：在select标签上设置value属性为当前value值或者在需选中的option上设置selected="selected"</div>
+	<script type="text/codelight" code="html" key="selected">
+		<select name="" id="test_type" value="2">
+			<option value="1">请选择类型</option>
+			<option value="2" selected="selected">类型1</option>
+		</select>
+	</script>
+</div>
+<h6 class="p_tit">方法：</h6>
+<div class="text_info">
+	<div class="mb10">1. select : 切换到某项</div>
+	<script type="text/codelight" code="javascript" key="select">
+		Select.select( value );
+	</script>
+	<div class="clearfix">
+		<select name="" id="test_type">
+			<option>请选择类型</option>
+			<option value="2">类型1</option>
+			<option value="3">类型2</option>
+			<option value="4">类型3</option>
+		</select>
+		
+		<select name="" id="test_type1" value="2">
+		    <optgroup label="group1">
+		        <option>1</option>
+		        <option value="22">2</option>
+		    </optgroup>
+		    <optgroup label="group2">
+                <option>3</option>
+                <option>4</option>
+            </optgroup>
+             <optgroup label="group3">
+                <option>5</option>
+                <option>6</option>
+            </optgroup>
+		</select>
+		<a href="" class="nj_btn" id="change_test">手动切换其选项</a>
+	</div>
+	
+</div>
+<h6 class="p_tit">属性：</h6>
+<div class="text_info">
+	<p>1. value : 当前value值</p>
+	<p>2. length : 所有选项个数</p>
+</div>
+
+<script>
+noJS.css(domain.project+'/css/lib/nojs/select.css')
+.use('lib/nojs/module/select', function(select,$){
+    var type1 = new select('test_type'),
+    
+    type2 = new select('test_type1'),
+    
+    n = type2.length,
+    i;
+    
+    $('#change_test').click(function(){
+        i = type2.index;
+        type2.select(++i);
+        return false;
+    })
+    
+    setTimeout(function(){
+        //type1.destroy();
+        //console.log(type1)
+    }, 2000)
+    
+}, {globalAfter:true});
+</script>

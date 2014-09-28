@@ -1,0 +1,80 @@
+<h4 class="p_tit">ui.popup</h4>
+<h6 class="p_tit">说明：</h6>
+<div class="text_info">
+	弹窗组件，继承至ui.overlay
+</div>
+<h6 class="p_tit">使用：</h6>
+<div class="text_info">
+    <p class="mb10">1. 实例化一个弹窗对象</p>
+    <script type="text/codelight" code="javascript">
+    var pop = new ui.popup(options);    
+    </script>
+    <p class="mb10">2. 设置弹窗内容</p>
+    <script type="text/codelight" code="javascript">
+    //设置标题
+    pop.set('title', String);
+    //设置内容
+    pop.set('content', String|Element);
+    //设置操作区按钮
+    //二维数组 例：[ ['确定','close','sb'],['取消','close'] ]
+    pop.set('button', Array);
+    </script>
+    <p class="mb10">3. 显示弹窗</p>
+    <script type="text/codelight" code="javascript">
+    pop.show(callback);    
+    </script>
+	
+	<a href="javascript:void(0);" class="nj_btn popup_test">点击显示弹窗 drop</a>
+	<a href="javascript:void(0);" class="nj_btn popup_test" data-class="scale_pop" data-showclass="scale_pop_show">点击显示弹窗 scale</a>
+	<a href="javascript:void(0);" class="nj_btn popup_test" data-class="turn_pop" data-showclass="turn_pop_show">点击显示弹窗 turn</a>
+</div>
+<h6 class="p_tit">扩展</h6>
+<div class="text_info">
+	<a href="" data-id="ui_msg">msg</a>
+</div>
+<style>
+
+</style>
+<script>
+noJS.use('$,lib/nojs/mods/layer',function($,layer){
+	function init(target){
+	    var className = target.data('class'),
+            showClassName = target.data('showclass'),
+            
+		win = new layer.popup({
+		    className : className,
+		    showClassName : showClassName,	
+		    width : 600,	  
+		    onShow : onShow
+		});
+        function onShow(){
+            win.onbeforehide1 = function(){
+                layer.msg.show('confirm','确认关闭?',{
+                    ok : function(){
+                        win.onbeforehide = null;
+                        win.hide();
+                    }
+                })
+            }
+        }
+		//console.log(className,showClassName)
+		win.set('title', '实例');
+		win.set('content', '<div style="height:300px">test</div>');
+		win.set('button', [
+			['确定','close','submit'],['取消','close']
+		]);	
+		target.data('pop', win);
+	}
+	//init();
+	$('.popup_test').click(function(){
+	    var self = $(this),
+	    win = self.data('pop');
+	    if( !win ){
+	        init(self);
+	        win = self.data('pop');
+	    }		
+		win.show();
+		return false;
+	})
+});
+</script>

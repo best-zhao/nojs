@@ -1,0 +1,64 @@
+{
+    "mdb" : {
+        "disable" : "false",
+        "data" : [
+            {"id":"mdb","name":"meidebi.com v3","open":1,"parent":"-1"},
+                {"id":"mdb_ui","name":"视觉规范","parent":"mdb"},
+                    {"id":"mdb_ui_font","name":"字体","link":"ui_font","parent":"mdb_ui"},
+                    {"id":"mdb_ui_base","name":"基本规范","link":"ui_base","parent":"mdb_ui"},  
+                    {"id":"mdb_ui_module","name":"组件规范","link":"ui_module","parent":"mdb_ui"},
+                {"id":"mdb_design","name":"设计稿","link":"design","parent":"mdb"},    
+                {"id":"mdb_modules","name":"组件","parent":"mdb"},  
+                    {"id":"mdb_upload","name":"upload文件上传","link":"modules/upload","parent":"mdb_modules"},
+                    {"id":"mdb_editor","name":"editor编辑器","link":"modules/editor","parent":"mdb_modules"},
+                {"id":"mdb_knockout","name":"knockout","link":"knockout/list","parent":"mdb"}                    
+        ]
+    },
+    "nojs" : {
+        "data" : [
+            {"id":"nojs_info","name":"nojs简介","link":"index","parent":"-1"},
+            {"id":"noJS","name":"noJS模块管理","link":"noJS/index","parent":"-1"},
+                {"id":"noJS_config","name":"参数配置","link":"noJS/config","parent":"noJS"},
+                {"id":"noJS_module","name":"模块","link":"noJS/module","parent":"noJS"},
+                {"id":"noJS_api","name":"接口","link":"noJS/api","parent":"noJS"},
+                {"id":"noJS_pack","name":"打包上线","link":"noJS/pack","parent":"noJS"},
+            
+            {"id":"nj_ui","name":"ui组件","parent":"-1"},
+                {"id":"ui_info","name":"说明","link":"ui/index","parent":"nj_ui"},
+                {"id":"ui_es6","name":"ES6扩展api","link":"ui/es6","parent":"nj_ui"},
+                {"id":"tools","name":"扩展工具","link":"ui/tools","parent":"nj_ui"},
+                {"id":"ui_core","name":"核心ui组件","parent":"nj_ui"},
+                    {"id":"ui_align","name":"ui.align","link":"ui/align","parent":"ui_core"},
+                    {"id":"ui_overlay","name":"ui.overlay","link":"ui/overlay","parent":"ui_core"},
+                    {"id":"ui_layer","name":"ui.layer","link":"ui/layer","parent":"ui_core"},
+                    {"id":"ui_popup","name":"ui.popup","link":"ui/popup","parent":"ui_core"},
+                    {"id":"ui_msg","name":"ui.msg","link":"ui/msg","parent":"ui_core"},
+                    {"id":"ui_select","name":"ui.select","link":"ui/select","parent":"ui_core"},
+                    {"id":"ui_switch","name":"ui.Switch","link":"ui/switch","parent":"ui_core"},
+                    {"id":"ui_slide","name":"ui.slide","link":"ui/slide","parent":"ui_core"},
+                    {"id":"ui_ico","name":"ui.ico","link":"ui/ico","parent":"ui_core"},
+            
+            {"id":"other","name":"常用模块","parent":"-1","open":1},
+                {"id":"m_scroll","name":"scroll滚动","link":"module/scroll","parent":"other"},
+                {"id":"m_code","name":"code代码美化","link":"module/code","parent":"other"},
+                {"id":"drag","name":"drag","link":"module/drag","parent":"other"},
+                {"id":"form","name":"form表单验证","link":"module/form","parent":"other"},
+                {"id":"upload","name":"upload文件上传","link":"module/upload","parent":"other"},
+                {"id":"tree","name":"tree树形菜单","link":"module/tree","parent":"other"},
+                {"id":"chart","name":"chart图表","link":"module/chat","parent":"other"},
+                {"id":"color","name":"color取色器","link":"module/color","parent":"other"},
+                {"id":"face","name":"face表情选择","link":"module/face","parent":"other"},
+                {"id":"rate","name":"rate星级打分","link":"module/rate","parent":"other"},
+                {"id":"autocomplete","name":"autocomplete自动完成","link":"module/autocomplete","parent":"other"},
+                {"id":"email","name":"email邮箱自动补全","link":"module/email","parent":"other"},
+                {"id":"lazyload","name":"lazyload延迟加载","link":"module/lazyload","parent":"other"},
+                {"id":"lightbox","name":"lightbox","link":"module/lightbox","parent":"other"},
+                {"id":"page","name":"page","link":"module/page","parent":"other"},
+                {"id":"resize","name":"resize","link":"module/resize","parent":"other"},
+    
+            {"id":"test_page","name":"小测试","parent":"-1"},
+                {"id":"impact","name":"html5碰撞小游戏","link":"test/impact","parent":"test_page"},
+                {"id":"imghot","name":"在线绘制图片热点","link":"test/imghot","parent":"test_page"}              
+        ]
+    }
+}

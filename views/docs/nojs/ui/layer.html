@@ -1,0 +1,33 @@
+
+<h4 class="p_tit">layer</h4>
+<h6 class="p_tit">说明：</h6>
+<div class="text_info">
+	模拟遮罩层，单体模式，只提供2个方法show/hide
+</div>
+<h6 class="p_tit">使用：</h6>
+<div class="text_info">
+	<script type="text/codelight" code="javascript" key="layer">
+	noJS.use('lib/nojs/mods/layer',function(layer){
+		layer.mask.show();//显示
+		//layer.mask.hide();//隐藏
+	})	
+	</script>
+	<p>通过layer.mask.element可获取遮罩层对象，前提是至少执行过一次show方法</p>
+</div>
+<h6 class="p_tit">实例：</h6>
+<div class="text_info"><input class="nj_btn" id="show_layer" value="显示遮罩" type="button" /> <span class="gray9">1s后自动隐藏</span></div>
+<h6 class="p_tit">扩展应用</h6>
+<div class="text_info">
+	<a href="" data-id="ui_popup">popup</a>
+</div>
+
+<script>
+noJS.use('$,lib/nojs/mods/layer',function($,layer){
+	$('#show_layer').click(function(){
+		layer.mask.show();
+		setTimeout(function(){
+			layer.mask.hide();
+		},1000)
+	})
+});
+</script>

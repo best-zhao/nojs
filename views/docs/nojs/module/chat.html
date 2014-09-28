@@ -1,0 +1,22 @@
+<h4 class="p_tit">chart</h4>
+<h6 class="p_tit">使用：</h6>
+<div class="text_info">
+    <div id="chat_test" style="width:600px;height:240px;font:12px arial;color:#999"></div>
+</div>
+<script>
+noJS.use('lib/nojs/module/chart', function(chart){
+    var chartData = {
+        labels : ['1', '2', '3','4','5'],
+        items : [
+            {data:[1650,1530,1680,1620,1630], fillStyle:'rgba(90,204,0,.3)', strokeStyle:'rgba(90,204,0,.8)'},
+            {data:[1510,1590,1651,1638,1641]}
+        ]
+    }
+    new chart({
+        element : 'chat_test',
+        data : chartData,
+        showPointData : true,
+        scaleFixed : 2
+    });
+}, {globalAfter:true});    
+</script>

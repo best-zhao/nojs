@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title><%=title%></title>
+<link rel="stylesheet" href="/css/nojs/ui.css">
+<link rel="stylesheet" href="/css/docs.css">
+<script>
+window.domain = {
+    rs : 'http://'+location.host
+}
+</script>
+<script src="/js/lib/nojs/noJS.js" data-config1="../conf.js" id="nojs"></script>
+</head>
+<body>
+
+<div id="ui_page" class="ui_page">
+    <div class="clearfix ui_wrap">
+        <div id="side_menu" class="menu_tree fl">
+            
+        </div>
+        <div id='main_content' class="main_content">             
+            <div id="iframe_content" class="iframe_content"></div>
+        </div>
+    </div>
+</div><!--#ui_page-->
+
+<script>
+noJS.config({
+    base : domain.rs+'/src/',
+    global : 'global',
+    alias : {
+        '$' : 'lib/jquery/jquery',
+        'ui' : 'lib/nojs/ui',
+        '$b' : 'pj/b'
+    }
+}).use('docs/index,lib/nojs/mods/codelight', function(docs, codeLight){
+    docs.init({
+        menu : domain.rs+'/src/docs/config.json',
+        complete : function(){
+            new codeLight({parent:docs.$wrap});
+        }
+    });
+}).css('/css/nojs/codelight.css');
+</script>
+</body>
+</html>
