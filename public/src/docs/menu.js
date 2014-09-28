@@ -92,7 +92,6 @@ define(function(require){
             headers : {noAjax:true},
             success : function(html){
                 G.$content.html(html);
-                ui.init(G.$content);
                 G.complete && G.complete(data);                
             }
         })
