@@ -6,7 +6,7 @@ function depsToExports(mods){
         return rect;
     }
     for( j=0; j<mods.length; j++ ){
-        _mod = Modules[mods[j]];
+        _mod = Modules.get(mods[j]);
         
         if( !_mod ){
             continue;
@@ -41,7 +41,7 @@ getExports.run = function(mod){
     function require( id ){
         var mod;
         id = resolve(id, 0, ID);
-        mod = Modules[id];
+        mod = Modules.get(id);
         return mod && getExports(mod);
     }
     require.async = function(){//按需加载模块

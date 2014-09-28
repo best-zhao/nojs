@@ -21,7 +21,7 @@ function Loader(item){
         file = files[i];
 
         //清除已存在模块
-        if( Modules[file] ){
+        if( Modules.get(file) ){
             files.splice(i,1);
             length--;
 
@@ -30,7 +30,7 @@ function Loader(item){
             end(null, 1, file, 1);
 
         }else{
-            Modules[file] = {id:file, bid:bid};
+            Modules.set(file, {id:file, bid:bid})
         }
     }
 
@@ -55,7 +55,7 @@ function Loader(item){
         
         Loader.event( s, function(){
             //模块下载并执行完毕 
-            typeof Modules[file].success=='function' && Modules[file].success();
+            typeof Modules.get(file).success=='function' && Modules.get(file).success();
             end(this, 1, file);
         }, function(){
             end(this,2 , file);
@@ -76,10 +76,11 @@ function Loader(item){
          * 1. 重复模块
          * 2. 非标准模块 不能执行define
          */
-        (repeat || !Modules[file].cmd) && Branch.check(bid, 0);
+        var mod = Modules.get(file);
+        (repeat || !mod.cmd) && Branch.check(bid, 0);
 
         //该模块已完全就绪
-        Modules[file].state = 1;
+        mod.state = 1;
 
         if( complete>=length ) {
 

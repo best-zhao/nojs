@@ -60,16 +60,27 @@ function resolve(path, ptype, base){
 
 /*
  * 添加后缀
- * @uri:解析过得uri
+ * @uri:解析过的uri
+ * @path:原模块标识名
  */
-resolve.fix = function(uri){
+resolve.fix = function(uri, path){
     var fix = Config.fix,
-        version = '';
-        
+        version = '',
+        update = Config.update || {},
+        //整体版本号
+        version = update.version || '';
+    
+    path = path || uri;
+
     if( /\.(js|json)$|\?|#/.test(uri) ){
         uri = uri.replace(/#$/, '');//去掉末尾# 不需要添加后缀
         fix = '';
     }
+    if( update.modules && update.modules[path] ){//个别模块版本号
+        version = update.modules[path];
+    }
+    version = (/\?/.test(path)?'&':'?') + '_v=' + version;
+
     return uri + fix + version;
 }
 

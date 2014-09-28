@@ -17,17 +17,29 @@ Config = {
     fix : '.js'
 },
 /**
- * Modules : {id:data} 模块缓存
- *     data:{uri:完整路径,
- *      bid:分支id,
- *      factory:工厂函数,
- *      exports:对外接口,
- *      cmd:是否标准模块,
- *      deps:依赖模块,
- *      state:1加载完成
- *     }
+ * Modules :
  */
-Modules = {},
+Modules = {
+    /**
+     * {id:data} 模块缓存
+     *     data:{uri:完整路径,
+     *      bid:分支id,
+     *      factory:工厂函数,
+     *      exports:对外接口,
+     *      cmd:是否标准模块,
+     *      deps:依赖模块,
+     *      state:1加载完成
+     *     }
+     */
+    data : {},
+    get : function(mod){
+        return mod && this.data[mod.split('?')[0]];
+    },
+    set : function(mod, data){
+        mod = mod.split('?')[0];
+        this.data[mod] = data;
+    }
+},
 
 /**
  * Branch : {id:data,length:0} 分支

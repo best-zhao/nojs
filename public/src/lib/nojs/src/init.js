@@ -12,7 +12,7 @@ function getSrc(node){
     for( i=0; i<length; i++ ){
         src = getSrc(script[i]);
         if( src ){
-            Modules[src] = {id : src};
+            Modules.set(src, {id : src});
         }
     }
 
@@ -28,6 +28,8 @@ function getSrc(node){
     if( !_config ){
         return;
     }  
+    _config = _config.split('?')[0];//去除配置文件版本号
+
     if( /\.js$/.test(_config) ){
         
         use.defer = [];

@@ -3213,42 +3213,6 @@ define("lib/jquery/jquery", [], function() {
         ui.touch();
     }
     /*
-     * 触发方式
-     * 1.独立初始化某个组件
-     * 2.批量初始化：通过在Elements上配置相应的属性初始化对应区域内所有ui组件，默认body区域
-     */
-    ui.init = function(area) {
-        area = area || $("body");
-        var dom = area.find("[data-ui]"), i, elem, method, options;
-        for (i = 0; i < dom.length; i++) {
-            elem = dom[i];
-            method = elem.getAttribute("data-ui");
-            if (ui[method]) {
-                if (options = elem.getAttribute("data-config")) {
-                    options = eval("({" + options + "})") || {};
-                }
-                ui[method](elem, options);
-            }
-        }
-    };
-    var isNew, cache = {};
-    function instaceofFun(fun, arg) {
-        if (!(fun instanceof arg.callee)) {
-            return newFun(arg.callee, Array.prototype.slice.call(arg));
-        } else {
-            return false;
-        }
-    }
-    ui.instaceofFun = instaceofFun;
-    function newFun(parent, args) {
-        function F(parent, args) {
-            parent.apply(this, args);
-        }
-        F.prototype = parent.prototype;
-        isNew = null;
-        return new F(parent, args);
-    }
-    /*
      * 所有依赖dom的ui组件都可以通过id,element,jQuery来获取dom元素
      */
     function getDom(selector) {
@@ -3286,14 +3250,6 @@ define("lib/jquery/jquery", [], function() {
         }
     };
     ui.extend = Extend;
-    ui.data = function(id, Class) {
-        if (Class) {
-            //set
-            cache[id] = Class;
-        } else {
-            return cache[id];
-        }
-    };
     //更改ui组件配置    
     ui.config = function(options) {
         options = options || {};

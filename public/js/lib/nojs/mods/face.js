@@ -367,7 +367,6 @@ define("lib/nojs/mods/Switch", [ "lib/jquery/jquery", "lib/nojs/ui" ], function(
      */
     var $ = require("lib/jquery/jquery"), ui = require("lib/nojs/ui");
     function Tab(element, options) {
-        var isNew;
         if (!(this instanceof Tab)) {
             return new Tab(element, options);
         }

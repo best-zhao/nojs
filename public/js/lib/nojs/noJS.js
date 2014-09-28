@@ -17,17 +17,29 @@ Config = {
     fix : '.js'
 },
 /**
- * Modules : {id:data} 模块缓存
- *     data:{uri:完整路径,
- *      bid:分支id,
- *      factory:工厂函数,
- *      exports:对外接口,
- *      cmd:是否标准模块,
- *      deps:依赖模块,
- *      state:1加载完成
- *     }
+ * Modules :
  */
-Modules = {},
+Modules = {
+    /**
+     * {id:data} 模块缓存
+     *     data:{uri:完整路径,
+     *      bid:分支id,
+     *      factory:工厂函数,
+     *      exports:对外接口,
+     *      cmd:是否标准模块,
+     *      deps:依赖模块,
+     *      state:1加载完成
+     *     }
+     */
+    data : {},
+    get : function(mod){
+        return mod && this.data[mod.split('?')[0]];
+    },
+    set : function(mod, data){
+        mod = mod.split('?')[0];
+        this.data[mod] = data;
+    }
+},
 
 /**
  * Branch : {id:data,length:0} 分支
@@ -126,16 +138,27 @@ function resolve(path, ptype, base){
 
 /*
  * 添加后缀
- * @uri:解析过得uri
+ * @uri:解析过的uri
+ * @path:原模块标识名
  */
-resolve.fix = function(uri){
+resolve.fix = function(uri, path){
     var fix = Config.fix,
-        version = '';
-        
+        version = '',
+        update = Config.update || {},
+        //整体版本号
+        version = update.version || '';
+    
+    path = path || uri;
+
     if( /\.(js|json)$|\?|#/.test(uri) ){
         uri = uri.replace(/#$/, '');//去掉末尾# 不需要添加后缀
         fix = '';
     }
+    if( update.modules && update.modules[path] ){//个别模块版本号
+        version = update.modules[path];
+    }
+    version = (/\?/.test(path)?'&':'?') + '_v=' + version;
+
     return uri + fix + version;
 }
 
@@ -200,7 +223,7 @@ function Loader(item){
         file = files[i];
 
         //清除已存在模块
-        if( Modules[file] ){
+        if( Modules.get(file) ){
             files.splice(i,1);
             length--;
 
@@ -209,7 +232,7 @@ function Loader(item){
             end(null, 1, file, 1);
 
         }else{
-            Modules[file] = {id:file, bid:bid};
+            Modules.set(file, {id:file, bid:bid})
         }
     }
 
@@ -234,7 +257,7 @@ function Loader(item){
         
         Loader.event( s, function(){
             //模块下载并执行完毕 
-            typeof Modules[file].success=='function' && Modules[file].success();
+            typeof Modules.get(file).success=='function' && Modules.get(file).success();
             end(this, 1, file);
         }, function(){
             end(this,2 , file);
@@ -255,10 +278,11 @@ function Loader(item){
          * 1. 重复模块
          * 2. 非标准模块 不能执行define
          */
-        (repeat || !Modules[file].cmd) && Branch.check(bid, 0);
+        var mod = Modules.get(file);
+        (repeat || !mod.cmd) && Branch.check(bid, 0);
 
         //该模块已完全就绪
-        Modules[file].state = 1;
+        mod.state = 1;
 
         if( complete>=length ) {
 
@@ -343,10 +367,10 @@ window.define = function(){
 
         //当前载入模块的uri
         id = args.length>2 && typeof args[0]=='string' ? resolve(args[0], 0, Config.base) : Loader.point,
-        currentMod = Modules[id],
+        currentMod = Modules.get(id),
 
         //主模块
-        mainMod = Modules[Loader.point],
+        mainMod = Modules.get(Loader.point),
         length, 
         bid = mainMod.bid;
     
@@ -354,7 +378,7 @@ window.define = function(){
 
         //合并的模块此时还未初始化 所以currentMod暂时不存在
         if( id && id!=Loader.point ){
-            currentMod = Modules[id] = {
+            currentMod = Modules.get(id) = {
                 id : id,
                 bid : mainMod.bid,
                 state : 1
@@ -448,6 +472,17 @@ noJS.config = function(options){
         //同时将配置项挂在noJS.config上使外部可调用
         noJS.config[i] = Config[i] = options[i];
     }
+
+    //将update中模块别名转化为标准模块
+    if( Config.alias && Config.update && Config.update.modules ){
+        for( var i in Config.update.modules ){
+            if( Config.alias[i] ){
+                Config.update.modules[Config.alias[i]] = Config.update.modules[i];
+                delete Config.update.modules[i];
+            }
+        }
+        console.log(Config.update.modules)
+    }
     
     //配置全局模块 
     use(options.global, null, {front:true});
@@ -536,7 +571,7 @@ function depsToExports(mods){
         return rect;
     }
     for( j=0; j<mods.length; j++ ){
-        _mod = Modules[mods[j]];
+        _mod = Modules.get(mods[j]);
         
         if( !_mod ){
             continue;
@@ -571,7 +606,7 @@ getExports.run = function(mod){
     function require( id ){
         var mod;
         id = resolve(id, 0, ID);
-        mod = Modules[id];
+        mod = Modules.get(id);
         return mod && getExports(mod);
     }
     require.async = function(){//按需加载模块
@@ -607,7 +642,7 @@ function getSrc(node){
     for( i=0; i<length; i++ ){
         src = getSrc(script[i]);
         if( src ){
-            Modules[src] = {id : src};
+            Modules.set(src, {id : src});
         }
     }
 
@@ -623,6 +658,8 @@ function getSrc(node){
     if( !_config ){
         return;
     }  
+    _config = _config.split('?')[0];//去除配置文件版本号
+
     if( /\.js$/.test(_config) ){
         
         use.defer = [];

@@ -51,7 +51,7 @@ define("docs/menu", [ "lib/jquery/jquery", "lib/nojs/ui", "./url", "lib/nojs/mod
             return;
         }
         var _url = setUrl("url");
-        var _id = this.box[0].id, name = _id.substring(_id.indexOf("_") + 1, _id.length), url = _url || this.box.data("id") + "/" + link, title = document.title, _data = {
+        var _id = this.box[0].id, name = _id.substring(_id.indexOf("_") + 1, _id.length), url = _url || "/docs/" + this.box.data("id") + "/" + link, title = document.title, _data = {
             title: data.name,
             url: url
         };
@@ -74,7 +74,6 @@ define("docs/menu", [ "lib/jquery/jquery", "lib/nojs/ui", "./url", "lib/nojs/mod
             },
             success: function(html) {
                 G.$content.html(html);
-                ui.init(G.$content);
                 G.complete && G.complete(data);
             }
         });

@@ -5,5 +5,11 @@ noJS.config({
         '$' : 'lib/jquery/jquery',
         'ui' : 'lib/nojs/ui',
         '$b' : 'pj/b'
+    },
+    update : {
+        version : '2.0',
+        modules : {
+            'docs/index' : '20140928'
+        }
     }
 });

@@ -17,10 +17,10 @@ window.define = function(){
 
         //当前载入模块的uri
         id = args.length>2 && typeof args[0]=='string' ? resolve(args[0], 0, Config.base) : Loader.point,
-        currentMod = Modules[id],
+        currentMod = Modules.get(id),
 
         //主模块
-        mainMod = Modules[Loader.point],
+        mainMod = Modules.get(Loader.point),
         length, 
         bid = mainMod.bid;
     
@@ -28,7 +28,7 @@ window.define = function(){
 
         //合并的模块此时还未初始化 所以currentMod暂时不存在
         if( id && id!=Loader.point ){
-            currentMod = Modules[id] = {
+            currentMod = Modules.get(id) = {
                 id : id,
                 bid : mainMod.bid,
                 state : 1
