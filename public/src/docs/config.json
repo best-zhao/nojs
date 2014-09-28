@@ -1,10 +1,4 @@
 {
-    // "test" : {
-    //     "disable" : "false",
-    //     "data" : [
-                              
-    //     ]
-    // },
     "nojs" : {
         "data" : [
             {"id":"nojs_info","name":"nojs简介","link":"index","parent":"-1"},
