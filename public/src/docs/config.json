@@ -1,19 +1,10 @@
 {
-    "mdb" : {
-        "disable" : "false",
-        "data" : [
-            {"id":"mdb","name":"meidebi.com v3","open":1,"parent":"-1"},
-                {"id":"mdb_ui","name":"视觉规范","parent":"mdb"},
-                    {"id":"mdb_ui_font","name":"字体","link":"ui_font","parent":"mdb_ui"},
-                    {"id":"mdb_ui_base","name":"基本规范","link":"ui_base","parent":"mdb_ui"},  
-                    {"id":"mdb_ui_module","name":"组件规范","link":"ui_module","parent":"mdb_ui"},
-                {"id":"mdb_design","name":"设计稿","link":"design","parent":"mdb"},    
-                {"id":"mdb_modules","name":"组件","parent":"mdb"},  
-                    {"id":"mdb_upload","name":"upload文件上传","link":"modules/upload","parent":"mdb_modules"},
-                    {"id":"mdb_editor","name":"editor编辑器","link":"modules/editor","parent":"mdb_modules"},
-                {"id":"mdb_knockout","name":"knockout","link":"knockout/list","parent":"mdb"}                    
-        ]
-    },
+    // "test" : {
+    //     "disable" : "false",
+    //     "data" : [
+                              
+    //     ]
+    // },
     "nojs" : {
         "data" : [
             {"id":"nojs_info","name":"nojs简介","link":"index","parent":"-1"},
