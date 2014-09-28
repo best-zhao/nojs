@@ -63,7 +63,7 @@ define(function(require){
         
         var _id = this.box[0].id,
             name = _id.substring(_id.indexOf('_')+1,_id.length),
-            url = _url || this.box.data('id')+'/'+link,
+            url = _url || '/docs/'+this.box.data('id')+'/'+link,
             title = document.title,
             _data = {
                 title : data.name,

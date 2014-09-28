@@ -56,7 +56,7 @@ fs.readFile('./public/src/docs/config.json', function(err, data){
             }
             !function(q,i){
                 app.get('/docs/'+i+'/'+q, function(req, res){
-                    res.render('/docs/'+i+'/'+q);
+                    res.render('docs/'+i+'/'+q);
                 });
             }(q.link,i);
         }        
