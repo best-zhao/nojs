@@ -32,9 +32,11 @@ define(function(require){
     })
         
     var treeOptions = {
+        //defaultNode : 'nojs_info',
         onSelect : function(data){
-            if( !first ){//页面首次加载
+            if( !first && setUrl() ){//页面首次加载
                 treeSelect.call(this, data);
+                return;
             }
             if( first==2 ){//onhashchange
                 treeSelect.call(this, data); 
@@ -45,7 +47,7 @@ define(function(require){
                 }
                 setUrl(_data);
                 first = 1;
-            }             
+            }
         }
     }
     /*

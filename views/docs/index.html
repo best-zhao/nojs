@@ -44,6 +44,7 @@ noJS.config({
 }).use('docs/index,lib/nojs/mods/codelight', function(docs, codeLight){
     docs.init({
         menu : domain.rs+'/src/docs/config.json',
+        defaultNode : 'nojs_info',
         complete : function(){
             new codeLight({parent:docs.$wrap});
         }
