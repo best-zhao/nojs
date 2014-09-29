@@ -14,7 +14,9 @@ var noJS = window.noJS = {
     version : '2.0'
 },
 Config = {
-    fix : '.js'
+    fix : '.js',
+    alias : {},
+    update : {}
 },
 /**
  * Modules :

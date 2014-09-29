@@ -6,18 +6,20 @@ noJS.config = function(options){
         noJS.config[i] = Config[i] = options[i];
     }
 
-    //将update中模块别名转化为标准模块
-    if( Config.alias && Config.update && Config.update.modules ){
+    //全部转化为完整路径
+    if( Config.update && Config.update.modules ){
+
         for( var i in Config.update.modules ){
-            if( Config.alias[i] ){
-                Config.update.modules[Config.alias[i]] = Config.update.modules[i];
-                delete Config.update.modules[i];
-            }
+
+            //这里要去掉自动添加的错误版本号 
+            var mod = resolve(i, Config.base).split('?')[0], v = Config.update.modules[i];
+            delete Config.update.modules[i];
+            Config.update.modules[mod] = v;
         }
-        console.log(Config.update.modules)
+
     }
     
-    //配置全局模块 
+    //载入全局模块 
     use(options.global, null, {front:true});
 
     return noJS;
