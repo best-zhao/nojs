@@ -2,8 +2,6 @@
  * 主界面框架入口文件
  * 
  */
-noJS.css([ domain.rs + "/css/nojs/tree.css", domain.rs + "/css/nojs/select.css" ]);
-
 define("docs/index", [ "lib/jquery/jquery", "lib/nojs/ui", "./menu", "./url", "lib/nojs/mods/tree", "$", "./key" ], function(require) {
     var $ = require("lib/jquery/jquery"), ui = require("lib/nojs/ui"), G = {}, menu = require("./menu"), url = require("./url"), setUrl = url.setUrl, key = require("./key"), html = $("html");
     //全屏快捷键"F"    
@@ -28,13 +26,11 @@ define("docs/index", [ "lib/jquery/jquery", "lib/nojs/ui", "./menu", "./url", "l
         $wrap: $("#main_content"),
         $content: $("#iframe_content"),
         beforeSend: function() {
-            G.$content.fadeTo(200, 0);
             //beforeSend事件
             G.options.beforeSend && G.options.beforeSend();
         },
         complete: function(data) {
             G.data = data;
-            G.$content.stop().fadeTo(400, 1);
             ui.mobile && setUrl("hideMenu", 1);
             //complete事件
             G.options.complete && G.options.complete();
@@ -76,7 +72,7 @@ define("docs/index", [ "lib/jquery/jquery", "lib/nojs/ui", "./menu", "./url", "l
         G.jump($(e.target).attr("href"));
         return false;
     });
-    $("#ui_page").show().addClass("d_show");
+    $("#ui_page").show();
     G.init = function(options) {
         G.options = options || {};
         menu.init(G);
@@ -118,6 +114,7 @@ define("docs/menu", [ "lib/jquery/jquery", "lib/nojs/ui", "docs/url", "lib/nojs/
             if (!first && setUrl()) {
                 //页面首次加载
                 treeSelect.call(this, data);
+                first = 1;
                 return;
             }
             if (first == 2) {

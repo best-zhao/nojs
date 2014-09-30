@@ -368,7 +368,7 @@ noJS.use('$,ui', function($,ui){
 	window.demoAction = {
 		item : [
 			{content : $('#demo_tmpl1').html(), callback : function(){
-				noJS.use(['lib/nojs/module/form'], function(form,$,ui){
+				noJS.use('lib/nojs/mods/form,$,ui', function(form,$,ui){
 				    //console.log(form.reg.specialCode('米色向日葵'))
 					form.reg.tel = function(value){
 						//自定义规则，手机、座机、400电话均可
@@ -411,7 +411,7 @@ noJS.use('$,ui', function($,ui){
                             isNull:'不能为空'
                         }
                     }
-                    new form.verify({
+                    new form({
                         form : $('#register1'),
                         rules : rules,
                         onSubmit : function(){

@@ -14,20 +14,25 @@ window.domain = {
 </head>
 <body>
 
-<div id="ui_page" class="ui_page">
+<div id="ui_page" class="ui_page d_hide">
     <div class="clearfix ui_wrap">
-        <div id="side_menu" class="menu_tree fl">
-            
-        </div>
+        <div id="side_menu" class="menu_tree fl"></div>
         <div id='main_content' class="main_content">             
             <div id="iframe_content" class="iframe_content"></div>
+            <div id="operating">
+                <div class="inner_btn f_icon"></div>
+                <ul id="op_menu" class="d_hide">
+                    <li class="demo">demo演示</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div><!--#ui_page-->
 
 <script>
+var dev = 1;
 noJS.config({
-    base : domain.rs+'/src/',
+    base : domain.rs+(dev?'/src/':'/js/'),
     global : 'global',
     alias : {
         '$' : 'lib/jquery/jquery',
@@ -41,15 +46,7 @@ noJS.config({
             '$' : '2014092801'
         }
     }
-}).use('docs/index,lib/nojs/mods/codelight', function(docs, codeLight){
-    docs.init({
-        menu : domain.rs+'/src/docs/config.json',
-        defaultNode : 'nojs_info',
-        complete : function(){
-            new codeLight({parent:docs.$wrap});
-        }
-    });
-}).css('/css/nojs/codelight.css');
+}).use('docs/init');
 </script>
 </body>
 </html>

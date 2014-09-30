@@ -2,10 +2,6 @@
  * 主界面框架入口文件
  * 
  */
-noJS.css([
-    domain.rs+'/css/nojs/tree.css',
-    domain.rs+'/css/nojs/select.css'
-]);
 
 define(function(require){
 	
@@ -44,13 +40,11 @@ define(function(require){
         '$wrap' : $('#main_content'),
         '$content' : $('#iframe_content'),
         'beforeSend' : function(){
-            G.$content.fadeTo(200, 0);
             //beforeSend事件
             G.options.beforeSend && G.options.beforeSend();
         },
         'complete' : function(data){
             G.data = data;
-            G.$content.stop().fadeTo(400, 1);
             
             ui.mobile && setUrl('hideMenu', 1);
 
@@ -100,7 +94,7 @@ define(function(require){
         G.jump($(e.target).attr('href'));
         return false;
     });
-    $('#ui_page').show().addClass('d_show');
+    $('#ui_page').show();
 
     G.init = function(options){
         G.options = options || {};

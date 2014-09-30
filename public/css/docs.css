@@ -1,8 +1,7 @@
 #hashWrap a{width:900px;height:100px;display:block}
+body{font:12px/1.6 '微软雅黑';}
 body,html,#ui_page{width:100%;height:100%;overflow:hidden;color:#333}
-.ui_page{position:relative;font:12px/1.6 '微软雅黑';   
-    display:none
-}
+.ui_page{position:relative}
 .ui_page_show{display:block}
 .orange{color:red}
 code,pre.code{margin: 0 5px;padding:3px;font-family: Monaco,Consolas,"Lucida Console",monospace;font-size:80%;background-color:rgba(0,0,0,0.025);border:1px solid rgba(0,0,0,0.1);border-radius:3px}
@@ -16,14 +15,7 @@ pre.code{padding:6px;margin:0 0 9px;font-family:'Courier New','Monospace'}
 #ui_head .options .nj_btn{float:left}
 #ui_head .options .nj_btn .nj_arrow{position:static;margin:8px 6px 0 0;float:left}
 
-#demo_content{position:absolute;left:100%;height:100%;width:100%;top:0;overflow:auto;overflow-x:hidden}
-#demo_content .demo_head .nj_btn{margin-right:9px}
-#demo_content .demo_wrap,.iframe_content{padding:30px}
-#demo_content .demo_wrap{margin-left:250px}
-#demo_content .nj_s_menu{background:#eee;font-size:12px;line-height:2.5;margin:25px 0 15px}
-#demo_content .nj_s_m{padding:0 9px;border-right:1px solid #fff;float:left}
-#demo_content .nj_s_menu .current{background:#e0e0e0}
-#demo_content .nj_s_c{overflow:hidden;zoom:1;font-size:12px}
+.iframe_content{padding:30px;transition:all .5s}
 .ui_wrap{height:100%;clear:both;position:relative}
 .menu_tree{width:250px;height:100%;overflow:auto;overflow-x:hidden;position:relative;background:#f0f0f0;z-index:40}
 .menu_tree .nj_tree{padding:15px 0;border-bottom:1px solid #d8d8d8;border-top:1px solid #F9F9F9}
@@ -87,9 +79,9 @@ html.page_full .main_content{margin:0}
 html.page_full #demo_content .demo_wrap{margin:0}
 
 /*chrome滚动条*/
-::-webkit-scrollbar-track-piece{background-color:#FBFBFB;-webkit-border-radius:0}
+::-webkit-scrollbar-track-piece{background-color:#F0F0F0;-webkit-border-radius:0}
 ::-webkit-scrollbar{width:12px;height:12px}
-::-webkit-scrollbar-thumb{height:50px;background-color:#ddd;outline-offset:-1px;border:1px solid #fff}
+::-webkit-scrollbar-thumb{height:50px;background-color:#ccc;outline-offset:-1px;border:1px solid #bbb}
 ::-webkit-scrollbar-thumb:hover{background-color:#ccc}
 
 /*switch*/
@@ -100,5 +92,44 @@ html.page_full #demo_content .demo_wrap{margin:0}
 .nj_s_box .nj_s_c{background:#eee;width:100%;height:100%;overflow:hidden}
 
 
+/*operting*/
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('/fonts/fontawesome-webfont.eot?v=4.2.0');
+  src: url('/fonts/fontawesome-webfont.eot?#iefix&v=4.2.0') format('embedded-opentype'), 
+        url('/fonts/fontawesome-webfont.woff?v=4.2.0') format('woff'), 
+        url('/fonts/fontawesome-webfont.ttf?v=4.2.0') format('truetype'), 
+        url('/fonts/fontawesome-webfont.svg?v=4.2.0#fontawesomeregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+.nj_overlay_show #op_menu li,#demo_content{
+    transition:all .4s;
+}
+.f_icon{width:20px;height:20px;cursor:pointer;opacity:.6;font:20px FontAwesome;color:#000;}
+.f_icon:hover,#operating .nj_overlay_show{opacity:1}
+#operating{position:absolute;right:1.5em;top:1em;}
+#operating .inner_btn{opacity:.4}
+#operating .inner_btn:before{content:'\F03A';}
+#op_menu{width:150px;font-size:14px;}
+#op_menu li{padding:5px 15px;cursor:default}
+#op_menu li:hover{background:#f0f0f0;text-indent:.5em;}
 
-
+.demo_wrap{}
+.demo_wrap .iframe_content{-webkit-transform:scale(.98);opacity:.6;}
+#demo_content{position:absolute;width:100%;height:100%;top:0;left:0;opacity:0;visibility:hidden}
+#demo_content .d_wrap{background:#fff;margin-left:250px;padding:30px;}
+#demo_content .d_close{position:absolute;right:1em;top:1em}
+#demo_content .d_close:before{content:'\F057';}
+#main_content .d_open{
+    -webkit-animation:moveShow 1s;
+    -moz-animation:moveShow 1s;
+    -ms-animation:moveShow 1s;
+    opacity:1;
+    visibility: visible;
+    z-index:50;
+}
+@-webkit-keyframes moveShow {
+    0%{-webkit-transform:translate(50px,0);opacity:0;}
+    100% {-webkit-transform:translate(0,0);opacity:1;}
+}

@@ -1,7 +1,8 @@
 /*
  * form 表单验证
  */
-define("lib/nojs/mods/form", [], function(require, $, ui) {
+define("lib/nojs/mods/form", [ "lib/jquery/jquery", "lib/nojs/ui" ], function(require) {
+    var $ = require("lib/jquery/jquery"), ui = require("lib/nojs/ui");
     var form = function(options) {
         this.options = options = config(options);
         this.button = options.button;
@@ -430,9 +431,7 @@ define("lib/nojs/mods/form", [], function(require, $, ui) {
         wrap = $('<span class="nj_f_tip"><span class="tip_ico"></span><span class="tip_con">' + tip + "</span></span>");
         t = wrap.find("span.tip_ico");
         holder[position](wrap);
-        s != "focus" && new ui.ico(t, {
-            type: s
-        });
+        //s!='focus' && new ui.ico(t,{type:s});		
         wrap.addClass("nj_f_" + s);
     };
     form.reg = {

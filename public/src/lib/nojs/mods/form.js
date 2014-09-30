@@ -1,7 +1,8 @@
 /*
  * form 表单验证
  */
-define(function( require, $, ui ){
+define(function(require){
+    var $ = require('$'), ui = require('ui');
 	var form = function(options){
 		this.options = options = config(options);
         
@@ -470,7 +471,7 @@ define(function( require, $, ui ){
 		wrap = $('<span class="nj_f_tip"><span class="tip_ico"></span><span class="tip_con">'+tip+'</span></span>');
 		t = wrap.find('span.tip_ico');
 		holder[position](wrap);
-		s!='focus' && new ui.ico(t,{type:s});		
+		//s!='focus' && new ui.ico(t,{type:s});		
 		wrap.addClass('nj_f_'+s);
 	}
 	form.reg = {

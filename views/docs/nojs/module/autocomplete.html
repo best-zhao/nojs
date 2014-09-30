@@ -151,11 +151,11 @@ var data = [
 
 
 <script>
-noJS.use(function($,ui){
+noJS.use('$,ui',function($,ui){
 	window.demoAction = {
 		item : [
 			{content : $('#demo_tmpl').html(), callback : function(){
-				noJS.use('lib/nojs/module/autocomplete', function( autocomplete, $, ui ){
+				noJS.use('$,ui,lib/nojs/module/autocomplete', function($, ui, autocomplete){
 					var S = new autocomplete( $('#auto_complete'), {
 						rule : rule,
 						max : 15,
@@ -186,7 +186,7 @@ noJS.use(function($,ui){
 						}
 						return html;
 					}
-				}, {globalAfter:true});
+				});
 			}}
 		]
 	}
