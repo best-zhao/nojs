@@ -113,10 +113,12 @@ define("docs/menu", [ "lib/jquery/jquery", "lib/nojs/ui", "docs/url", "lib/nojs/
         }
     });
     var treeOptions = {
+        //defaultNode : 'nojs_info',
         onSelect: function(data) {
-            if (!first) {
+            if (!first && setUrl()) {
                 //页面首次加载
                 treeSelect.call(this, data);
+                return;
             }
             if (first == 2) {
                 //onhashchange

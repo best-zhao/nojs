@@ -2,8 +2,8 @@
  * 数据图表
  * 2014-4-29
  */
-define("lib/nojs/mods/chart", [], function(require, $) {
-    var canvasSupport = !!document.createElement("canvas").getContext;
+define("lib/nojs/mods/chart", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery"), canvasSupport = !!document.createElement("canvas").getContext;
     function chart(options) {
         this.options = options = $.extend(true, {
             axisColor: "#c8c8c8",

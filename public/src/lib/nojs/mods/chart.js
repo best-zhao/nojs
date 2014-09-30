@@ -2,8 +2,9 @@
  * 数据图表
  * 2014-4-29
  */
-define(function(require,$){
-    var canvasSupport = !!document.createElement('canvas').getContext;
+define(function(require){
+    var $ = require('$'),
+    canvasSupport = !!document.createElement('canvas').getContext;
     
     function chart(options){
         this.options = options = $.extend(true, {
