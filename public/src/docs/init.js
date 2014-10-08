@@ -1,9 +1,3 @@
-noJS.css([
-    domain.rs+'/css/nojs/tree.css',
-    domain.rs+'/css/nojs/select.css',
-    domain.rs+'/css/nojs/codelight.css'
-]);
-
 define(function(require){
     var $ = require('$'),
         docs = require('./index'),

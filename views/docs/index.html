@@ -46,7 +46,11 @@ noJS.config({
             '$' : '2014092801'
         }
     }
-}).use('docs/init');
+}).css([
+    domain.rs+'/css/nojs/tree.css',
+    domain.rs+'/css/nojs/select.css',
+    domain.rs+'/css/nojs/codelight.css'
+]).use('docs/init');
 </script>
 </body>
 </html>
