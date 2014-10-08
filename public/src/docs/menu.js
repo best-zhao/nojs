@@ -7,7 +7,7 @@ define(function(require){
     var $ = require('$'),
         ui = require('ui'),
         url = require('./url'),
-        tree = require('lib/nojs/mods/tree'),
+        tree = require('../lib/nojs/mods/tree'),
         side = $('#side_menu'),
         setUrl = url.setUrl,
         first = 0,

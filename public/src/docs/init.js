@@ -8,7 +8,7 @@ define(function(require){
     var $ = require('$'),
         docs = require('./index'),
         codeLight = require('../lib/nojs/mods/codelight'),
-        layer = require('lib/nojs/mods/layer'),
+        layer = require('../lib/nojs/mods/layer'),
         demo = require('./demo');
 
     docs.init({
