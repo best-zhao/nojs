@@ -39,7 +39,7 @@ Modules = {
     },
     set : function(mod, data){
         mod = mod.split('?')[0];
-        this.data[mod] = data;
+        return this.data[mod] = data;
     }
 },
 

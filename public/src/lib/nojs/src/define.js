@@ -28,11 +28,11 @@ window.define = function(){
 
         //合并的模块此时还未初始化 所以currentMod暂时不存在
         if( id && id!=Loader.point ){
-            currentMod = Modules.get(id) = {
+            currentMod = Modules.set(id, {
                 id : id,
                 bid : mainMod.bid,
                 state : 1
-            }
+            })
         }else{
             return;
         }        
