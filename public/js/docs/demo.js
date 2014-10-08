@@ -16,7 +16,7 @@ define("docs/demo", [ "lib/jquery/jquery", "./index", "lib/nojs/ui", "./menu", "
         docs.$wrap.addClass("demo_wrap");
         setTimeout(function() {
             $demo.addClass("d_open");
-        }, 300);
+        }, 200);
         demo.render();
     };
     demo.hide = function() {

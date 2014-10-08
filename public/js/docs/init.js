@@ -5,7 +5,10 @@ define("docs/init", [ "lib/jquery/jquery", "./index", "lib/nojs/ui", "./menu", "
     docs.init({
         menu: domain.rs + "/src/docs/config.json",
         defaultNode: "nojs_info",
-        beforeSend: function() {},
+        beforeSend: function() {
+            //docs.$content.fadeTo(200, 0);
+            window.demoAction = null;
+        },
         complete: function() {
             //docs.$content.stop().fadeTo(400, 1);
             new codeLight({
@@ -619,7 +622,7 @@ define("docs/demo", [ "lib/jquery/jquery", "docs/index", "lib/nojs/ui", "docs/me
         docs.$wrap.addClass("demo_wrap");
         setTimeout(function() {
             $demo.addClass("d_open");
-        }, 300);
+        }, 200);
         demo.render();
     };
     demo.hide = function() {

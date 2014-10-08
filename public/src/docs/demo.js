@@ -23,7 +23,7 @@ define(function(require){
         docs.$wrap.addClass('demo_wrap');
         setTimeout(function(){
             $demo.addClass('d_open');
-        }, 300)
+        }, 200)
         demo.render();
     }
     demo.hide = function(){
