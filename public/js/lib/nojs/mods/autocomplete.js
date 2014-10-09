@@ -3,7 +3,8 @@
  * nolure@vip.qq.com
  * 2013-8-29
  */
-define("lib/nojs/mods/autocomplete", [], function(require, $) {
+define("lib/nojs/mods/autocomplete", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery");
     function moveEnd(obj) {
         obj.focus();
         var len = obj.value.length;

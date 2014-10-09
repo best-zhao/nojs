@@ -7,7 +7,7 @@ define(function(require){
         $demo = $([
             '<div id="demo_content" class=""><div class="d_wrap">',
                 '<div class="d_close f_icon"></div>',
-                '<div class="d_content"></div>',
+                '<div class="d_content clearfix"></div>',
             '</div></div>'
         ].join('')).appendTo(docs.$wrap);
         $demo.find('div.d_close').click(function(){
@@ -34,13 +34,13 @@ define(function(require){
         var data = window.demoAction.item, html = {menu:'',content:''}, i=0, n = data.length;
 
         for( ; i<n; i++ ){
-            html.menu += '<li>demo'+(i+1)+'</li>';
+            html.menu += '<li class="nj_s_m">demo'+(i+1)+'</li>';
             html.content += '<div class="nj_s_c">'+data[i].content+'</div>';
         }
-        html.menu = '<ul class="nj_s_menu clearfix">'+html.menu+'</ul>';
-        html.content = '<div class="nj_s_con">'+html.content+'</div>';
+        html.menu = '<ul class="nj_s_menu demo_tab clearfix">'+html.menu+'</ul>';
+        html.content = '<div class="nj_s_con clearfix">'+html.content+'</div>';
 
-        demo.$content.html(html.menu + html.content);
+        demo.$content.html((window.demoAction.html||'')+html.menu + html.content);
 
         require.async('lib/nojs/mods/Switch', function(Switch){
             new Switch.tab(demo.$content, {
@@ -49,6 +49,10 @@ define(function(require){
                 }
             });
         })
+    }
+    demo.destroy = function(){
+        $demo && demo.$content.empty();
+        window.demoAction = null;
     }
 
     return demo

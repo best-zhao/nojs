@@ -10,7 +10,7 @@ define(function(require){
         defaultNode : 'nojs_info',
         beforeSend : function(){
             //docs.$content.fadeTo(200, 0);
-            window.demoAction = null;
+            demo.destroy();
         },
         complete : function(){
             //docs.$content.stop().fadeTo(400, 1);

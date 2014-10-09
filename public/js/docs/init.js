@@ -1,5 +1,3 @@
-noJS.css([ domain.rs + "/css/nojs/tree.css", domain.rs + "/css/nojs/select.css", domain.rs + "/css/nojs/codelight.css" ]);
-
 define("docs/init", [ "lib/jquery/jquery", "./index", "lib/nojs/ui", "./menu", "./url", "../lib/nojs/mods/tree", "./key", "../lib/nojs/mods/codelight", "../lib/nojs/mods/layer", "./demo" ], function(require) {
     var $ = require("lib/jquery/jquery"), docs = require("./index"), codeLight = require("../lib/nojs/mods/codelight"), layer = require("../lib/nojs/mods/layer"), demo = require("./demo");
     docs.init({
@@ -7,7 +5,7 @@ define("docs/init", [ "lib/jquery/jquery", "./index", "lib/nojs/ui", "./menu", "
         defaultNode: "nojs_info",
         beforeSend: function() {
             //docs.$content.fadeTo(200, 0);
-            window.demoAction = null;
+            demo.destroy();
         },
         complete: function() {
             //docs.$content.stop().fadeTo(400, 1);
@@ -1809,7 +1807,7 @@ define("docs/demo", [ "lib/jquery/jquery", "docs/index", "lib/nojs/ui", "docs/me
     var $ = require("lib/jquery/jquery"), docs = require("docs/index");
     var $demo;
     function demo() {
-        $demo = $([ '<div id="demo_content" class=""><div class="d_wrap">', '<div class="d_close f_icon"></div>', '<div class="d_content"></div>', "</div></div>" ].join("")).appendTo(docs.$wrap);
+        $demo = $([ '<div id="demo_content" class=""><div class="d_wrap">', '<div class="d_close f_icon"></div>', '<div class="d_content clearfix"></div>', "</div></div>" ].join("")).appendTo(docs.$wrap);
         $demo.find("div.d_close").click(function() {
             demo.hide();
         });
@@ -1836,12 +1834,12 @@ define("docs/demo", [ "lib/jquery/jquery", "docs/index", "lib/nojs/ui", "docs/me
             content: ""
         }, i = 0, n = data.length;
         for (;i < n; i++) {
-            html.menu += "<li>demo" + (i + 1) + "</li>";
+            html.menu += '<li class="nj_s_m">demo' + (i + 1) + "</li>";
             html.content += '<div class="nj_s_c">' + data[i].content + "</div>";
         }
-        html.menu = '<ul class="nj_s_menu clearfix">' + html.menu + "</ul>";
-        html.content = '<div class="nj_s_con">' + html.content + "</div>";
-        demo.$content.html(html.menu + html.content);
+        html.menu = '<ul class="nj_s_menu demo_tab clearfix">' + html.menu + "</ul>";
+        html.content = '<div class="nj_s_con clearfix">' + html.content + "</div>";
+        demo.$content.html((window.demoAction.html || "") + html.menu + html.content);
         require.async("lib/nojs/mods/Switch", function(Switch) {
             new Switch.tab(demo.$content, {
                 onChange: function(index) {
@@ -1849,6 +1847,10 @@ define("docs/demo", [ "lib/jquery/jquery", "docs/index", "lib/nojs/ui", "docs/me
                 }
             });
         });
+    };
+    demo.destroy = function() {
+        $demo && demo.$content.empty();
+        window.demoAction = null;
     };
     return demo;
 });

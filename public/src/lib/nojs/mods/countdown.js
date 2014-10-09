@@ -3,7 +3,8 @@
  * 2014-4-29
  * @nolure@vip.qq.com
  */
-define(function(require,$){
+define(function(require){
+    var $ = require('$')
     function countdown(el, diff){
         if( !diff ){
             return;

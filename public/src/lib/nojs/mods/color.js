@@ -1,4 +1,5 @@
-define(function( require, $ ){
+define(function( require ){
+	var $ = require('$')
 	function color(obj){
 		/*
 		 * 取色器

@@ -3,7 +3,8 @@
  * 2014-4-29
  * @nolure@vip.qq.com
  */
-define("lib/nojs/mods/countdown", [], function(require, $) {
+define("lib/nojs/mods/countdown", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery");
     function countdown(el, diff) {
         if (!diff) {
             return;

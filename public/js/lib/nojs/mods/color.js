@@ -1,4 +1,5 @@
-define("lib/nojs/mods/color", [], function(require, $) {
+define("lib/nojs/mods/color", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery");
     function color(obj) {
         /*
 		 * 取色器

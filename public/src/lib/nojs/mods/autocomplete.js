@@ -3,7 +3,8 @@
  * nolure@vip.qq.com
  * 2013-8-29
  */
-define(function(require,$){
+define(function(require){
+	var $ = require('$')
 	function moveEnd(obj){ 
 		obj.focus(); 
 		var len = obj.value.length; 

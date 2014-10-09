@@ -3,7 +3,8 @@
  * nolure@vip.qq.com
  * 2013-9-10
  */
-define(function( require, $, ui ){
+define(function(require){
+    var $ = require('$'), ui = require('ui')
     var fullscreen = require('./fullscreen');
 	function imgPreLoad(){
 		var list = [], intervalId = null,

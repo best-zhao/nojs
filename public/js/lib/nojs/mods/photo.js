@@ -3,7 +3,8 @@
  * nolure@vip.qq.com
  * 2013-9-10
  */
-define("lib/nojs/mods/photo", [ "./fullscreen" ], function(require, $, ui) {
+define("lib/nojs/mods/photo", [ "lib/jquery/jquery", "lib/nojs/ui", "./fullscreen" ], function(require) {
+    var $ = require("lib/jquery/jquery"), ui = require("lib/nojs/ui");
     var fullscreen = require("./fullscreen");
     function imgPreLoad() {
         var list = [], intervalId = null, // 用来执行队列
@@ -405,7 +406,7 @@ define("lib/nojs/mods/photo", [ "./fullscreen" ], function(require, $, ui) {
 /*
  * 浏览器全屏模式api
  */
-define("lib/nojs/mods/fullscreen", [], function(require, $) {
+define("lib/nojs/mods/fullscreen", [], function(require) {
     var fullScreenApi = {
         supportsFullScreen: false,
         isFullScreen: function() {

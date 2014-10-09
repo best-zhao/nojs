@@ -3,7 +3,8 @@
  * nolure@vip.qq.com
  * 2013-10-17
  */
-define(function(require,$){
+define(function(require){
+    var $ = require('$')
     /*
      * @element：确保element是闭合的且设置了定位属性的标签
      */

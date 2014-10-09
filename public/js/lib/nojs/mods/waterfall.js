@@ -5,7 +5,8 @@
  * @opt:{autoWidth:自适应宽度,autoLoad:滚动加载数据}
  * @load数据加载方法
  */
-define("lib/nojs/mods/waterfall", [], function(require, $, mobile) {
+define("lib/nojs/mods/waterfall", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery");
     function imgPreLoad() {
         var list = [], intervalId = null, // 用来执行队列
         tick = function() {

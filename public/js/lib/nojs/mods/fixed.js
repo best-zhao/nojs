@@ -81,11 +81,14 @@ define("lib/nojs/mods/fixed", [], function(require, $) {
                     }
                 }
                 if (options.state != 1) {
-                    options.element.css({
+                    var style = {
                         top: ie6 ? options.offset + _top : options.offset,
-                        position: ie6 ? "absolute" : "fixed",
-                        width: options.element.parent().width()
-                    }).addClass("nj_fixed");
+                        position: ie6 ? "absolute" : "fixed"
+                    };
+                    if (options.autoWidth) {
+                        style.width = options.element.parent().width();
+                    }
+                    options.element.css(style).addClass("nj_fixed");
                     options.state = 1;
                     options.start && options.start();
                 }

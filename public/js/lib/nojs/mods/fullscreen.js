@@ -1,7 +1,7 @@
 /*
  * 浏览器全屏模式api
  */
-define("lib/nojs/mods/fullscreen", [], function(require, $) {
+define("lib/nojs/mods/fullscreen", [], function(require) {
     var fullScreenApi = {
         supportsFullScreen: false,
         isFullScreen: function() {

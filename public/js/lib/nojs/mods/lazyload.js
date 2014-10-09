@@ -3,8 +3,8 @@
  * nolure@vip.qq.com
  * 2013-9-5
  */
-define("lib/nojs/mods/lazyload", [], function(require, $) {
-    var _window = $(window), _document = $(document);
+define("lib/nojs/mods/lazyload", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery"), _window = $(window), _document = $(document);
     function lazyload(options) {
         this.options = options = options || {};
         this.scroll = options.scroll || _window;

@@ -5,7 +5,8 @@
  * @opt:{autoWidth:自适应宽度,autoLoad:滚动加载数据}
  * @load数据加载方法
  */
-define(function(require,$,mobile){
+define(function(require){
+	var $ = require('$')
 	function imgPreLoad(){
 		var list = [], intervalId = null,
 		// 用来执行队列

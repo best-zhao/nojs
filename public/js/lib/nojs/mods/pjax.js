@@ -3,7 +3,7 @@
  * 2014-2-13
  * nolure@vip.qq.com
  */
-define("lib/nojs/mods/pjax", [], function(require, $) {
+define("lib/nojs/mods/pjax", [ "lib/jquery/jquery" ], function(require) {
     /*
      * @options : {} 
      *  selector
@@ -11,6 +11,7 @@ define("lib/nojs/mods/pjax", [], function(require, $) {
      *  timeout
      *  callback
      */
+    var $ = require("lib/jquery/jquery");
     //自增 标识每个pjax实例的id
     var index = 0;
     function pjax(options) {

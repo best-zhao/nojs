@@ -3,8 +3,9 @@
  * nolure@vip.qq.com
  * 2013-9-5
  */
-define(function(require,$){
-	var _window = $(window),
+define(function(require){
+	var $ = require('$'),
+		_window = $(window),
 		_document = $(document);
 	
 	function lazyload(options){

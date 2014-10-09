@@ -3,7 +3,7 @@
  * 2014-2-13
  * nolure@vip.qq.com
  */
-define(function(require,$){
+define(function(require){
     /*
      * @options : {} 
      *  selector
@@ -11,7 +11,7 @@ define(function(require,$){
      *  timeout
      *  callback
      */
-    
+    var $ = require('$')
     //自增 标识每个pjax实例的id
     var index = 0;
     

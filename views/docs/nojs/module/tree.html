@@ -171,7 +171,7 @@
 </div>
 
 <script type="text/templete" id="demo_style">
-<link rel="stylesheet" href="css/tree.css" />    
+<link rel="stylesheet" href="/css/nojs/tree.css" />    
 <style>
 /*demo style*/
 .test_tree{font-size:12px;width:47%;min-width:170px;border:1px solid #ddd;margin:0 1% 9px 0;padding:9px 0;overflow:auto;height:400px}	
@@ -221,11 +221,11 @@
 </script>
 
 <script>
-noJS.use(function($,ui){
+noJS.use('$,ui', function($,ui){
 	window.demoAction = {
 		item : [
 			{content : $('#demo_tmpl').html(), callback : function(){
-				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
+				noJS.use('lib/nojs/mods/tree,$,ui', function(tree,$,ui){
 					//tree.max = 20;
 					function testData(number){
 						//模拟数据 number*s.length 个节点
@@ -283,7 +283,7 @@ noJS.use(function($,ui){
 						return false;
 					});
 				    
-				    $.getJSON(domain.static+'/config.json', function(json){
+				    $.getJSON('/src/docs/config.json', function(json){
                         new tree('tree_test22', {
                             data : json.nojs.data,
                             isCheck : true,
@@ -298,10 +298,10 @@ noJS.use(function($,ui){
                             }
                         })
                     })
-				}, {globalAfter:true})
+				})
 			}},
 			{content : $('#demo_tmpl2').html(), callback : function(){
-				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
+				noJS.use('lib/nojs/mods/tree,$,ui', function(tree,$,ui){
 						
 					var key = 'tree_test2_data',
 					    _data = $.localStorage.get(key);
@@ -317,21 +317,21 @@ noJS.use(function($,ui){
 						}
 					});	
 					//console.log(Tree.data.level)				
-				}, {globalAfter:true});
+				});
 			}},
 			{content : $('#demo_tmpl3').html(), callback : function(){
-				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
-					$.getJSON(domain.static+'/config.json', function(json){
+				noJS.use('lib/nojs/mods/tree,$,ui', function(tree,$,ui){
+					$.getJSON('/src/docs/config.json', function(json){
                         tree.select( $('#tree_test3'), {level:0,data:json.nojs.data} );
                     })
-				}, {globalAfter:true});
+				});
 			}},
 			{content : $('#demo_tmpl4').html(), callback : function(){
-				noJS.use(['lib/nojs/module/tree'], function(tree,$,ui){
-					$.getJSON(domain.static+'/config.json', function(json){
+				noJS.use('lib/nojs/mods/tree,$,ui,lib/nojs/mods/select', function(tree,$,ui,select){
+					$.getJSON('/src/docs/config.json', function(json){
                         tree.select( $('#tree_test4'), {
                             data : json.nojs.data, 
-                            level : 3,                            
+                            level : 3,
                             select : ['nj_ui','ui_core','ui_msg'],
                             onSelect : function(id){
                                 //console.log(id)
@@ -339,7 +339,7 @@ noJS.use(function($,ui){
                             ui : {
                                 init : function(item, options){
                                     options.defaultEvent = options.value && true;
-                                    return new ui.select(item, options);
+                                    return new select(item, options);
                                 },
                                 event : 'onSelect',
                                 element : 'nearby'
@@ -357,11 +357,10 @@ noJS.use(function($,ui){
                             $.localStorage.set(key, JSON.stringify(Data));
                         }
 					});
-				}, {globalAfter:true});
+				});
 			}}
 		],
 		html : $('#demo_style').html()
 	}
-});
-
+})
 </script>

@@ -3,7 +3,8 @@
  * nolure@vip.qq.com
  * 2013-10-17
  */
-define("lib/nojs/mods/resize", [], function(require, $) {
+define("lib/nojs/mods/resize", [ "lib/jquery/jquery" ], function(require) {
+    var $ = require("lib/jquery/jquery");
     /*
      * @element：确保element是闭合的且设置了定位属性的标签
      */

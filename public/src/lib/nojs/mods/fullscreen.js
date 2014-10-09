@@ -1,7 +1,7 @@
 /*
  * 浏览器全屏模式api
  */
-define(function(require,$){
+define(function(require){
     var fullScreenApi = { 
             supportsFullScreen: false,
             isFullScreen: function() { return false; }, 
