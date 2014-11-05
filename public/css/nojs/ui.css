@@ -15,7 +15,7 @@ html{-webkit-text-size-adjust:none}/*解除chrome最小字体限制*/
 ::-webkit-input-placeholder{color:#bbb;font-weight:400}/*for webkit*/
 input:-moz-placeholder,textarea:-moz-placeholder{color:#aaa!important;font-weight:400!important}/*重置firefox placeholder*/
 .ph_lab{position:absolute;color:#aaa;cursor:text;text-indent:9px;font-family:Tahoma}/*placeholder for ie*/
-/*public*/
+/*base*/
 a{text-decoration:none}
 a:hover{text-decoration:underline}
 .clear{clear:both;overflow:hidden;height:0}
@@ -35,7 +35,7 @@ a:hover{text-decoration:underline}
 
 /*form*/
 .nj_f_tip{color:#666}
-.nj_f_tip .nj_ico{margin:0 5px 0 0;vertical-align:-3px}
+.nj_f_tip .nj_ico{margin:0 5px 0 0;vertical-align:0}
 .nj_f_error{color:red}
 /*btns*/
 .nj_btn{background:none;border:none;line-height:23px;height:23px;border:1px solid #BFC0C2;color:#555;padding:0 12px;display:inline-block;vertical-align:top;cursor:pointer}
@@ -77,19 +77,26 @@ input.n_b_bg,input.n_b_bo,input.n_b_bb,button.n_b_bg,button.n_b_bo,button.n_b_bb
 .nj_s_c{display:none}
 .nj_s_m{cursor:default}
 
-.closeBtn{display: inline-block;font:800 12px/16px tahoma;cursor: pointer;;width:16px;height:16px;border-radius:16px;text-align: center;overflow:hidden;}
-.closeBtn:hover{background:#666;color:#fff;}
 /*ico*/
-.nj_ico{width:16px;height:16px;display:inline-block;vertical-align:-3px;position:relative}
-.nj_ico canvas{float:left}
-.nj_ico .oval{position:absolute;top:0;left:0}
-.nj_ico .polyline{position:absolute;left:0}
-.n_i_loading{color:#00AB1C}
-.n_i_ok,.n_i_warn,.n_i_error{width:14px;height:14px;background:#00AB1C;color:#fff}
-.n_i_warn{background:#FB8612}
-.n_i_error{background:#d00}
-.n_i_close{background:#fff;color:#444;padding:3px}
-.n_i_close .oval,.n_i_close .polyline{top:3px;left:3px}
+@font-face {
+  font-family: 'iconfont';
+  src: url('/fonts/iconfont.eot');/* IE9*/
+  src: url('/fonts/iconfont.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+        url('/fonts/iconfont.woff') format('woff'), /* chrome、firefox */
+        url('/fonts/iconfont.ttf') format('truetype'), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+        url('/fonts/iconfont.svg#uxiconfont') format('svg');/* iOS 4.1- */
+}
+.nj_ico{display:inline-block;text-align:center;cursor:default;vertical-align: middle;
+    font:16px/16px iconfont;
+    -webkit-font-smoothing: antialiased;
+    /*-webkit-text-stroke-width: 0.2px;*/
+    -moz-osx-font-smoothing: grayscale;
+}
+.n_i_ok,.n_i_warn,.n_i_error{color:#00AB1C}
+.n_i_warn{color:#FB8612}
+.n_i_error{color:#d00}
+.n_i_close{font:800 14px/14px tahoma;cursor:pointer;width:15px;height:15px;border-radius:15px;overflow:hidden;color:#666;text-indent:-0.04em}
+.n_i_close:hover{background:#666;color:#fff;font-size:13px;}
 /*arrow*/
 .nj_arrow{width:0;height:0;border:solid;border-width:4px 4px 0;border-color:#666 transparent;_border-color:#666 #fff;position:absolute;overflow:hidden}
 .n_a_top{border-width:0 4px 4px}
@@ -228,16 +235,15 @@ input.n_b_bg,input.n_b_bo,input.n_b_bb,button.n_b_bg,button.n_b_bo,button.n_b_bb
 .higher_layer{z-index:992!important}
 .msg_tip_win{min-width:240px;z-index:993}
 .msg_tip_win .win_wrap{background:#fff;_width:240px}
-.msg_tip_win .win_tit,.msg_tip_win .n_i_close{display:none}
+.msg_tip_win .win_tit,.msg_tip_win .win_close{display:none}
 .msg_tip_win .con{padding:5px 10px 5px 30px;white-space:nowrap;_width:188px}
-.msg_tip_win .con .nj_ico{vertical-align:top;width:24px;height:24px}
-.msg_tip_win .con .tip_ico{float:left;margin-left:2px}
-.msg_tip_win .con .tip_con{margin:3px 0 0 15px;display:inline-block;white-space:normal}
+.msg_tip_win .con .tip_ico{float:left;margin:2px 0 0 2px;font-size:24px;}
+.msg_tip_win .con .tip_con{margin:0 0 0 15px;display:inline-block;white-space:normal}
 .msg_tip_win .win_opt{text-align:center}
 .msg_tip_confirm{width:400px}
 .msg_tip_confirm .con{text-align:left;padding:5px 0 0}
 .msg_tip_confirm .win_opt{text-align:right}
-.msg_tip_confirm .win_tit{display:block}
+.msg_tip_confirm .win_tit,.msg_tip_confirm .win_close{display:block}
 
 .nj_up_btn{position:relative;overflow:hidden;vertical-align:top;display:inline-block;cursor:pointer}
 .nj_up_btn input{position:absolute;opacity:0;filter:alpha(opacity=0);right:-8px;bottom:-2px;cursor:pointer;width:120%\9;font-size:2em;*vertical-align:-5px}
@@ -248,9 +254,9 @@ input.n_b_bg,input.n_b_bo,input.n_b_bb,button.n_b_bg,button.n_b_bo,button.n_b_bb
 .nj_form .text{border:1px solid #BDBCBC;height:15px;line-height:15px;padding:4px 5px;width:200px;background:#fff;margin-right:7px}
 .nj_form .text:focus{box-shadow:0 0 7px #9DDEEF;border-color:#3ABDD7}
 .nj_form textarea.text{height:auto}
-.nj_form .lab{float:left;margin-right:7px;width:80px;text-align:right}
+.nj_form .lab{float:left;margin-right:7px;width:80px;text-align:right;white-space:nowrap;}
 .nj_form .lab i{color:#f06;margin-right:7px}
-.nj_form .date{display:inline-block;vertical-align:top;background:#fff url(/css/nojs/images/date.png) no-repeat 93% 5px}
-.nj_form .date .text{width:90px;background-color:transparent}
+.nj_form .date{display:inline-block;vertical-align:top;background:#fff url(/css/nojs/images/date.png) no-repeat 91% 5px}
+.nj_form .date .text{width:120px;background-color:transparent}
 .nj_form .disabled,button[disabled],input[disabled]{background:#eee!important;border-color:#BDBCBC!important;color:#999!important}
 

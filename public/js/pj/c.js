@@ -1,4 +1,1 @@
-define("pj/c", [], function(require, exports, module) {
-    exports.c = "cc";
-    console.log("c.js");
-});
+/*nolure@vip.qq.com*/define("pj/c",[],function(require,a){a.c="cc",console.log("c.js")});

@@ -1,12 +1,15 @@
 define(function(require){
     var $ = require('$'),
-        docs = require('./index');
+        url = require('./url'),
+        setUrl = url.setUrl,
+        docs = require('./index'),
+        Switch = require('../lib/nojs/mods/Switch');
 
     var $demo;
     function demo(){
         $demo = $([
             '<div id="demo_content" class=""><div class="d_wrap">',
-                '<div class="d_close f_icon"></div>',
+                '<div class="d_close nj_ico n_i_close">×</div>',
                 '<div class="d_content clearfix"></div>',
             '</div></div>'
         ].join('')).appendTo(docs.$wrap);
@@ -15,22 +18,27 @@ define(function(require){
         })
         demo.$content = $demo.find('div.d_content');
     }   
-    demo.show = function(){
+    demo.show = function(index){
         if( !window.demoAction ){
             return;
         }
+        index = index || 0;
+
         !$demo && demo();
         docs.$wrap.addClass('demo_wrap');
         setTimeout(function(){
             $demo.addClass('d_open');
-        }, 200)
-        demo.render();
+        }, 300)
+        demo.tab ? demo.tab.change(index) : demo.render(index);
+        demo.isOpen = 1;
     }
     demo.hide = function(){
         docs.$wrap.removeClass('demo_wrap');
         $demo.removeClass('d_open');
+        demo.isOpen = null;
+        setUrl('demo', null);
     }
-    demo.render = function(){
+    demo.render = function(index){
         var data = window.demoAction.item, html = {menu:'',content:''}, i=0, n = data.length;
 
         for( ; i<n; i++ ){
@@ -42,18 +50,44 @@ define(function(require){
 
         demo.$content.html((window.demoAction.html||'')+html.menu + html.content);
 
-        require.async('lib/nojs/mods/Switch', function(Switch){
-            new Switch.tab(demo.$content, {
-                onChange : function(index){
-                    data[index].callback && data[index].callback();
+        demo.tab = new Switch.tab(demo.$content, {
+            mode : 'click',
+            firstIndex : index,
+            onChange : function(index){
+                demo.index = index;
+                if( data[index].callback ){
+                    data[index].callback();
+                    delete data[index].callback;
                 }
-            });
-        })
+                window.demoAction.onChange && window.demoAction.onChange(index);
+                setUrl('demo', index);
+            }
+        });
     }
     demo.destroy = function(){
         $demo && demo.$content.empty();
-        window.demoAction = null;
+        window.demoAction = demo.tab = null;
     }
+
+    url.onHashChange.push(function(e, data){
+        var key = data.key, index = setUrl('demo');
+        
+        if( index && key == 'demo'  ){           
+            if( demo.isOpen ){
+                demo.tab && index!=demo.index && demo.tab.change(index);
+            }else{
+                demo.show();
+            }
+        }
+    })
+
+    docs.$wrap.delegate('a[data-action]', 'click', function(){
+        var act = $(this).data('action');
+        if( act=='demo' ){
+            demo.show($(this).data('index'));
+        }
+        return false;
+    })
 
     return demo
 })

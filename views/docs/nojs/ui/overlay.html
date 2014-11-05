@@ -38,7 +38,7 @@
 			<td></td>
 		</tr>
 	</table>
-	<p>其余选项同 <a href="" data-id="ui_align">align</a></p>
+	<p>其余选项同 <a href="" data-treeid="ui_align">align</a></p>
 </div>
 <h6 class="p_tit">方法：</h6>
 <div class="text_info">
@@ -74,7 +74,7 @@
 		<tr>
 			<td>element</td>
 			<td>element | string</td>
-			<td>触发源对象或id，默认为nearby对象，适用于一对一模式，<a href="" data-action="demo" data-index="2">[示例2]</a></td>
+			<td>触发源对象或id，默认为nearby对象，适用于一对一模式，<a href="" data-action="demo" data-index="1">[示例2]</a></td>
 			<td></td>
 		</tr>
 		<tr>
@@ -83,7 +83,7 @@
 			<td>[parent, tag], 适用于一对多模式，如表格或列表操作中，多个同类操作共享一个overlay层，使用事件代理模式绑定事件<br />
 				parent: 表格或列表区域对象或id<br />
 				tag: 指定满足触发条件的标签，string-HTML TAG, function返回布尔值
-				<br /> <a href="" data-action="demo" data-index="3">[示例3]</a></td>
+				<br /> <a href="" data-action="demo" data-index="2">[示例3]</a></td>
 			<td></td>
 		</tr>
 	</table>
@@ -155,12 +155,17 @@ Overlay.on({
 </script>
 
 <script>
-noJS.use(function($,ui){
+noJS.use('$,ui,lib/nojs/mods/layer',function($,ui,layer){
+    ui.config({
+        overlay : {
+            insertTo : 'body'
+        }
+    })
 	window.demoAction = {
         item : [
             {content : $('#demo_tmpl1').html(), callback : function(call){
-                noJS.use(function($,ui){
-                    var m = new ui.overlay({
+                noJS.use('$,ui,lib/nojs/mods/layer',function($,ui,layer){
+                    var m = new layer.overlay({
                         nearby : 'show_tips'
                     }), time;
                     m.set('content', '<div style="padding:90px">tips</div>');     
@@ -170,20 +175,25 @@ noJS.use(function($,ui){
                             m.show();
                         }, 1000)
                     }
-                    show(); 
+                    show();
+                    m.nearby.click(function(){
+                        m[m.visible?'hide':'show']();
+                        return false;
+                    })
+
                                     
                     //**hide
-                    call.onShow = show;
-                    call.onHide = function(index){
-                        time = clearTimeout(time);
-                    }
+                    // call.onShow = show;
+                    // call.onHide = function(index){
+                    //     time = clearTimeout(time);
+                    // }
                     //hide**
                 })
             }},
 			{content : $('#demo_tmpl2').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui,lib/nojs/mods/layer',function($,ui,layer){
 				    //自定义外部事件控制浮动层
-				    var m1 = new ui.overlay({
+				    var m1 = new layer.overlay({
                         nearby : 'overlay_test1'
                     })
                     m1.set('content', '<div style="padding:50px">自定义外部事件控制浮动层,click触发</div>');
@@ -191,7 +201,7 @@ noJS.use(function($,ui){
                         m1[ m1.visible ? 'hide' : 'show' ]();
                         return false;
                     })
-                    var m2 = new ui.overlay({
+                    var m2 = new layer.overlay({
                         nearby : 'overlay_test12'
                     })
                     m2.set('content', '<div style="padding:50px">mouseover触发，只适合单纯的内容显示</div>');
@@ -203,7 +213,7 @@ noJS.use(function($,ui){
                     
 				    
 				    //使用on方法绑定事件
-					var m3 = new ui.overlay({
+					var m3 = new layer.overlay({
 						nearby : 'overlay_test11',
                         effect : 'fade'
 					})
@@ -211,7 +221,7 @@ noJS.use(function($,ui){
 					m3.on({
 						mode : 'click'
 					});	
-					var m4 = new ui.overlay({
+					var m4 = new layer.overlay({
                         nearby : 'overlay_test13',
                         effect : 'slide'
                     })
@@ -220,8 +230,8 @@ noJS.use(function($,ui){
 				})
 			}},
 			{content : $('#demo_tmpl3').html(), callback : function(){
-				noJS.use(function($,ui){
-					var m = new ui.overlay({
+				noJS.use('$,ui,lib/nojs/mods/layer',function($,ui,layer){
+					var m = new layer.overlay({
 						position : {right:0, top:100},
 						onShow : function(){							
 							id = this.nearby.attr('data-id');//更新当前所选id
@@ -250,12 +260,9 @@ noJS.use(function($,ui){
 				})
 			}}
 			
-		],
-		onHide : function(){
-			ui.overlay.hide();
-		},
+		],		
 		onChange : function(){
-			ui.overlay.hide();
+			layer.overlay.hide();
 		}
 	}
 });

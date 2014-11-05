@@ -1,19 +1,15 @@
 #hashWrap a{width:900px;height:100px;display:block}
 body{font:12px/1.6 '微软雅黑';}
 body,html,#ui_page{width:100%;height:100%;overflow:hidden;color:#333}
+a{color:#1171DE;}
 .ui_page{position:relative}
 .ui_page_show{display:block}
 .orange{color:red}
 code,pre.code{margin: 0 5px;padding:3px;font-family: Monaco,Consolas,"Lucida Console",monospace;font-size:80%;background-color:rgba(0,0,0,0.025);border:1px solid rgba(0,0,0,0.1);border-radius:3px}
 pre.code{padding:6px;margin:0 0 9px;font-family:'Courier New','Monospace'}
 
-#ui_head,.menu_tree{-webkit-transition:all .3s ease;-moz-transition:all .3s ease}
-#ui_head{height:50px;background:#e6e6e6;padding:20px}
-#ui_head h1{font:800 26px 'arial';color:#000;text-shadow:1px 1px 1px #999;}
-#ui_head h2{color:#666;font-weight:400;font-size:13px}
-#ui_head .options{margin-top:27px;display:none}
-#ui_head .options .nj_btn{float:left}
-#ui_head .options .nj_btn .nj_arrow{position:static;margin:8px 6px 0 0;float:left}
+.menu_tree{-webkit-transition:all .3s ease;-moz-transition:all .3s ease}
+
 
 .iframe_content{padding:30px;transition:all .4s}
 .ui_wrap{height:100%;clear:both;position:relative}
@@ -26,7 +22,7 @@ pre.code{padding:6px;margin:0 0 9px;font-family:'Courier New','Monospace'}
 .nj_tree  .folder{display:none}
 
 .main_content{height:100%;overflow:auto;zoom:1;font:14px/1.8 tahoma,'微软雅黑';overflow-x:hidden}
-.menu_tree,.main_content,#ui_head{
+.menu_tree,.main_content,#demo_content .d_wrap{
     -webkit-transition:all 800ms cubic-bezier(0.34, 1.21, 0.4, 1);
     -moz-transition:all 800ms cubic-bezier(0.34, 1.21, 0.4, 1);
     transition:all 800ms cubic-bezier(0.34, 1.21, 0.4, 1)
@@ -58,9 +54,6 @@ h6.p_tit{margin:0 0 10px;text-shadow:0 0 1px #ddd;color:#333;font-weight:400}
 .arg_list tr.required td:first-child:before{content:'*';color:red}
 
 @media all and (max-width:640px){    
-    #ui_head{padding:0 0 0 28px;height:57px;position:relative}
-    #ui_head h1{font-size:18px;border-left:1px solid #f5f5f5;padding-top:8px}
-    #ui_head h2{font-size:12px}
     
     #show_menu{display:block;position:absolute;border-right:1px solid #ccc;height:100%;top:0;width:20px;left:0;background:#ddd}
     #show_menu:after{content:'<';position:absolute;color:#333;left:4px;top:18px;text-shadow:0 0 2px #333;z-index:999;text-indent:0;font:800 18px simsun}
@@ -69,14 +62,13 @@ h6.p_tit{margin:0 0 10px;text-shadow:0 0 1px #ddd;color:#333;font-weight:400}
     .main_content{margin:0;padding:0}
     .iframe_content{padding:15px}
     .text_info{padding-left:0}
-    #demo_content .demo_wrap{margin:0}
+    #demo_content .d_wrap{margin:0}
 }
 
 /*full*/
-html.page_full #ui_head{margin-top:-90px}
 html.page_full .menu_tree{left:-250px}
 html.page_full .main_content{margin:0}
-html.page_full #demo_content .demo_wrap{margin:0}
+html.page_full #demo_content .d_wrap{margin:0}
 
 /*chrome滚动条*/
 ::-webkit-scrollbar-track-piece{background-color:#F0F0F0;-webkit-border-radius:0}
@@ -94,35 +86,42 @@ html.page_full #demo_content .demo_wrap{margin:0}
 
 /*operting*/
 @font-face {
-  font-family: 'FontAwesome';
-  src: url('/fonts/fontawesome-webfont.eot?v=4.2.0');
-  src: url('/fonts/fontawesome-webfont.eot?#iefix&v=4.2.0') format('embedded-opentype'), 
-        url('/fonts/fontawesome-webfont.woff?v=4.2.0') format('woff'), 
-        url('/fonts/fontawesome-webfont.ttf?v=4.2.0') format('truetype'), 
-        url('/fonts/fontawesome-webfont.svg?v=4.2.0#fontawesomeregular') format('svg');
-  font-weight: normal;
-  font-style: normal;
+  font-family: 'iconfont';
+  src: url('/fonts/iconfont.eot');/* IE9*/
+  src: url('/fonts/iconfont.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+        url('/fonts/iconfont.woff') format('woff'), /* chrome、firefox */
+        url('/fonts/iconfont.ttf') format('truetype'), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+        url('/fonts/iconfont.svg#uxiconfont') format('svg');/* iOS 4.1- */
 }
 .nj_overlay_show #op_menu li,#demo_content{
-    transition:all .4s;
+    transition:all .2s;
 }
-.f_icon{width:20px;height:20px;cursor:pointer;opacity:.6;font:20px FontAwesome;color:#000;}
+.f_icon{width:20px;height:20px;cursor:pointer;opacity:.6;color:#000;
+    font:18px iconfont;
+    -webkit-font-smoothing: antialiased;
+    /*-webkit-text-stroke-width: 0.2px;*/
+    -moz-osx-font-smoothing: grayscale;
+}
 .f_icon:hover,#operating .nj_overlay_show{opacity:1!important}
 #operating{position:absolute;right:1.5em;top:1em;}
 #operating .inner_btn{opacity:.4}
-#operating .inner_btn:before{content:'\F03A';}
 #op_menu{width:150px;font-size:14px;}
 #op_menu li{padding:5px 15px;cursor:default}
 #op_menu li:hover{background:#f0f0f0;text-indent:.5em;}
 
-.demo_wrap .iframe_content{-webkit-transform:scale(.99);opacity:.6;}
-#demo_content{position:absolute;width:100%;height:100%;top:0;left:0;z-index:50;visibility:hidden;background:rgba(200,200,200,.2);}
+
+/*demo*/
+.demo_wrap .iframe_content{-webkit-transform:scale(.96);opacity:.4;}
+#demo_content{position:absolute;width:100%;height:100%;top:0;left:0;z-index:50;visibility:hidden;background:rgba(200,200,200,.3);}
 #demo_content .d_wrap{background:#fff;margin-left:250px;height:100%;opacity:0;overflow:auto;}
 #demo_content .d_content{padding:30px;}
-#demo_content .d_close{position:absolute;right:1em;top:1em}
-#demo_content .d_close:before{content:'\F057';}
+#demo_content .d_close{position:absolute;right:1em;top:1em;
+    font-size:18px;
+    line-height:19px;
+    width:21px;height:21px;
+}
 #main_content .d_open{
-    visibility: visible;    
+    visibility: visible;
 }
 #main_content .d_open .d_wrap{-webkit-animation:moveShow 1s;
     -moz-animation:moveShow 1s;
@@ -133,5 +132,5 @@ html.page_full #demo_content .demo_wrap{margin:0}
     100% {-webkit-transform:translate(0,0);opacity:1;}
 }
 .demo_tab{margin:0 0 20px;}
-.demo_tab li{float:left;}
+.demo_tab li{float:left;cursor:pointer;}
 .demo_tab .current{font-weight:800;}

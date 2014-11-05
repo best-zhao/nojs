@@ -1,11 +1,1 @@
-define("pj/async", [ "./a", "pj/b", "pj/c" ], function(require) {
-    require("./a");
-    console.log("async.js");
-    return "Async";
-});
-
-define("pj/a", [ "pj/b", "pj/c" ], function(require, exports, module) {
-    var b = require("pj/b");
-    exports.a = "a";
-    console.log("a.js", b);
-});
+/*nolure@vip.qq.com*/define("pj/async",["./a","pj/b","pj/c"],function(require){return require("./a"),console.log("async.js"),"Async"}),define("pj/a",["pj/b","pj/c"],function(require,a){var b=require("pj/b");a.a="a",console.log("a.js",b)});

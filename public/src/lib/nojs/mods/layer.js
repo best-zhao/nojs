@@ -8,6 +8,7 @@ define(function(require){
     /*
      * 浮动层
      */
+    
     layer.overlay = function(options){
         options = $.extend(true, {}, ui.config.overlay, options);
         //className主要用于全局配置 name则用于单个实例配置
@@ -15,9 +16,10 @@ define(function(require){
         
         var insertTo = (options.parent ? window.parent : window).document;
         options.insertTo = options.insertTo=='body' ? insertTo.body : $(insertTo).find(options.insertTo);
+
         
         layer.overlay.baseConstructor.call(this, options);
-        //this.insertTo
+
         this.visible = false;//可视状态
         this.content = null;//内容区域
         this.arrow = this.options.arrow;//箭头 根据align对齐方式自动调整指向
@@ -27,10 +29,11 @@ define(function(require){
         layer.overlay.item.push(this);
         this.init();
     };
-    ui.config.overlay = {
+    ui.config.overlay = $.extend({
         showClassName : 'nj_overlay_show',
         insertTo : 'body'
-    }
+    }, ui.config.overlay);
+
     ui.extend(layer.overlay, ui.align);
     ui.extend.proto(layer.overlay, {
         set : function(fn, key, value){
@@ -238,8 +241,7 @@ define(function(require){
             effect;
         function init(){
             layer = $('<div id="nj_layer" class="nj_layer"></div>').appendTo(document.body);
-            
-            if( $.browser('ie6') ){
+            if( $.browser.ie && parseInt($.browser.version)==6 ){
                 S = function(){
                     layer.css({
                         width : w.width(),
@@ -306,14 +308,14 @@ define(function(require){
     ui.extend.proto(layer.popup, {        
         set : function(fn, key, value){
             /*
-                                   设置标题、内容、按钮
+               设置标题、内容、按钮
             */
             if( key=='title' ){
                 value && this.title.html(value).show();
             }else if( key=='button' ){
                 this.button = [];
                 this.operating.empty()[value?'show':'hide']();//重设操作区
-                if( value ){                    
+                if( value ){
                     for( var i=0; i<value.length; i++ ){
                         this.addBtn.apply( this, value[i] );
                     }
@@ -324,7 +326,7 @@ define(function(require){
         },
         show : function(fn, callback){
             /*
-                                            显示弹窗
+                显示弹窗
                 @callBack:可选参数，回调函数
             */
             if( this.visible ){
@@ -332,6 +334,7 @@ define(function(require){
             }
             this.mask && layer.mask.show();
             fn.call(this, callback);
+
             
             //this.bindEsc && layer.popup.focus.push(this);
             if( this.bindEsc && !layer.popup.focus[this.key] ){
@@ -374,7 +377,7 @@ define(function(require){
         this.key = id;
         
         this.set('content', [
-            '<span class="win_close closeBtn">×</span><div class="win_tit"></div>',
+            '<span class="win_close nj_ico n_i_close">×</span><div class="win_tit"></div>',
             '<div class="win_con clearfix"></div>',
             '<div class="win_opt"></div>'
         ].join(''));
@@ -495,12 +498,14 @@ define(function(require){
                     
                 opt = $.extend(true, {
                     title : C && '温馨提醒：',
-                    bindEsc : C ? true : false
+                    bindEsc : C ? true : false,
+                    timeout : 1500,
+                    //默认只有confirm显示遮罩
+                    mask : C ? null : false,
+
                 }, ui.config.msg, opt);
                 
-                var C = type=='confirm',
-                    timeout = opt.timeout!=undefined ? opt.timeout : 1600,
-                    btn = opt.button,
+                var btn = opt.button,
                     win = Win[type];
                 
                 //隐藏其他
@@ -509,7 +514,7 @@ define(function(require){
                 tip = tip || '';
                 if(type=='loading'){
                     tip = tip || '正在处理请求,请稍候……';
-                }else if(C){
+                }else if( C ){
                     btn = btn || [
                         ['确定',function(){
                             win.hide(function(){
@@ -522,11 +527,9 @@ define(function(require){
                 if( !win || !$('#'+win.key).length ){
                     opt.name = 'msg_tip_win msg_tip_'+type + ' ' + (opt.name||'');
                     win = new layer.popup(opt);
-                    //win.element.find('div.nj_overlay_wrap').addClass('msg_tip_'+type);
                     
                     win.set('title', opt.title);
-                    win.set('content', '<div class="con clearfix"><i class="tip_ico"></i><span class="tip_con"></span></div>');
-                    new ui.ico( win.content.find('i.tip_ico'), {type : C ? 'warn' : type} );
+                    win.set('content', '<div class="con clearfix"><i class="tip_ico nj_ico n_i_'+(C?'warn':type)+'">'+(ui.config.iconText[type]||'')+'</i><span class="tip_con"></span></div>');
                     Win[type] = win;
                     
                     if( C ){
@@ -538,9 +541,9 @@ define(function(require){
                         }
                     }
                 }
-                win.layer = C ? true : opt.layer;
-                //自动隐藏                            
-                win.timeout = !C && type!='loading' && !opt.reload ? timeout : 0;
+                //自动隐藏
+                win.timeout = !C && type!='loading' && !opt.reload ? opt.timeout : 0;
+
                 if( opt.reload ){
                     setTimeout(function(){
                         if( opt.reload===true ){
@@ -556,7 +559,7 @@ define(function(require){
                 win.content.find('.tip_con').html(tip);
                 win.show();
                 C && win.button[0].focus();     
-                return win;           
+                return win;
             },
             hide : function( now ){
                 for( var i in Win ){

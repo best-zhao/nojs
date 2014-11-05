@@ -1,10 +1,1 @@
-define("pj/b", [ "./c" ], function(require, exports, module) {
-    var c = require("./c");
-    exports.b = "bb";
-    console.log("b.js");
-});
-
-define("pj/c", [], function(require, exports, module) {
-    exports.c = "cc";
-    console.log("c.js");
-});
+/*nolure@vip.qq.com*/define("pj/b",["./c"],function(require,a){require("./c");a.b="bb",console.log("b.js")}),define("pj/c",[],function(require,a){a.c="cc",console.log("c.js")});

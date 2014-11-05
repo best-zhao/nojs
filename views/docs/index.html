@@ -6,7 +6,7 @@
         <div id='main_content' class="main_content">             
             <div id="iframe_content" class="iframe_content"></div>
             <div id="operating">
-                <div class="inner_btn f_icon"></div>
+                <div class="inner_btn f_icon">&#xe600;</div>
                 <ul id="op_menu" class="d_hide">
                     <li class="demo">demo演示</li>
                 </ul>
@@ -16,25 +16,33 @@
 </div><!--#ui_page-->
 
 <script>
-var dev = domain.rs.indexOf('herokuapp.com')<0;
-noJS.config({
-    base : domain.rs+(dev?'/src/':'/js/'),
-    global : 'global',
-    alias : {
-        '$' : 'lib/jquery/jquery',
-        'ui' : 'lib/nojs/ui',
-        '$b' : 'pj/b'
-    },
-    update : {
-        version : '2.0',
-        modules : {
-            'docs/index' : '20140928',
-            '$' : '2014092801'
-        }
+window.domain = {
+    rs : 'http://'+location.host
+}
+!function(){
+    var _dev = /[?&]nojs-debug=(true|false)(?:&|$|#)/.exec(location.href),
+        dev = domain.rs.indexOf('herokuapp.com')<0;
+    if( _dev ){
+        dev = _dev[1]=='true';
     }
-}).css([
-    domain.rs+'/css/nojs/tree.css',
-    domain.rs+'/css/nojs/select.css',
-    domain.rs+'/css/nojs/codelight.css'
-]).use('docs/init');
+    noJS.config({
+        base : domain.rs+(dev?'/src/':'/js/'),
+        global : 'global',
+        alias : {
+            '$' : 'lib/jquery/jquery',
+            'ui' : 'lib/nojs/ui'
+        },
+        version : {
+            base : '2.1',
+            modules : {
+                'docs/init' : '20140928',
+                'global' : '2014101401'
+            }
+        }
+    }).css([
+        domain.rs+'/css/nojs/tree.css',
+        domain.rs+'/css/nojs/select.css',
+        domain.rs+'/css/nojs/codelight.css'
+    ]).use('docs/init');
+}();
 </script>

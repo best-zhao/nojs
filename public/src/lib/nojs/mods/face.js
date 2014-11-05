@@ -3,10 +3,12 @@
  * 2013-8-2
  * nolure@vip.qq.com
  */
-define(function(require,$,ui){
-    require('./Switch');
+define(function(require){
+    var $ = require('$'),
+        layer = require('./layer'),
+        Switch = require('./Switch');
     
-	var face = function( options ){
+	function face( options ){
 		this.options = options = $.extend(true, {}, face._config, options);
 		this.button = options.button;//表情选择器,JQ对象
 		this.insert = $(options.insert);//表情写入对象
@@ -32,33 +34,6 @@ define(function(require,$,ui){
                         '44':'坏笑','45':'左哼哼','46':'右哼哼','47':'哈欠','48':'鄙视','49':'委屈','50':'快哭了','51':'阴险','52':'亲亲','53':'吓','54':'可怜'
                 },
                 fix : ".gif"
-            },      
-            "qq" : {
-                name : '默认表情',
-                url : '/',
-                item : {'e100':'微笑','e101':'撇嘴','e102':'色','e103':'发呆',
-                        'e104':'得意','e105':'流泪','e106':'害羞','e107':'闭嘴',
-                        'e108':'睡','e109':'大哭','e110':'尴尬','e111':'发怒','e112':'调皮',
-                        'e113':'龇牙','e114':'惊讶','e115':'难过','e116':'酷','e117':'冷汗',
-                        'e118':'抓狂','e119':'吐','e120':'偷笑','e121':'可爱','e122':'白眼',
-                        'e123':'傲慢','e124':'饥饿','e125':'困','e126':'惊恐','e127':'流汗',
-                        'e128':'憨笑','e129':'大兵','e130':'奋斗','e131':'咒骂','e132':'疑问',
-                        'e133':'嘘','e134':'晕','e135':'折磨','e136':'衰','e137':'骷髅',
-                        'e138':'敲打','e139':'再见','e140':'擦汗','e141':'抠鼻','e142':'鼓掌',
-                        'e143':'糗大了','e144':'坏笑','e145':'左哼哼','e146':'右哼哼','e147':'哈欠',
-                        'e148':'鄙视','e149':'委屈','e150':'快哭了','e151':'阴险','e152':'亲亲',
-                        'e153':'吓','e154':'可怜','e155':'菜刀','e156':'西瓜','e157':'啤酒',
-                        'e158':'篮球','e159':'乒乓','e160':'咖啡','e161':'饭','e162':'猪头',
-                        'e163':'玫瑰','e164':'凋谢','e165':'示爱','e166':'爱心','e167':'心碎',
-                        'e168':'蛋糕','e169':'闪电','e170':'炸弹','e171':'刀','e172':'足球',
-                        'e173':'瓢虫','e174':'便便','e175':'月亮','e176':'太阳','e177':'礼物',
-                        'e178':'拥抱','e179':'强','e180':'弱','e181':'握手','e182':'胜利',
-                        'e183':'抱拳','e184':'勾引','e185':'拳头','e186':'差劲','e187':'爱你',
-                        'e188':'NO','e189':'OK','e190':'爱情','e191':'飞吻','e192':'跳跳',
-                        'e193':'发抖','e194':'怄火','e195':'转圈','e196':'磕头','e197':'回头',
-                        'e198':'跳绳','e199':'挥手','e200':'激动'
-                },
-                fix : ".gif"
             }
         }
 	}
@@ -72,16 +47,24 @@ define(function(require,$,ui){
 			var T = this;
 			var options = $.extend({
                 nearby : this.button,
-                className : 'face_menu',
-                onShow : function(){
-                    if( !this.element.data('init') ){
-                        this.element.data('init',true);
-                        T.loadFace();
-                    }
+                className : 'face_menu'
+            }, this.options.overlay),
+
+            onShow = options.onShow;
+
+			options.onShow = function(){
+				if( !this.element.data('init') ){
+                    this.element.data('init',true);
+                    T.loadFace();
                 }
-            }, this.options.overlay);
-			this.pop = new ui.overlay(options);
-			this.pop.on({mode : 'click'});
+                onShow && onShow.call(this);
+			}
+
+			this.pop = new layer.overlay(options);
+			this.pop.on({
+				mode : 'click',
+				element : this.button
+			});
 			
 			//theme为数组显示多套表情
 			var themes = this.options.themes||[];
@@ -89,13 +72,12 @@ define(function(require,$,ui){
 			
 			
 			$.each(themes, function(i,v){
-			    var item = face._config.themeItems[v];
+			    var item = T.options.themeItems[v];
 			    if( item ){
 			        item.id = v;
 			        T.themes.push(item);
 			    }
 			});
-			
 			
 		},
 		//载入表情 once
@@ -124,7 +106,7 @@ define(function(require,$,ui){
                 '</div>'
             ].join('');
 			this.pop.set('content',faceHtml);
-			this.tab = new ui.tab(this.pop.content);
+			this.tab = new Switch.tab(this.pop.content);
 			
 			this.item = this.pop.content.find("ul.list img");	
 				

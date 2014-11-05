@@ -1,7 +1,7 @@
 define(function(require){
     var $ = require('$'),
         data = {},
-        ieHashSupport = $.browser('ie') && $.browser.version<8;
+        ieHashSupport = $.browser.ie && parseFloat($.browser.version)<8;
     
     if( ieHashSupport ){
         var iframe = $('<iframe id="hashIframe" name="hashIframe" style="display:none;position:absolute"></iframe><a target="hashIframe"></a>').appendTo(document.body),
@@ -53,6 +53,7 @@ define(function(require){
 		    delete _hash[key];
 		}else if( value===undefined ){//get
 		    _hash[key] = _hash[key] && decodeURIComponent(_hash[key]);
+
             return _hash[key] && decodeURIComponent(_hash[key]);//执行2次decodeURIComponent for firefox
         }else{//set
             _hash[key] = value && encodeURIComponent(value);

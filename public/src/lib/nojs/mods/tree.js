@@ -596,7 +596,7 @@ define(function(require){
 		replaceLink : function(area){
 			//ie67下会自动补全url为绝对路径
 			//使用 getAttribute( 'href', 2 ) 可解决
-			if( $.browser('ie6 ie7') ){
+			if( $.browser.ie && parseFloat($.browser.version)<8 ){
 				area = area || this.box;
 				var a = area.find('a'), link;
 				a.each(function(){

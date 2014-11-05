@@ -3,18 +3,17 @@
  */
 function use(path, callback, options){
     
+    if( !path || typeof path!='string' ){return noJS;}
+
     if( use.defer ){
         use.defer.push(Array.prototype.slice.call(arguments));
         return noJS;
     }
     
-    if( !path || typeof path!='string' ){return noJS;}
-    
-
     function call( exports ){
         callback && callback.apply(null, exports);
     }
-    path = path.split(',');
+    path = path.replace(/\s/g, '').split(',');
        
         
     if( type(callback)=='object' ){//无回调,参数2作为3使用
@@ -46,7 +45,7 @@ function use(path, callback, options){
 }
 
 //载入配置文件时 use动作暂存此处
-//use.defer = [];
+//use.defer = []; 
 
 noJS.use = use;
 

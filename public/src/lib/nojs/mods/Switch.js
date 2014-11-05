@@ -21,7 +21,7 @@ define(function(require){
         this.length = this.item.length;
         if(!this.length){return;}
         this.options = options = options || {};
-        this.mode = this.mode || ui.config.eventType;
+        this.mode = options.mode || ui.config.eventType;
         this.onChange = options.onChange;
         this.onHide = options.onHide;
         this.index = this.getIndex(options.firstIndex);
@@ -37,7 +37,8 @@ define(function(require){
                 
             if( !this.menuItem ){
                 return;
-            }    
+            } 
+               
             this.menuItem.on(this.mode+'.nj_switch', function(){
                 m = $(this);
                 if( m.hasClass('current') ){

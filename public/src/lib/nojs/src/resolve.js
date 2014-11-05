@@ -22,6 +22,11 @@ function resolve(path, ptype, base){
         return '';
     }
 
+    //以'/'结尾的默认表示加载该目录的index.js
+    if( /\/$/.test(path) ){
+        path += 'index';
+    }
+
     //别名转化 
     //alias中最好不要使用相对路径
     var alias = Config.alias || {},       
@@ -65,9 +70,9 @@ function resolve(path, ptype, base){
 resolve.fix = function(uri){
     var fix = Config.fix,
         version = '',
-        update = Config.update || {},
+        update = Config.version || {},
         //整体版本号
-        version = update.version || '';    
+        version = update.base || '';    
    
 
     if( /\.(js|json)$|\?|#/.test(uri) ){

@@ -6,6 +6,7 @@ module.exports = function(grunt) {
         noJS.push(_rs+'/lib/nojs/src/'+i+'.js');
     });
     var concatnoJS = {}, concatConf = {};
+    concatnoJS[_rs+'/lib/nojs/noJS.js'] = noJS;
     concatnoJS[rs+'/lib/nojs/noJS.js'] = noJS;
     concatConf[rs+'/conf.js'] = _rs+'/conf.js';
    
@@ -85,9 +86,9 @@ module.exports = function(grunt) {
                 files : [
                 	{
 	                	expand : true,
-	                	cwd: 'js',
+	                	cwd: rs+'/',
 	                	src : "**/*.js",
-	                	dest : 'js'
+	                	dest : rs
 	                }
                 ]
 			}
@@ -119,6 +120,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     
     //all 'copy:js', transport之后
-    grunt.registerTask('default',['transport','concat','clean']);
+    grunt.registerTask('default',['transport','concat','clean','uglify']);
     
 };

@@ -1,6 +1,6 @@
 <style>
-.p_rate{height:12px;overflow:hidden;background:url(/img/rate.png) repeat-x;display:inline-block;position:relative}
-.p_rate i{position:absolute;top:0;left:0;cursor:pointer;width:13px;height:12px;background:url(/img/rate.png) repeat-x 0 12px;vertical-align:top}
+.p_rate{height:12px;overflow:hidden;background:url(/css/nojs/images/rate.png) repeat-x;display:inline-block;position:relative}
+.p_rate i{position:absolute;top:0;left:0;cursor:pointer;width:13px;height:12px;background:url(/css/nojs/images/rate.png) repeat-x 0 12px;vertical-align:top}
 .p_rate .current{background-position:0 -24px}
 .p_rate .hover{background-position:0 -12px}
 </style>
@@ -60,7 +60,7 @@
 	<p class="mb10">2. Rate.reset方法可重置所选</p>
 </div>
 <script>
-noJS.use('lib/nojs/module/score',function( $, ui, score ){
+noJS.use('$,lib/nojs/mods/score',function( $, score ){
 	var Rate = new score('test_rate1', {
 		//title : [11,22,33,44,55],
 		onSelect : function(index){

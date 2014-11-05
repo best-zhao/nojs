@@ -60,11 +60,11 @@
 </script>
 
 <script>
-noJS.use(function($,ui){
+noJS.use('$,ui',function($,ui){
 	window.demoAction = {
 		item : [
 			{content : $('#demo_tmpl').html(), callback : function(){
-				noJS.use('lib/nojs/module/lazyload', function($,ui,lazyload){
+				noJS.use('$,ui,lib/nojs/mods/lazyload', function($,ui,lazyload){
 					var area = $('#test_lazyload').scrollTop(220),
 					lazy = new lazyload({
 						scroll : area
@@ -73,7 +73,7 @@ noJS.use(function($,ui){
 						area.scrollTop(0).find('img').each(function(){
 							var _this = $(this),
 								src = this.src || _this.attr('data-lazyload');
-							src && _this.attr('data-lazyload', src.split('?')[0] + '?t='+ $.random()).removeAttr('src');
+							src && _this.attr('data-lazyload', src.split('?')[0] + '?t='+ (+new Date)).removeAttr('src');
 						})
 						area.html(area.html());
 						lazy.init();

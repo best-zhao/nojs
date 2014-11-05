@@ -7,14 +7,14 @@ noJS.config = function(options){
     }
 
     //全部转化为完整路径
-    if( Config.update && Config.update.modules ){
+    if( Config.version && Config.version.modules ){
 
-        for( var i in Config.update.modules ){
+        for( var i in Config.version.modules ){
 
             //这里要去掉自动添加的错误版本号 
-            var mod = resolve(i, Config.base).split('?')[0], v = Config.update.modules[i];
-            delete Config.update.modules[i];
-            Config.update.modules[mod] = v;
+            var mod = resolve(i, Config.base).split('?')[0], v = Config.version.modules[i];
+            delete Config.version.modules[i];
+            Config.version.modules[mod] = v;
         }
 
     }

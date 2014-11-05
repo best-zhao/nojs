@@ -5,7 +5,7 @@
  */
 define(function(require, $){
     var win = $(window),
-        ie6 = $.browser('ie6');
+        ie6 = $.browser.ie && parseInt($.browser.version)==6;
     
     
     //固定元素在某个位置

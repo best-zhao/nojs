@@ -424,6 +424,14 @@ define(function(require){
 		        self.state = null;
                 _success && _success.call(this, json);  
 		    }
+            var bs = options.beforeSend;
+            if( typeof bs=='function' && bs()==false ){
+                self.state = null;
+                return;
+            }
+            if( bs ){
+                delete options.bs;
+            }
 		    
 		    //dataType:'jsonp'跨域提交 get使用jquery默认处理方式 post使用iframe提交
 		    if( options.dataType=='jsonp' && options.type=='post' ){
@@ -468,7 +476,7 @@ define(function(require){
 		
 		offset = m.offset();
 		
-		wrap = $('<span class="nj_f_tip"><span class="tip_ico"></span><span class="tip_con">'+tip+'</span></span>');
+		wrap = $('<span class="nj_f_tip"><span class="tip_ico nj_ico n_i_'+s+'">'+(ui.config.iconText[s]||'')+'</span><span class="tip_con">'+tip+'</span></span>');
 		t = wrap.find('span.tip_ico');
 		holder[position](wrap);
 		//s!='focus' && new ui.ico(t,{type:s});		

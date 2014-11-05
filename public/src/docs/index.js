@@ -16,26 +16,14 @@ define(function(require){
     
     //全屏快捷键"F"    
 	key.methods['70'] = function(){
-        setUrl('full', setUrl('full') ? null : 1);
+        var isFull = $.localStorage.get('fullpage');
+        $.localStorage.set('fullpage', isFull==1 ? 0 : 1);
+        html[isFull==0 ? 'addClass' : 'removeClass']('page_full');
     };
-	
-    url.onHashChange.push(function(e, data){
-        var key = data.key;
-        
-        if( key=='full' ){
-            html[setUrl(key)=='1' ? 'addClass' : 'removeClass']('page_full');
-        }else if( key=='hideMenu' ){
-            html[setUrl(key)?'addClass':'removeClass']('hide_menu');
-        }
-    });
     
     //初始状态
-    setUrl('full')=='1' && html.addClass('page_full');
-    if( setUrl('hideMenu')=='1' || ui.mobile ){
-        setUrl('hideMenu', 1);
-        html.addClass('hide_menu');
-    }
-    
+    ($.localStorage.get('fullpage')==1 || ui.mobile) && html.addClass('page_full');
+
 	G = {
         '$wrap' : $('#main_content'),
         '$content' : $('#iframe_content'),
@@ -44,13 +32,12 @@ define(function(require){
             G.options.beforeSend && G.options.beforeSend();
         },
         'complete' : function(data){
-            G.data = data;
-            
-            ui.mobile && setUrl('hideMenu', 1);
-
+            G.data = data;            
+            //ui.mobile && setUrl('hideMenu', 1);
             //complete事件
             G.options.complete && G.options.complete();
         },
+        '$menu' : $('#side_menu'),
         'menu' : menu
     }
     
@@ -101,12 +88,13 @@ define(function(require){
         menu.init(G);
     }
 	
-	return G;
+	
 	ui.touch(function(){
 	    G.$wrap.swipeRight(function(){
-            setMenu('show');
+            G.$menu.css('left', '0');
         }).swipeLeft(function(){
-            setMenu('hide');
+            G.$menu.css('left', '-250px');
         })
 	})
+    return G;
 });

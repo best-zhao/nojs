@@ -20,19 +20,19 @@
 		<option value="confirm">确认操作</option>
 		<option value="loading">loading提示</option>
 	</select>
-	<a href="" class="nj_btn" id="test">显示消息框</a>
-	<a href="" class="nj_btn" id="hide">隐藏消息框</a>
+	<a href="javascript:void(0);" class="nj_btn" id="test">显示消息框</a>
+	<a href="javascript:void(0);" class="nj_btn" id="hide">隐藏消息框</a>
 </div>
 <script>
-noJS.use(function($,ui){
+noJS.use('$,lib/nojs/mods/select,lib/nojs/mods/layer',function($,select,layer){
 	
-	var type = new ui.select('test_type');
+	var type = new select('test_type');
 	$('#test').click(function(){
-		ui.msg.show( type.value, '操作提示消息' );
+		layer.msg.show( type.value, '操作提示消息' );
 		return false;
 	})
 	$('#hide').click(function(){
-		ui.msg.hide();
+		layer.msg.hide();
 		return false;
 	})
 });

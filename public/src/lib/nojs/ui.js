@@ -68,6 +68,12 @@
     };  
     ui.config.eventType = ui.mobile ? 'tap' : 'mouseover';
     ui.config.clickEvent = ui.mobile ? 'tap' : 'click';
+    ui.config.iconText = {
+        ok : '&#xe60f;',
+        warn : '&#xe622;',
+        error : '&#xe60e;',
+        confirm : '&#xe622;'
+    }
     
     /*
      * ES5扩展：JSON
@@ -200,40 +206,6 @@
             }
             object.onmousewheel = scrollFunc;//IE/Opera/Chrome/Safari 
         },
-        browser : function(){
-            //检测浏览器
-            var u = navigator.userAgent.toLowerCase(),
-            v = u.match(/(?:firefox|opera|safari|chrome|msie)[\/: ]([\d.]+)/),
-            //mozilla/5.0 (windows nt 6.1; wow64; trident/7.0; slcc2; .net clr 2.0.50727; .net clr 3.5.30729; .net clr 3.0.30729; media center pc 6.0; .net4.0c; .net4.0e; rv:11.0) like gecko
-            //ie11已去除msie标示 可通过trident检测
-            fn = {
-                version:v?v[0]:' ',//浏览器版本号
-                safari:/version.+safari/.test(u),
-                chrome:/chrome/.test(u),
-                firefox:/firefox/.test(u),
-                ie:/msie/.test(u),
-                ie6:/msie 6.0/.test(u),
-                ie7:/msie 7.0/.test(u),
-                ie8:/msie 8.0/.test(u),
-                ie9:/msie 9.0/.test(u),
-                opera: /opera/.test(u) 
-            }, state;
-            function check( name ){
-                //多个用逗号隔开 如'ie6 ie7'
-                state = false;
-                name = name.split(' ');
-                $.each( name, function( i, val ){
-                    if( fn[ val ] ){
-                        state = true;
-                        return false;
-                    }
-                })
-                return state;
-            }
-            //check.fn = fn;
-            check.version = parseInt(fn.version.split(/[\/: ]/)[1].split('.')[0]);
-            return check; 
-        }(),
         tmpl : function(){
             /*
              * js模版引擎
@@ -599,7 +571,9 @@
         this.relative = options.relative!=undefined ? options.relative : screen ? true : false;
         
         this.fixed = options.fixed==undefined && screen ? 'fixed' : options.fixed;//null fixed animate
-        this.cssFixed = this.fixed=='fixed' && !$.browser('ie6') && screen;//可以直接使用position:fixed来定位
+
+        var ie6 = $.browser.ie && parseInt($.browser.version)==6;
+        this.cssFixed = this.fixed=='fixed' && !ie6 && screen;//可以直接使用position:fixed来定位
         
         this.offset = options.offset || [0,0];
         this.isWrap = this.nearby && (screen || this.nearby.find(this.element).length);//对象是否在参考对象内部
@@ -772,205 +746,5 @@
             this.item[this.effect][1](this.element);
         }
     }
-    
-    /*
-     * canvas/vml绘制的图标
-     */
-    ui.ico = function(dom, opt){
-        if( !(this instanceof ui.ico) ){
-            return new ui.ico(dom, opt);
-        }
-        //opt = $.extend( ui.config.ico, opt );
-        opt = opt || {};
-        this.hasCanvas = !!document.createElement('canvas').getContext;
-        this.type = opt.type || 'ok';
-        this.ico = $('<i class="nj_ico n_i_'+this.type+'"></i>');
-        if( !(dom = getDom(dom)) ){
-            return;
-        }
-        //dom && dom.length && dom.empty();
-        //this.obj = dom || $('body:first');
-        dom.html(this.ico);
-        this.canvas = null;
-        this.ctx = null;
-        //this.ico.css('visibility','hidden');
-        this.width = opt.width || this.ico.width() || 16;
-        this.height = opt.height || this.ico.height() || 16;
-        
-        this.color = opt.color || this.ico.css('color');
-        this.bgcolor = opt.bgcolor || this.ico.css('background-color');
-        //this.ico.removeAttr('style');
-        this.ico.css({
-            'background' : 'none',
-            'width' : this.width,
-            'height' : this.height
-        });
-        this.createSpace();
-    }
-    ui.ico.prototype = {        
-        createSpace : function(){
-            var d = document;
-            if(this.hasCanvas){
-                this.canvas = d.createElement('canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.canvas.width = this.width;
-                this.canvas.height = this.height;
-                this.ico.append(this.canvas);
-            }else{
-                if(!ui.ico['iscreatevml']){//只创建 一次vml
-                    var s = d.createStyleSheet(),
-                        shapes = ['polyline','oval','arc','stroke','shape'];
-                    d.namespaces.add("v", "urn:schemas-microsoft-com:vml"); //创建vml命名空间
-                    for(var i=0;i<shapes.length;i++){
-                        s.addRule("v\\:"+shapes[i],"behavior:url(#default#VML);display:inline-block;");
-                    }
-                    ui.ico['iscreatevml'] = true;
-                }
-                this.ico.css('position','relative');
-            }
-            this.draw();
-        },
-        drawLine : function(point,fill,border){
-            var i,n = point.length;
-            if(this.hasCanvas){
-                this.ctx.beginPath();
-                this.ctx.moveTo(point[0],point[1]);
-                for(i=2;i<n;i+=2){
-                    this.ctx.lineTo(point[i],point[i+1]);
-                }
-                this.ctx.stroke();
-                fill&&this.ctx.fill();
-            }else{
-                var path = '',v = '';
-                for(i=0;i<n;i+=2){
-                    path += point[i]+','+point[i+1]+' ';
-                }
-                v += '<v:polyline strokeWeight="'+border+'" filled="'+(fill?'true':'false')+'" class="polyline" strokecolor="'+this.color+'" points="'+path+'" ';
-                if(fill){
-                    v += 'fillcolor="'+this.color+'"';
-                }
-                v += '/>';
-                $(this.canvas).after(v);
-            }
-        },
-        draw : function(){
-            var startAngle,endAngle,border,point,
-                p = Math.PI,
-                width = this.width,
-                height = this.height,
-                color = this.color,
-                bgcolor = this.bgcolor,
-                ctx = this.ctx,
-                canvas = this.canvas,
-                type = this.type,
-                d = document,
-                T = this;
-            if(type=='loading'){
-                border = 3;
-                if(this.hasCanvas){
-                    startAngle = p / 180;
-                    endAngle = 200*p / 180;
-                    ctx.strokeStyle = this.color;
-                    ctx.lineWidth = border;
-                    window.setInterval(function(){
-                        ctx.clearRect(0,0,width,height);
-                        startAngle += 0.2;
-                        endAngle += 0.2;
-                        ctx.beginPath();
-                        ctx.arc(width/2,height/2,width/2-border+1,startAngle,endAngle,false);
-                        ctx.stroke();
-                    },20);
-                }else{
-                    startAngle = 0;
-                    border--;
-                    this.canvas = d.createElement('<v:arc class="oval" filled="false" style="left:1px;top:1px;width:'+(width-border*2+1)+'px;height:'+(height-border*2+1)+'px" startangle="0" endangle="200"></v:arc>');
-                    $(this.canvas).append('<v:stroke weight="'+border+'" color="'+color+'"/>');
-                    this.ico.append(this.canvas);
-                    window.setInterval(function(){
-                        startAngle += 6;
-                        startAngle = startAngle>360?startAngle-360:startAngle;
-                        T.canvas.rotation = startAngle;
-                    },15);
-                }
-            }else if( type=='ok' || type=='warn' || type=='error' || type=='close' ){
-                if(this.hasCanvas){
-                    ctx.beginPath();
-                    ctx.fillStyle = bgcolor;
-                    ctx.arc(width/2,height/2,width/2,p,3*p,false);
-                    ctx.fill();
-                    ctx.fillStyle = color;
-                    ctx.strokeStyle = color;
-                }else{
-                    this.canvas = d.createElement('<v:oval class="oval" fillcolor="'+bgcolor+'" style="width:'+(width-1)+'px;height:'+(height-1)+'px;"></v:oval>');
-                    $(this.canvas).append('<v:stroke color="'+bgcolor+'"/>');
-                    this.ico.append(this.canvas);
-                }
-                
-                if(type=='ok'){
-                    point = [0.26*width,0.43*height , 0.45*width,0.59*height , 0.71*width,0.33*height , 0.71*width,0.47*height , 0.45*width,0.73*height , 0.26*width,0.57*height];
-                    this.drawLine(point,true);
-                }else if(type=='warn'){
-                    if(this.hasCanvas){
-                        ctx.beginPath();
-                        ctx.arc(width*0.5,height*0.73,width*0.07,p,3*p,false);
-                        ctx.stroke();
-                        ctx.fill();
-                    }else{
-                        this.ico.append('<v:oval class="oval" fillcolor="#fff" style="width:'+height*0.16+'px;height:'+height*0.14+'px;left:'+(height*($.browser('ie6 ie7')?0.43:0.4))+'px;top:'+(height*0.68)+'px"><v:stroke color="#fff"/></v:oval>');
-                    }
-                    point = [0.45*width,0.22*height , 0.55*width,0.22*height , 0.55*width,0.54*height , 0.45*width,0.54*height];
-                    this.drawLine(point,true);
-                }else if(type=='error'||type=='close'){
-                    if(!this.hasCanvas){
-                        width = width*0.95;
-                        height = height*0.95;
-                    }
-                    point = [0.33*width,0.30*height , 0.5*width,0.46*height , 0.68*width,0.30*height , 0.72*width,0.34*height , 0.55*width,0.52*height , 0.71*width,0.68*height , 0.68*width,0.73*height , 0.5*width,0.56*height , 0.34*width,0.72*height , 0.29*width,0.69*height , 0.46*width,0.51*height , 0.29*width,0.34*height];
-                    this.drawLine(point,true);
-                    function bind(){
-                        if(T.hasCanvas){
-                            T.ico.hover(function(){
-                                ctx.clearRect(0,0,width,height);
-                                ctx.beginPath();
-                                ctx.fillStyle = color;
-                                ctx.strokeStyle = bgcolor;    
-                                ctx.arc(width/2,height/2,width/2,p,3*p,false);
-                                ctx.fill();
-                                ctx.stroke();
-                                ctx.fillStyle = bgcolor;
-                                T.drawLine(point,true);
-                            },function(){
-                                ctx.clearRect(0,0,width,height);
-                                ctx.beginPath();
-                                ctx.fillStyle = bgcolor;
-                                ctx.strokeStyle = bgcolor;
-                                ctx.arc(width/2,height/2,width/2,p,3*p,false);
-                                ctx.fill();
-                                ctx.stroke();
-                                ctx.fillStyle = color;
-                                ctx.strokeStyle = color;
-                                T.drawLine(point,true);
-                            })
-                        }else{
-                            T.ico.hover(function(){
-                                var a = $(this).find('.oval')[0],b = $(this).find('.polyline')[0];
-                                a.fillcolor = a.strokecolor = color;
-                                b.fillcolor = b.strokecolor = bgcolor;
-                            },function(){
-                                var a = $(this).find('.oval')[0],b = $(this).find('.polyline')[0];
-                                a.fillcolor = a.strokecolor = bgcolor;
-                                b.fillcolor = b.strokecolor = color;
-                            })
-                        }
-                    }
-                    type=='close' && bind();
-                }
-            }else{
-                //自定义绘图方法
-                this['Draw'+type] && this['Draw'+type]();
-            }
-        }
-    }       
-   
     return ui;
 });

@@ -14,7 +14,7 @@
 <h6 class="p_tit">使用：</h6>
 <div class="text_info">
 	<script type="text/templete" code="javascript" key="face">
-	noJS.use('lib/nojs/module/face',function(face,$,ui,){	
+	noJS.use('lib/nojs/mods/face',function(face,$,ui,){	
 		var FaceTest = new face( options );
 	});
 	</script>
@@ -50,12 +50,16 @@
 .nj_face .a i{color:#fff;top:1px}
 </style>
 <script>
-noJS.use('lib/nojs/module/face',function(face,$,ui){
+noJS.use('lib/nojs/mods/face,$',function(face,$){
+	face.config({
+		themeItems : {
+			'default' : {url:'http://css.meidebi.com/js/lib/Kindeditor/plugins/emoticons/images/'}
+		},
+		themes : ['default']
+	});
 	new face({
 		button : $('#facetest'),
-		insert : $('#comment_box'),
-		baseUrl : 'img/face/',
-		theme : 'qq'
+		insert : $('#comment_box')
 	});
-},{globalAfter:true});
+});
 </script>

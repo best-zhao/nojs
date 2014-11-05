@@ -65,7 +65,7 @@
 </div>
 <h6 class="p_tit">扩展</h6>
 <div class="text_info">
-	<a href="" data-id="ui_layer">layer</a> <a href="" data-id="ui_overlay">overlay</a>
+	<a href="" data-treeid="ui_layer">layer</a> <a href="" data-treeid="ui_overlay">overlay</a>
 </div>
 
 <script type="text/templete" id="demo_html">
@@ -105,7 +105,7 @@
 </script>
 
 <script type="text/templete" id="demo_tmpl4">
-<p class="mb10">relative的区别，以position:{left:50, top:50}为例</p>
+<p class="mb10">relative的区别，以position:{left:50, top:50}为例,nearby==window时relative默认为true</p>
 <div class="test_screen mb10" id="test_screen4" style="width:300px;height:200px;overflow:hidden">
 	true:同css的background-position定位
 	<div class="x"></div><div class="y"></div>
@@ -128,6 +128,15 @@
 
 <script type="text/templete" id="demo_tmpl6">
 <p class="mb10">有时用于定位的属性值使用百分比或像素均不能满足需求，需要使用函数。如页面中常用的回到顶部按钮，需要依附到页面内容区域的右边，浏览器窗口发生改变后，使用百分比或者像素值都不能准确定位，必须使用函数动态获取。函数若返回像素值注意转为字符串格式</p>
+<pre>position : {
+	top:90, 
+	left : function(size){
+		//这里page宽度300 size.width指的是nearby对象的尺寸，实际应用中应该是屏幕的尺寸
+		//窗口宽度大于页面宽度转为字符串格式，否则直接靠窗口右侧固定
+		return size.width>300 ? (size.width + 300)/2 + '' : 100; 
+	}
+}
+</pre>
 <div class="test_screen" id="test_screen6">
 	<div class="some" style="background:#aaa;width:300px;line-height:300px">page页面内容区域,宽300px<br />12</div>
 	<div class="fixed" style="color:#fff;text-align:center;line-height:50px;cursor:pointer">top</div>
@@ -136,13 +145,13 @@
 </script>
 
 <script>
-noJS.use(function($,ui){
+noJS.use('$,ui',function($,ui){
 	var fixed;
 	window.demoAction = {
 		html : $('#demo_html').html(),
 		item : [
 			{content : $('#demo_tmpl1').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui',function($,ui){
 					new ui.align( {
 						element : $('#test_screen1 .fixed'),
 						position : {top:50,left:50},
@@ -151,7 +160,7 @@ noJS.use(function($,ui){
 				})
 			}},
 			{content : $('#demo_tmpl2').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui',function($,ui){
 					new ui.align( {
 						element : $('#test_screen2 .fixed'),
 						position : {bottom:10,right:10},
@@ -162,7 +171,7 @@ noJS.use(function($,ui){
 				})
 			}},
 			{content : $('#demo_tmpl3').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui',function($,ui){
 					new ui.align( {
 						element : $('#test_screen3 .fixed'),
 						position : {bottom:'20px',right:'20px'},
@@ -173,7 +182,7 @@ noJS.use(function($,ui){
 				})
 			}},
 			{content : $('#demo_tmpl4').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui',function($,ui){
 					new ui.align( {
 						element : $('#test_screen4 .fixed'),
 						position : {top:50,left:50},
@@ -190,7 +199,7 @@ noJS.use(function($,ui){
 				})
 			}},
 			{content : $('#demo_tmpl5').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui',function($,ui){
 					fixed = $([
 						'<div class="demo_fixed">{top:100,left:0}</div>',
 						'<div class="demo_fixed">{top:0,left:100}</div>',
@@ -220,7 +229,7 @@ noJS.use(function($,ui){
 				})
 			}},
 			{content : $('#demo_tmpl6').html(), callback : function(){
-				noJS.use(function($,ui){
+				noJS.use('$,ui',function($,ui){
 					var top = new ui.align( {
 						element : $('#test_screen6 .fixed'),
 						position : {top:90, left : function(size){
@@ -240,12 +249,6 @@ noJS.use(function($,ui){
 				})
 			}}
 		],
-		onShow : function(){
-			//fixed && fixed.show();
-		},
-		onHide : function(){
-			fixed && fixed.hide();
-		},
 		onChange : function(index){
 			fixed && fixed[index==4?'show':'hide']();
 		}
