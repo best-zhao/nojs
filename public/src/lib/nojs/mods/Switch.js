@@ -109,7 +109,7 @@ define(function(require){
         for( var i=1; i<=this.length; i++ ){
             list += '<li class="nj_s_m">'+i+'</li>';
         }
-        this.mene.append(list);
+        this.menu.append(list);
         this.menuItem = this.menu.find('.nj_s_m');
         this.bind();
     }

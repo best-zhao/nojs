@@ -28,7 +28,7 @@ define(function(require){
         docs.$wrap.addClass('demo_wrap');
         setTimeout(function(){
             $demo.addClass('d_open');
-        }, 300)
+        }, 200)
         demo.tab ? demo.tab.change(index) : demo.render(index);
         demo.isOpen = 1;
     }
@@ -71,13 +71,18 @@ define(function(require){
 
     url.onHashChange.push(function(e, data){
         var key = data.key, index = setUrl('demo');
-        
-        if( index && key == 'demo'  ){           
+
+        if( key != 'demo' ){
+            return;
+        }        
+        if( index  ){
             if( demo.isOpen ){
                 demo.tab && index!=demo.index && demo.tab.change(index);
             }else{
                 demo.show();
             }
+        }else{
+            demo.hide();
         }
     })
 

@@ -1,13 +1,65 @@
-<style>
-</style>
-<div class="font_icon_list">
+<h4 class="p_tit">icon</h4>
+<h6>font icon</h6>
+<div class="text_info font_icon_list">
     <i class="nj_ico n_i_ok">&#xe60f;</i>
+    <span>&amp;#xe60f;</span><br />
+
     <i class="nj_ico n_i_warn">&#xe622;</i>
+    <span>&amp;#xe622;</span><br />
+
     <i class="nj_ico n_i_error">&#xe60e;</i>
+    <span>&amp;#xe60e;</span><br />
+    
+</div>
+
+<h6>css icon</h6>
+<div class="text_info">
     <i class="nj_ico n_i_close">×</i>
 </div>
+
+<h6>canvas/vml icon</h6>
+<div class="text_info">
+    <span id="nj_ico_loading"></span>
+</div>
+
+<h4 class="p_tit">ui.animate</h4>
+<div id="animate_test" style="background:#eee;height:90px;width:90px;margin:0 0 10px">ui.animate</div>
+<div id="animate_test1" style="background:#eee;height:90px;width:90px;margin:0 0 10px">jQuery animate</div>
+
+<button class="nj_btn" id="reset_animate">start</button>
+
+<div id="qrcode" style="width:164px;height:164px"></div>
 <script>
-noJS.use(function($,ui){
-	//new ui.ico();
-});
+noJS.use('$,ui,lib/nojs/mods/icon,lib/nojs/mods/layer,lib/jquery/jquery.qrcode', function($,ui,icon,layer){
+    //new icon('nj_ico_loading');
+    //layer.msg.show('loading');
+    var el = $('#animate_test'),
+        el1 = $('#animate_test1');
+    
+    $('#qrcode').qrcode({width: 164,height: 164,text: "http://www.meidebi.com",glog:"http://www.meidebi.com/favicon.ico"});
+
+    function animate(){
+        el.width(90);
+        el1.width(90);
+
+        ui.animate({
+            speed : 1,
+            //easing : 'easeOutExpo',
+            callback : function(complete){
+                var w = complete*400;
+                el.width(w)
+            }
+        })
+
+        el1.animate({
+            width : 400
+        },'normal')
+    }
+    $('#reset_animate').click(function(){
+        animate();
+    })
+
+
+
+})
 </script>

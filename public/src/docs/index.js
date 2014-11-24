@@ -44,6 +44,10 @@ define(function(require){
     ui.config({
         overlay : {
             insertTo : G.$content
+        },
+        msg : {
+            //overlay默认insertTo被改变后 msg仍默认为body对象
+            insertTo : 'body'
         }
     });
     

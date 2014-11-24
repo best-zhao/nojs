@@ -59,7 +59,7 @@
 
 <script>
 noJS.css(domain.project+'/css/lib/nojs/select.css')
-.use('lib/nojs/module/select', function(select,$){
+.use('$,lib/nojs/mods/select', function($,select){
     var type1 = new select('test_type'),
     
     type2 = new select('test_type1'),
@@ -78,5 +78,5 @@ noJS.css(domain.project+'/css/lib/nojs/select.css')
         //console.log(type1)
     }, 2000)
     
-}, {globalAfter:true});
+});
 </script>

@@ -113,7 +113,7 @@ define(function(require){
             this.number.find('i').text( this.length );
             
 			this.page = this.wrap.find('i.p').css({'opacity':'0.4'});
-			this.createPageIco(this.page);
+			//this.createPageIco(this.page);
 			
 			this.page.click(function(e){
 				e.preventDefault();

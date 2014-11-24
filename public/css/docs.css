@@ -111,7 +111,7 @@ html.page_full #demo_content .d_wrap{margin:0}
 
 
 /*demo*/
-.demo_wrap .iframe_content{-webkit-transform:scale(.96);opacity:.4;}
+.demo_wrap .iframe_content{-webkit-transform:scale(.98);opacity:.4;}
 #demo_content{position:absolute;width:100%;height:100%;top:0;left:0;z-index:50;visibility:hidden;background:rgba(200,200,200,.3);}
 #demo_content .d_wrap{background:#fff;margin-left:250px;height:100%;opacity:0;overflow:auto;}
 #demo_content .d_content{padding:30px;}

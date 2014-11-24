@@ -233,26 +233,6 @@
 ::-webkit-validation-bubble-text-block { font-size: 12px; } 
 </style>
 <script type="text/templete" id="demo_tmpl1">
-<form action="">
-    <ul class="nj_form">
-        <li class="clearfix item">
-            <label for="" class="lab">用户名：</label>
-            <div class="fields">
-                <span class="date"><input name="name" class="text" /></span>
-            </div>
-        </li>
-        <li class="clearfix item">
-            <label for="" class="lab">密码：</label>
-            <div class="fields">
-                <input type="password" name="password" class="text" />
-            </div>
-        </li>
-        <li class="fields">
-            <button type="submit" class="nj_btn">登录</button>
-        </li>
-    </ul>
-</form>  
-<br />  
 <form action="" id="register1">
 	<ul class="nj_form">
 		<li class="item clearfix">
@@ -440,7 +420,10 @@ noJS.use('$,ui', function($,ui){
 				noJS.use('lib/nojs/mods/form,lib/nojs/mods/layer,$,ui', function(form,layer,$,ui){
 					var win, btn = $('#show_form');
 					function init(){
-						win = new layer.popup({width:430});
+						win = new layer.popup({
+							width:430,
+							insertTo : document.body
+						});
 						win.set('title', '验证邮箱');
 						win.set('content', [
                             '<form action=""><ul class="nj_form mt10">',

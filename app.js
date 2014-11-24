@@ -5,7 +5,6 @@
 
 var express = require('express');
 var routes = require('./routes');
-var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
 var ejs = require('ejs');
@@ -34,8 +33,8 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
+routes.init(app);
 app.get('/', routes.index);
-app.get('/users', user.list);
 app.get('/docs', function(req, res){
   res.render('docs/index', { title: 'nojs docs' });
 })

@@ -1,11 +1,25 @@
 define(function(require){
     var $ = require('$'),
+        ui = require('ui'),
         docs = require('./'),
         codeLight = require('../lib/nojs/mods/codelight'),
         layer = require('../lib/nojs/mods/layer'),
         demo = require('./demo'),
         url = require('./url'),
         setUrl = url.setUrl;
+
+    ui.config({
+        msg : {
+            onContent : function(content){
+                var loading = this.content.find('.n_i_loading');
+                loading.length && require.async('lib/nojs/mods/icon', function(icon){
+                    new icon(loading, {
+                        type : 'loading'
+                    });
+                })
+            }
+        }
+    })
 
     docs.init({
         menu : domain.rs+'/src/docs/config.json',

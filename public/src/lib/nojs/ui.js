@@ -172,9 +172,61 @@
             return index;
         }
     }
+
+    //动画
+    ui.animate = (function(){
+        var requestAnimFrame =  window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function(callback) {
+                window.setTimeout(callback, 1000 / 60);
+            }
+
+        function animate(options){
+            options = options || {};
+            if( !options.callback ){
+                return;
+            }
+            var callback = options.callback,
+                loop = options.loop,//是否为无限循环动画
+                speed = options.speed || 1,
+                //对于无限循环的动画speed无用 在callback中设置每次变化步长即可
+                amount = speed / 60,
+                easing = options.easing || 'easeOutExpo',
+                easingFunction = animate.easings[easing],
+                complete = 0;
+
+            requestAnimFrame(animLoop);
+
+            function animLoop(){
+                complete += amount;
+                var call = callback(easingFunction(complete));//callback返回false可停止动画
+                if( call===false || (!loop && complete>1) ){
+                    //防止动画结束时complete大于1而超出目标值
+                    !loop && complete>1 && callback(1);
+                    return;
+                }
+                requestAnimFrame(animLoop);
+            }
+        }
+        animate.easings = {
+            linear : function (t){
+                return t;
+            },
+            easeOutExpo: function (t) {
+                return (t==1) ? 1 : 1 * (-Math.pow(2, -10 * t/1) + 1);
+            },
+            easeOutQuart: function (t) {
+                return -1 * ((t=t/1-1)*t*t*t - 1);
+            }
+        }
+        return animate;
+    })();
     
     /* 
-     * [animate动画扩展]
+     * [jQuery animate动画扩展]
      * http://gsgd.co.uk/sandbox/jquery/easing/jquery.easing.1.3.js
      * easeIn：加速度缓动；
      * easeOut：减速度缓动；
@@ -275,24 +327,7 @@
                 }
                 return cookieValue;
             }
-        },
-        addCss : function(css){
-            //动态创建css @css:string
-            if( typeof css!='string' ){
-                return;
-            }
-            var i, style;
-             
-            if( document.createStyleSheet ) {
-                window.style= css; 
-                document.createStyleSheet("javascript:style"); 
-            }else{
-                style = document.createElement('style'); 
-                style.type = 'text/css'
-                style.innerHTML = css; 
-                document.getElementsByTagName('HEAD')[0].appendChild(style);
-            }
-        },
+        },       
         localStorage : function(){
             var localStorage = window.localStorage || (function(){
                 //userData

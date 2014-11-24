@@ -6,7 +6,27 @@
 <title><%=title%></title>
 <link rel="stylesheet" href="/css/nojs/ui.css">
 <link rel="stylesheet" href="/css/docs.css">
-<script src="/js/lib/nojs/noJS.js" data-config1="../conf.js" id="nojs"></script>
+<script src="/js/lib/nojs/noJS.js" id="nojs"></script>
+<script>
+window.domain = {
+    rs : 'http://'+location.host
+}
+!function(){
+    noJS.config({
+        base : domain.rs+'/src/',
+        alias : {
+            '$' : 'lib/jquery/jquery',
+            'ui' : 'lib/nojs/ui'
+        },
+        version : {
+            base : '1.0',
+            modules : {
+            }
+        }
+    })
+}();
+</script>
+
 </head>
 <body>
 </body>

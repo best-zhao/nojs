@@ -1,0 +1,51 @@
+<% include ../layout.html %>
+
+<h1><%=title%></h1>
+
+<% if(menus.length){ %>
+    <ul>
+    <% for(var i=0; i<menus.length; i++){ %>
+        <li><%=menus[i].name%> 
+            <a href="/a/menu/<%=menus[i]._id%>">编辑</a>
+            <a href="/a/menu/del/<%=menus[i]._id%>">删除</a>
+        </li>
+    <%}%>
+    </ul>
+<%}%>
+
+
+<h2>添加菜单</h2>
+<form action="/a/menu/add" method="post">
+    <ul class="nj_form">
+        <li class="clearfix item">
+            <label for="" class="lab">父类：</label>
+            <div class="fields">
+                <select name="pid" id="menu_items">
+                    <option value="-1">根目录</option>
+                    <% if(menus.length){ %>
+                        <% for(var i=0; i<menus.length; i++){ %>
+                            <option value="<%=menus[i]._id%>"><%=menus[i].name%></option>
+                        <%}%>
+                    <%}%>
+                </select>
+            </div>
+        </li>
+        <li class="clearfix item">
+            <label for="" class="lab">名称：</label>
+            <div class="fields">
+                <input type="text" name="name" class="text" value="<%=menu.name%>">
+            </div>
+        </li>
+        <li class="fields">
+            <input type="hidden" name="_id" value="<%=menu._id%>">
+            <button class="nj_btn n_b_sb" type="submit">提交</button>
+        </li>
+    </ul>
+</form>
+
+
+<script>
+noJS.use('$', function($){
+    //$.getJSON('/a/menu', function(){})
+})
+</script>

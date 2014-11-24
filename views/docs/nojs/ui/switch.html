@@ -18,7 +18,7 @@
 		 *	'onChange' : 回掉函数	
 		 * }
 		 */
-		var Tab = new ui.Switch( id, option );
+		var Tab = new Switch.tab( id, option );
 	</script>
 	<p>html: (以下class均不可缺少)</p>
 	<script type="text/codelight" code="html" key="Switch">
@@ -62,13 +62,11 @@
 </div>
 <h6 class="p_tit">扩展应用</h6>
 <div class="text_info">
-	<a href="" data-id="ui_slide">slide</a>
+	<a href="" data-treeid="ui_slide">slide</a>
 </div>
 
 <script>
-noJS.use(function($,ui){
-	new ui.Switch( 'switch_box', {
-		
-	})
+noJS.use('lib/nojs/mods/Switch',function(Switch){
+	new Switch.tab('switch_box');
 });
 </script>

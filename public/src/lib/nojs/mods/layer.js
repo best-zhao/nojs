@@ -39,6 +39,7 @@ define(function(require){
         set : function(fn, key, value){
             if( key=='content' ){
                 this.content.empty().append(value);
+                this.options.onContent && this.options.onContent.call(this,value);
             }else{
                 fn.call(this, value);
             }
@@ -488,7 +489,7 @@ define(function(require){
         
         ui.config.msg = {
             //不限宽度
-            width : null
+            width : null            
         }
         
         return {
@@ -501,7 +502,7 @@ define(function(require){
                     bindEsc : C ? true : false,
                     timeout : 1500,
                     //默认只有confirm显示遮罩
-                    mask : C ? null : false,
+                    mask : C ? null : false
 
                 }, ui.config.msg, opt);
                 

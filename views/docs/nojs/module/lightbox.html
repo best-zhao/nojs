@@ -105,41 +105,41 @@
 </script>
 
 <script>
-noJS.use(function($,ui){
+noJS.use('$,ui',function($,ui){
 	window.demoAction = {
 		item : [
 			{
-				content : $('#demo_tmpl').html()
+				content : $('#demo_tmpl').html(),
+                callback : function(){
+                    noJS.use('$,ui,lib/nojs/mods/photo', function($,ui,photo){
+                        var list = $('#photo_player'),
+                            img = list.find('.list img'),
+                            c;
+                            
+                        new photo.player(list, {
+                            srcRule : function(src,obj){
+                                return obj.attr('big');
+                            },
+                            onShow : function(){
+                                ///this.fullScreen = true;
+                            }
+                        });
+                        //清除图片缓存
+                        $('#clear_cache').click(function(){
+                            c = (+new Date);
+                            img.each(function(){
+                                $(this).attr({
+                                    'src' : this.src.split('?')[0] + '?t=' + c,
+                                    'big' : $(this).attr('big').split('?')[0] + '?t=' + c
+                                })
+                            })
+                            return false;
+                        })
+                        
+                    });
+                }
 			}
-		],
-		callback : function(){
-			noJS.use('lib/nojs/module/photo', function($,ui,photo){
-				var list = $('#photo_player'),
-					img = list.find('.list img'),
-					c;
-					
-				new photo.player(list, {
-					srcRule : function(src,obj){
-						return obj.attr('big');
-					},
-					onShow : function(){
-						///this.fullScreen = true;
-					}
-				});
-				//清除图片缓存
-				$('#clear_cache').click(function(){
-					c = (+new Date);
-					img.each(function(){
-						$(this).attr({
-							'src' : this.src.split('?')[0] + '?t=' + c,
-							'big' : $(this).attr('big').split('?')[0] + '?t=' + c
-						})
-					})
-					return false;
-				})
-				
-			});
-		}
+		]
 	}
 })
 

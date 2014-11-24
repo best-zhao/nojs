@@ -18,3 +18,59 @@
     <p>2. Array.prototype.filter</p>
     <p>2. Array.prototype.indexOf</p>
 </div>
+
+
+<div class="css3_rotate d_hide"><img src="http://css.meidebi.com/img/o/client_phone.png" width="100%" height="100%" alt=""></div>
+<style>
+    .css3_rotate{width:200px;height:400px;
+        -webkit-backface-visibility: hidden;
+        -moz-backface-visibility: hidden;
+        -ms-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000px;
+        -moz-perspective: 1000px;
+        -ms-perspective: 1000px;
+        perspective: 1000px;
+        }
+    .css3_rotate img{
+        border-radius:39px;box-shadow:9px 9px 19px #ddd;
+        -webkit-transform-style:preserve-3d;
+        transition:all .5s;transform-origin:90% 100%;
+    }
+    .css3_rotate:hover img{-webkit-transform:rotateY(-45deg) rotate(9deg) translate(20px,10px);}
+</style>
+
+
+<style>
+    #node_slider{position:relative;margin:50px 0;}
+    #node_slider .bar{height:7px;width:400px;background:#959BA3;border-radius:7px;cursor:cell;}
+    #node_slider .node{position:absolute;width:15px;height:15px;
+        border-radius:15px;background:#e4e4e4;
+        margin:0 0 0 -8px;top:-5px;cursor:move;
+        color:#ccc;font:28px/15px simsun;text-align:center;
+        border:1px solid #999;
+        box-shadow: 1px 1px 2px rgba(0,0,0,.3);
+    }
+    #node_slider .node span{position:absolute;top:-30px;font:18px/1 Georgia;left:0;
+        margin-left:-22px;width:60px;text-align:center;cursor:text;
+        color:#bbb;
+    }
+    #node_slider .node:hover{border-color:#333;}
+    #node_slider .current{background:#f40;opacity:.7;color:#FF9600;z-index:20;border-color:red;}
+    #node_slider .current span{color:#f40;font-weight:800;}
+</style>
+<div id="node_slider">
+    <div class="bar"></div>
+</div>
+
+<script>
+noJS.use('$,http://rs.meidebi3.com/src/project/admin/lottery/slider.js', function($,slider){
+    new slider('node_slider', {
+        max : 100,
+        min : 10,
+        node : [33,66,100]
+    });
+})    
+</script>
+
+
