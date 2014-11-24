@@ -16,7 +16,7 @@
         <li class="clearfix item">
             <label for="" class="lab">名称：</label>
             <div class="fields">
-                <input type="text" name="menu[name]" class="text" value="<%=menu.name%>">
+                <input type="text" name="menu[name]" class="text" value="">
             </div>
         </li>
         <li class="clearfix item">
@@ -28,11 +28,11 @@
         <li class="clearfix item">
             <label for="" class="lab">内容：</label>
             <div class="fields">
-                <textarea name="menu[content]" id="menu_content" cols="30" rows="10" class="text"><%=menu.content||''%></textarea>
+                <textarea name="menu[content]" id="menu_content" cols="30" rows="10" class="text"></textarea>
             </div>
         </li>
         <li class="fields">
-            <input type="hidden" name="menu[_id]" value="<%=menu._id%>">
+            <input type="hidden" name="menu[_id]" value="">
             <button class="nj_btn n_b_sb" type="submit">提交</button>
             <button class="nj_btn" type="reset">add new</button>
         </li>
@@ -54,7 +54,7 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit', function($,tree,form
     $form = $('#menu_edit'),
     opt = el.next().find('a');
 
-    $.getJSON('/a/menu', function(json){
+    $.getJSON('/getMenus', function(json){
         treeOptions = {
             data : json.data,
             level : 0
@@ -93,8 +93,9 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit', function($,tree,form
         }
     })
 
+    KindEditor.options.filterMode = false;
     editor = KindEditor.create("#menu_content", {
-        items : ['undo', 'redo', '|', 'bold', 'forecolor', 'fontsize', 'fontname','|','justifynav','insertorderednav','indent','outdent','table','emoticons', '|', 'link', 'unlink','multiimage']
+        items : ['source','undo', 'redo', '|', 'bold', 'forecolor', 'fontsize', 'fontname','|','justifynav','insertorderednav','indent','outdent','table','emoticons', '|', 'link', 'unlink','multiimage']
     })
 })
 </script>

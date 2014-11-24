@@ -24,7 +24,6 @@ var Schema = mongoose.Schema,
     Menu = new Schema({
         name : {type:String, validate:[validate, 'menu name is required']},
         pid : {type:String, default:'-1'},
-        link : String,
         content : String
     });
 Menu = mongoose.model('menu', Menu);
@@ -37,18 +36,21 @@ exports.init = function(app){
 
     //菜单管理
     app.get('/a/menu', function(req, res){
+        var d = {
+            title : 'admin'
+        }
+        res.render('admin/menu', d)
+    });
+
+    //action 获取所有菜单
+    app.get('/getMenus', function(req, res){
         Menu.find({}, function(err, data){
-            var d = {
-                title : 'admin',
-                menus : data,
-                menu : {name:'',_id:''}
-            }
-            req.xhr ? res.send({
+            res.send({
                 status : 1,
                 data : data
-            }) : res.render('admin/menu', d)
+            }) 
         }) 
-    });
+    })
 
     //aciton添加/编辑菜单
     app.post('/a/menu/add', function(req, res){

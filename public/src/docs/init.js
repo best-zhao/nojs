@@ -22,9 +22,12 @@ define(function(require){
     })
 
     //domain.rs+'/src/docs/config.json'
-    $.getJSON('/a/menu', function(json){
+    $.getJSON('/getMenus', function(json){
         json.data.forEach(function(m){
-            m.link = '/docs_'+m._id;
+            if( m.content ){
+                m.link = '/docs_'+m._id;
+            }            
+
         });
         docs.init({
             menu : {nojs:{data:json.data}},
