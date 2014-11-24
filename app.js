@@ -39,29 +39,6 @@ app.get('/docs', function(req, res){
   res.render('docs/index', { title: 'nojs docs' });
 })
 
-fs.readFile('./public/src/docs/config.json', function(err, data){
-    if(err) {
-        throw err;
-    }
-    var page = JSON.parse(data),
-        i, m, j, q;
-    for( i in page ){
-        m = page[i].data;
-        
-        for( j=0; j<m.length; j++ ){
-            q = m[j];
-            if( !q.link ){
-                continue;
-            }
-            !function(q,i){
-                app.get('/docs/'+i+'/'+q, function(req, res){
-                    res.render('docs/'+i+'/'+q);
-                });
-            }(q.link,i);
-        }        
-    }
-});
-
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
