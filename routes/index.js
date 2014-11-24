@@ -23,7 +23,9 @@ var Schema = mongoose.Schema,
     //ObjectId = Schema.ObjectId,
     Menu = new Schema({
         name : {type:String, validate:[validate, 'menu name is required']},
-        pid : String
+        pid : {type:String, default:'-1'},
+        link : String,
+        content : String
     });
 Menu = mongoose.model('menu', Menu);
 
@@ -37,28 +39,26 @@ exports.init = function(app){
     app.get('/a/menu', function(req, res){
         Menu.find({}, function(err, data){
             var d = {
-                title : '菜单管理',
+                title : 'admin',
                 menus : data,
                 menu : {name:'',_id:''}
             }
             req.xhr ? res.send({
                 status : 1,
-                data : data.map(function(d){
-                    return {name:d.name,_id:d._id,pid:d.pid}
-                })
+                data : data
             }) : res.render('admin/menu', d)
         }) 
     });
-  
 
     //aciton添加/编辑菜单
     app.post('/a/menu/add', function(req, res){
-        var data = req.body;
+        var data = req.body.menu;
 
         if( data._id ){//edit
             Menu.findById(data._id, function(err, m){
-                m.name = data.name;
-                m.pid = data.pid;
+                for(var i in data ){
+                    m[i] = data[i];
+                }
                 m.save(function(err){
                     if(err){
                         throw err;
@@ -68,8 +68,8 @@ exports.init = function(app){
                 })
             }) 
         }else{//add
-            var menu = {name:data.name, pid:data.pid||-1};
-            menu = new Menu(menu); 
+            delete data._id;
+            var menu = new Menu(data); 
 
             menu.save(function(err){
                 if( err ){
@@ -81,22 +81,6 @@ exports.init = function(app){
         }
     });
 
-    //编辑菜单
-    app.get('/a/menu/:id', function(req, res){
-        Menu.find({}, function(err, data){
-            var d = {
-                title : '编辑菜单',
-                menus : data
-            }
-            data.forEach(function(m){
-                if( m._id==req.params.id ){
-                    d.menu = m;                    
-                }
-            })
-            res.render('admin/menu', d);
-        }) 
-    })
-
     //action删除菜单
     app.get('/a/menu/del/:id', function(req, res){
         Menu.findById(req.params.id, function(err, data){
@@ -106,5 +90,14 @@ exports.init = function(app){
                 })
             }
         })
+    })
+
+    //view显示
+    app.get('/docs_:id', function(req, res){
+        Menu.findById(req.params.id, function(err, data){
+            if( data ){
+                res.send(data.content);
+            }
+        }) 
     })
 }

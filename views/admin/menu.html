@@ -2,50 +2,99 @@
 
 <h1><%=title%></h1>
 
-<% if(menus.length){ %>
-    <ul>
-    <% for(var i=0; i<menus.length; i++){ %>
-        <li><%=menus[i].name%> 
-            <a href="/a/menu/<%=menus[i]._id%>">编辑</a>
-            <a href="/a/menu/del/<%=menus[i]._id%>">删除</a>
-        </li>
-    <%}%>
-    </ul>
-<%}%>
+<div id="menu_manage">
+    <span id="menu_items"></span>
+    <span class="opt">
+        <a href="" data-bind="attr:{href:'/a/menu/del/'+id()}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
+    </span>
+</div>
 
 
 <h2>添加菜单</h2>
-<form action="/a/menu/add" method="post">
+<form action="/a/menu/add" method="post" id="menu_edit">
     <ul class="nj_form">
-        <li class="clearfix item">
-            <label for="" class="lab">父类：</label>
-            <div class="fields">
-                <select name="pid" id="menu_items">
-                    <option value="-1">根目录</option>
-                    <% if(menus.length){ %>
-                        <% for(var i=0; i<menus.length; i++){ %>
-                            <option value="<%=menus[i]._id%>"><%=menus[i].name%></option>
-                        <%}%>
-                    <%}%>
-                </select>
-            </div>
-        </li>
         <li class="clearfix item">
             <label for="" class="lab">名称：</label>
             <div class="fields">
-                <input type="text" name="name" class="text" value="<%=menu.name%>">
+                <input type="text" name="menu[name]" class="text" value="<%=menu.name%>">
+            </div>
+        </li>
+        <li class="clearfix item">
+            <label for="" class="lab">父级：</label>
+            <div class="fields">
+                <span id="menu_pid"></span>                
+            </div>
+        </li>        
+        <li class="clearfix item">
+            <label for="" class="lab">内容：</label>
+            <div class="fields">
+                <textarea name="menu[content]" id="menu_content" cols="30" rows="10" class="text"><%=menu.content||''%></textarea>
             </div>
         </li>
         <li class="fields">
-            <input type="hidden" name="_id" value="<%=menu._id%>">
+            <input type="hidden" name="menu[_id]" value="<%=menu._id%>">
             <button class="nj_btn n_b_sb" type="submit">提交</button>
+            <button class="nj_btn" type="reset">add new</button>
         </li>
     </ul>
 </form>
 
-
 <script>
-noJS.use('$', function($){
-    //$.getJSON('/a/menu', function(){})
+noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit', function($,tree,form){
+    tree.key = {
+        id : '_id',
+        parent : 'pid'
+    }
+    var menu = {
+        id : ko.observable('')
+    },editor,
+    treeOptions, 
+    el = $('#menu_items'), 
+    $pid = $('#menu_pid'),
+    $form = $('#menu_edit'),
+    opt = el.next().find('a');
+
+    $.getJSON('/a/menu', function(json){
+        treeOptions = {
+            data : json.data,
+            level : 0
+        }
+        treeOptions.onSelect = function(id, data){
+            menu.id(id);
+
+            //pid select
+            var options = $.extend({
+                name : ['menu[pid]'],
+                disable : [id]
+            }, treeOptions)
+            options.onSelect = null;
+            tree.select($pid.empty(), options);
+
+            //fill form
+            var mdata = $.extend({}, data.all[id]);
+            editor.html(mdata.content||'')
+            for( var i in mdata ){
+                mdata['menu['+i+']'] = mdata[i];
+                delete mdata[i];
+            }
+            form.fill({
+                form : $form,
+                data : mdata
+            })
+            
+        }
+        tree.select(el, treeOptions);
+        ko.applyBindings(menu, document.getElementById('menu_manage'));
+    })
+
+    opt.click(function(){
+        if( tree.rootID==menu.id() ){
+            return false;
+        }
+    })
+
+    editor = KindEditor.create("#menu_content", {
+        items : ['undo', 'redo', '|', 'bold', 'forecolor', 'fontsize', 'fontname','|','justifynav','insertorderednav','indent','outdent','table','emoticons', '|', 'link', 'unlink','multiimage']
+    })
 })
 </script>

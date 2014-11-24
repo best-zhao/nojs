@@ -660,7 +660,7 @@ define(function(require){
 	        }
 	        type = item[0].type;
 	        value = data[i];
-	        if( type=='text' || type=='hidden' || type=='textarea' && typeof value=='string' ){
+	        if( type=='text' || type=='hidden' || type=='textarea' || type=='select-one' && typeof value=='string' ){
 	            item.val(value);
 	            
 	        }else if( type=='radio' ){

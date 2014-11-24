@@ -80,11 +80,11 @@ input.n_b_bg,input.n_b_bo,input.n_b_bb,button.n_b_bg,button.n_b_bo,button.n_b_bb
 /*font icon*/
 @font-face {
   font-family: 'iconfont';
-  src: url('/fonts/iconfont.eot');/* IE9*/
-  src: url('/fonts/iconfont.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-        url('/fonts/iconfont.woff') format('woff'), /* chrome、firefox */
-        url('/fonts/iconfont.ttf') format('truetype'), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
-        url('/fonts/iconfont.svg#uxiconfont') format('svg');/* iOS 4.1- */
+  src: url('http://at.alicdn.com/t/font_1416798400_1283169.eot'); /* IE9*/
+  src: url('http://at.alicdn.com/t/font_1416798400_1283169.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  url('http://at.alicdn.com/t/font_1416798400_1283169.woff') format('woff'), /* chrome、firefox */
+  url('http://at.alicdn.com/t/font_1416798400_1283169.ttf') format('truetype'), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+  url('http://at.alicdn.com/t/font_1416798400_1283169.svg#iconfont') format('svg'); /* iOS 4.1- */
 }
 .nj_ico{display:inline-block;text-align:center;cursor:default;
     font:16px/16px iconfont;
@@ -92,6 +92,7 @@ input.n_b_bg,input.n_b_bo,input.n_b_bb,button.n_b_bg,button.n_b_bo,button.n_b_bb
     /*-webkit-text-stroke-width: 0.2px;*/
     -moz-osx-font-smoothing: grayscale;
 }
+.nj_ico:hover{text-decoration: none}
 .n_i_ok,.n_i_warn,.n_i_error{color:#00AB1C}
 .n_i_warn{color:#FB8612}
 .n_i_error{color:#d00}

@@ -16,33 +16,9 @@
 </div><!--#ui_page-->
 
 <script>
-window.domain = {
-    rs : 'http://'+location.host
-}
-!function(){
-    var _dev = /[?&]nojs-debug=(true|false)(?:&|$|#)/.exec(location.href),
-        dev = domain.rs.indexOf('herokuapp.com')<0;
-    if( _dev ){
-        dev = _dev[1]=='true';
-    }
-    noJS.config({
-        base : domain.rs+(dev?'/src/':'/js/'),
-        global : 'global',
-        alias : {
-            '$' : 'lib/jquery/jquery',
-            'ui' : 'lib/nojs/ui'
-        },
-        version : {
-            base : '2.1',
-            modules : {
-                'docs/init' : '20140928',
-                'global' : '2014101401'
-            }
-        }
-    }).css([
-        domain.rs+'/css/nojs/tree.css',
-        domain.rs+'/css/nojs/select.css',
-        domain.rs+'/css/nojs/codelight.css'
-    ]).use('docs/init');
-}();
+noJS.css([
+    domain.rs+'/css/nojs/tree.css',
+    domain.rs+'/css/nojs/select.css',
+    domain.rs+'/css/nojs/codelight.css'
+]).use('docs/init');
 </script>

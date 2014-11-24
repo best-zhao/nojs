@@ -646,7 +646,7 @@ define(function(require){
 		if( !box || !box.length || !data ){
 			return;
 		}
-		
+
 		function getChild(child, level){
 			var j, item = '', _data;
 			if( child && child.length ){
@@ -666,11 +666,12 @@ define(function(require){
 			return line;
 		}
 		function getItem(m,level){
-			return '<option value="'+(m[_id]!=undefined?m[_id]:'')+'">'+(single?getLine(m.level):'')+m[_name]+'</option>'+( single ? getChild(m[_child],level) : '' );
+			var disable = options.disable && options.disable.indexOf(m[_id])>-1 ? 'disabled="disabled"' : '';
+			return '<option '+disable+' value="'+(m[_id]!=undefined?m[_id]:'')+'">'+(single?getLine(m.level):'')+m[_name]+'</option>'+( single ? getChild(m[_child],level) : '' );
 		}
 		empty = '<option value="'+emptyID+'">请选择</option>';
 		
-		function addItem(parentID){	    
+		function addItem(parentID){	 
 		    var i, name, level = 0, item = '', 
                 child = !parentID ? data[level] : Data.all[parentID][_child];
                 

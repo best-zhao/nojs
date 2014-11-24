@@ -12,15 +12,25 @@ window.domain = {
     rs : 'http://'+location.host
 }
 !function(){
+    var _dev = /[?&]nojs-debug=(true|false)(?:&|$|#)/.exec(location.href),
+        dev = domain.rs.indexOf('herokuapp.com')<0;
+    if( _dev ){
+        dev = _dev[1]=='true';
+    }
     noJS.config({
-        base : domain.rs+'/src/',
+        base : domain.rs+(dev?'/src/':'/js/'),
+        global : 'global',
         alias : {
             '$' : 'lib/jquery/jquery',
-            'ui' : 'lib/nojs/ui'
+            'ui' : 'lib/nojs/ui',
+            'edit' : 'lib/kindeditor-4.1.10/kindeditor-min',
+            'ko' : 'lib/knockout/knockout-3.2.0'
         },
         version : {
-            base : '1.0',
+            base : '2.1',
             modules : {
+                'docs/init' : '20140928',
+                'global' : '2014101401'
             }
         }
     })

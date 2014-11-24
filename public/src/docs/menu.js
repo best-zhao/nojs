@@ -17,7 +17,7 @@ define(function(require){
     url.onHashChange.push(function(e, data){
         var id = data.id, m,
             key = data.key;
-        
+
         if( id && (key=='id'||key=='url') && menu.items.length ){
             for( var i=0;i<menu.items.length;i++ ){
                 m = menu.items[i];
@@ -42,7 +42,7 @@ define(function(require){
             if( first==2 ){//onhashchange
                 treeSelect.call(this, data); 
             }else{
-                var _data = {id:data.id};                
+                var _data = {id:data[tree.key.id]};                
                 if( first ){//tree click 通过hash变化来触发onSelect事件
                     _data['url'] = null;
                 }
@@ -57,8 +57,8 @@ define(function(require){
      */
     function treeSelect(data){
         var link = data.link,
-            id = data.id;
-        
+            id = data[tree.key.id];
+
         if(!link){
             return;
         }
@@ -66,7 +66,7 @@ define(function(require){
         
         var _id = this.box[0].id,
             name = _id.substring(_id.indexOf('_')+1,_id.length),
-            url = _url || '/docs/'+this.box.data('id')+'/'+link,
+            url = _url || link,
             title = document.title,
             _data = {
                 title : data.name,
@@ -130,6 +130,9 @@ define(function(require){
     menu.init = function(global){
         G = global;
         treeOptions.defaultNode = setUrl() || G.options.defaultNode;//设置默认节点
+        if( G.options.treeKey ){
+            tree.key = G.options.treeKey;
+        }
         treeInit();
     }
     

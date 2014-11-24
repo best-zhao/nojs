@@ -19,7 +19,7 @@ module.exports = function(grunt) {
                     alias: {
                         '$' : 'lib/jquery/jquery',
                         'ui' : 'lib/nojs/ui',
-                        '$b' : 'pj/b'
+                        'ko' : 'lib/knockout/knockout-2.2.0'
                     }
 		        },
                 files : [
