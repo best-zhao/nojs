@@ -1,11 +1,11 @@
-<% include ../layout %>
+<% include ../layout.html %>
 
 <h1><%=title%></h1>
 
 <div id="menu_manage">
     <span id="menu_items"></span>
     <span class="opt">
-        <a href="" data-bind="attr:{href:'/a/menu/del/'+id()}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
+        <a href="" data-bind="attr:{href:'/a/menu/del/'+id()},visible:id()!=-1" class="nj_ico gray3" title="删除节点">&#xe609;</a>
     </span>
 </div>
 
@@ -25,7 +25,7 @@
                 <span id="menu_pid"></span>                
             </div>
         </li>        
-        <li class="clearfix item">
+        <li class="clearfix item d_hide">
             <label for="" class="lab">内容：</label>
             <div class="fields">
                 <textarea name="menu[content]" id="menu_content" cols="30" rows="10" class="text"></textarea>
@@ -87,15 +87,9 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit', function($,tree,form
         ko.applyBindings(menu, document.getElementById('menu_manage'));
     })
 
-    opt.click(function(){
-        if( tree.rootID==menu.id() ){
-            return false;
-        }
-    })
-
     KindEditor.options.filterMode = false;
     editor = KindEditor.create("#menu_content", {
-        items : ['source','undo', 'redo', '|', 'bold', 'forecolor', 'fontsize', 'fontname','|','justifynav','insertorderednav','indent','outdent','table','emoticons', '|', 'link', 'unlink','multiimage']
+        items : ['source','undo', 'redo', '|', 'bold', 'forecolor','|','table','emoticons', '|', 'link', 'unlink','multiimage']
     })
 })
 </script>

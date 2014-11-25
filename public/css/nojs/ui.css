@@ -28,10 +28,6 @@ a:hover{text-decoration:underline}
 .gray9{color:#999}
 
 /*ui*/
-.v_show{visibility:visible}
-.v_hide{visibility:hidden}
-.d_show{display:block}
-.d_hide{display:none}
 
 /*form*/
 .nj_f_tip{color:#666}
@@ -271,3 +267,8 @@ input.n_b_bg,input.n_b_bo,input.n_b_bb,button.n_b_bg,button.n_b_bo,button.n_b_bb
 .nj_form .date .text{width:120px;background-color:transparent}
 .nj_form .disabled,button[disabled],input[disabled]{background:#eee!important;border-color:#BDBCBC!important;color:#999!important}
 
+
+.v_show{visibility:visible}
+.v_hide{visibility:hidden}
+.d_show{display:block}
+.d_hide{display:none}
