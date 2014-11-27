@@ -2,10 +2,8 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title><%=title%></title>
+<title>backbone</title>
 <link rel="stylesheet" href="/css/nojs/ui.css">
-<link rel="stylesheet" href="/css/docs.css">
 <script src="/js/lib/nojs/noJS.js" id="nojs"></script>
 <script>
 window.domain = {
@@ -19,23 +17,24 @@ window.domain = {
     }
     noJS.config({
         base : domain.rs+(dev?'/src/':'/js/'),
-        global : 'global',
         alias : {
             '$' : 'lib/jquery/jquery',
             'ui' : 'lib/nojs/ui',
             'edit' : 'lib/kindeditor-4.1.10/kindeditor-min',
             'ko' : 'lib/knockout/knockout-3.2.0',
-            'ng' : 'lib/angular/angular-1.2.27'
-        },
-        version : {
-            base : '2.1',
-            modules : {
-                'docs/init' : '20140928',
-                'global' : '2014101401'
-            }
+            'ng' : 'lib/angular/angular-1.3.4'
         }
     })
 }();
 </script>
 </head>
-<body ng-app="myapp" class="ng-app:myapp" id="ng-app">
+<body>
+
+<script>
+noJS.use('ng', function(){
+    
+})
+</script>
+
+</body>
+</html>
