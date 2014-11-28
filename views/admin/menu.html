@@ -2,37 +2,21 @@
 
 <h1><%=title%></h1>
 
-<div id="menu_manage">
+<div id="menu_manage" ng-controller="menuItems">
     <span id="menu_items"></span>
     <span class="opt">
-        <a href="" data-bind="attr:{href:'/a/menu/del/'+id()},visible:id()!=-1" class="nj_ico gray3" title="删除节点">&#xe609;</a>
+        <a href="/a/menu/del/{{id}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
     </span>
-</div>
-Your name: <input type="text" ng-model="yourname" value="12" placeholder="World1">
-        <hr>
-        Hello {{yourname}}!
-<div ng-controller="noJS.PhoneListCtrl">
-  Search: <input ng-model="query" value="">
-  Sort by:
-  <select ng-model="orderProp">
-    <option value=""><!--nj--></option>
-    <option value="name">Alphabetical</option>
-    <option value="age">Newest</option>
-  </select>
-  <ul >
-    <li ng-repeat="phone in phones | filter:query "  ng-click="remove(phone)">
-      {{phone.name+' --- '+phone.snippet}} <input ng-module="" value="{{phone.age}}">
-    </li>
-  </ul>
-</div>
 
-<div ng-controller="MyController">
-  <input type="text" ng-init="yourname=1" value="12">
-  <h5>{{ clock }}</h5>
+    <div class="messages">
+        <div class="alert" ng-repeat="entry in log">
+            {{ entry.msg }}<input ng-model="entry.msg" value="" />
+        </div>
+    </div>
 </div>
 
 
-<h2>添加菜单{{'World'}}</h2>
+<h2>添加菜单</h2>
 <form action="/a/menu/add" method="post" id="menu_edit">
     <ul class="nj_form">
         <li class="clearfix item">
@@ -47,144 +31,42 @@ Your name: <input type="text" ng-model="yourname" value="12" placeholder="World1
                 <span id="menu_pid"></span>                
             </div>
         </li>        
-        <li class="clearfix item d_hide">
+        <li class="clearfix item">
             <label for="" class="lab">内容：</label>
             <div class="fields">
                 <textarea name="menu[content]" id="menu_content" cols="30" rows="10" class="text"></textarea>
             </div>
         </li>
         <li class="fields">
-            <input type="hidden" name="menu[_id]" value="">
+            <input class="d_hide" name="menu[_id]">
             <button class="nj_btn n_b_sb" type="submit">提交</button>
             <button class="nj_btn" type="reset">add new</button>
         </li>
     </ul>
 </form>
-<div class="loader d_hide"></div>
-<style>
-    .loader {
-      font-size: 10px;
-      text-indent: -9999em;
-      width: 5em;
-      height: 5em;
-      border-radius: 50%;
-      background: -moz-linear-gradient(left, #eee 10%, rgba(255, 255, 255, 0) 42%);
-      background: -webkit-linear-gradient(left, #eee 10%, rgba(255, 255, 255, 0) 42%);
-      background: -o-linear-gradient(left, #eee 10%, rgba(255, 255, 255, 0) 42%);
-      background: -ms-linear-gradient(left, #eee 10%, rgba(255, 255, 255, 0) 42%);
-      background: linear-gradient(to right, #eee 10%, rgba(155, 155, 155, 0) 42%);
-      position: relative;
-      -webkit-animation: load3 1.4s infinite linear;
-      animation: load3 1.4s infinite linear;
-    }
-    .loader:before {
-      width: 50%;
-      height: 50%;
-      background: #eee;
-      border-radius: 100% 0 0 0;
-      position: absolute;
-      top: 0;
-      left: 0;
-      content: '';
-    }
-    .loader:after {
-      background: #fff;
-      width: 75%;
-      height: 75%;
-      border-radius: 50%;
-      content: '';
-      margin: auto;
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-    }
-    @-webkit-keyframes load3 {
-      0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-      100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
-    }
-    @keyframes load3 {
-      0% {
-        -webkit-transform: rotate(0deg);
-        transform: rotate(0deg);
-      }
-      100% {
-        -webkit-transform: rotate(360deg);
-        transform: rotate(360deg);
-      }
-    }
-</style>
 <script>
-//console.log(document.body.innerHTML.match(/{{[\w\.]+}}/g))
-noJS.PhoneListCtrl = function ($scope){
-    $scope.phones = [
-      {"name": "1Nexus S", "snippet": "Fast just got faster with Nexus S.","age" :3},
-      {"name": "2Motorola XOOM™ with Wi-Fi", "snippet": "The Next, Next Generation tablet.","age" :1},
-      {"name": "3MOTOROLA XOOM™", "snippet": "The Next, Next Generation tablet.","age" :2}
-    ];
-    //$scope.orderProp = 'age'; 
-    $scope.remove = function(){
-      console.log($scope.phones.remove)
 
-    } 
-
-    setTimeout(function(){
-      $scope.$apply(function(){
-        $scope.phones.splice(1,0,{"name": "4MOTOROLA XOOM™", "snippet": "The Next, Next Generation tablet.","age" :4})
-      });  
-    }, 4000) 
-}
-function MyController($scope){
-    $scope.person = { name: "Ari Lerner" };  
-    $scope.clock = 0;
-    var updateClock = function() { 
-      console.log($scope.yourname)
-      $scope.clock++;  
-    };  
-    var timer = setInterval(function() { 
-      $scope.$apply(updateClock);  
-    }, 1000);  
-    updateClock();
-}
 noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,form){
-    //nodeType 3文本节点 8注释的文本
-    var c = document.body.getElementsByTagName('li')[0].childNodes;
-    c = Array.prototype.slice.call(c,0);
-    var a = c.filter(function(n){
-      //console.log(n.childNodes,n.nodeType,n.nodeName)
-      return n.nodeType==3;
-    })
-    console.log(a.map(function(n){
-      return n.nodeValue//.replace(/^\s*|\s*$/g,'');
-    }))
-
-
-    // angular.element(document).ready(function() {
-    //   angular.bootstrap(document);
-    // });
-    var app=angular.module("myapp",[]); 
-    app.controller('PhoneListCtrl', noJS.PhoneListCtrl);
-    app.controller('MyController', MyController);
-
     tree.key = {
         id : '_id',
         parent : 'pid'
     }
-    var menu = {
-        id : ko.observable('')
-    },editor,
+    var editor,
     treeOptions, 
     el = $('#menu_items'), 
     $pid = $('#menu_pid'),
-    $form = $('#menu_edit'),
-    opt = el.next().find('a');
+    $form = $('#menu_edit');
+    
+    angular.module('myApp', []).controller('menuItems', function($scope){
+        $scope.id = tree.rootID;
+        $scope.getID = function(id){
+            $scope.id = id;
+        }
+        $scope.log = [
+            { msg: '1Data Received!' },
+            { msg: '2Data Received!' }
+        ];
+    })
 
     $.getJSON('/getMenus', function(json){
         treeOptions = {
@@ -192,7 +74,6 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
             level : 0
         }
         treeOptions.onSelect = function(id, data){
-            menu.id(id);
 
             //pid select
             var options = $.extend({
@@ -204,7 +85,7 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
 
             //fill form
             var mdata = $.extend({}, data.all[id]);
-            editor.html(mdata.content||'')
+            editor.html(mdata.content||'');
             for( var i in mdata ){
                 mdata['menu['+i+']'] = mdata[i];
                 delete mdata[i];
@@ -216,13 +97,25 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
             
         }
         tree.select(el, treeOptions);
-        ko.applyBindings(menu, document.getElementById('menu_manage'));
     })
 
     KindEditor.options.filterMode = false;
     editor = KindEditor.create("#menu_content", {
-        items : ['source','undo', 'redo', '|', 'bold', 'forecolor','|','table','emoticons', '|', 'link', 'unlink','multiimage']
+        items : ['source', 'bold', 'forecolor','|','table','emoticons', '|', 'link', 'unlink','multiimage','code']
     })
+
+    var Form = new form({
+      form : $form,
+      rules : {
+        'menu[name]' : {isNull:''}
+      },
+      ajaxSubmit : {
+        success : function(json){
+            location.reload();
+        }
+      }
+    })
+
 })
 </script>
 

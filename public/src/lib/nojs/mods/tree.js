@@ -673,17 +673,19 @@ define(function(require){
 		
 		function addItem(parentID){	 
 		    var i, name, level = 0, item = '', 
-                child = !parentID ? data[level] : Data.all[parentID][_child];
-                
-            if( !child.length ){
+                child = !parentID ? data[level] : Data.all[parentID][_child],
+                sFirst = level==0 && single;
+            
+            if( (!child || !child.length) && !sFirst ){
                 return;
             }
             parentID && (Data.all[parentID].init = 1);
+
             level = !parentID ? 0 : Data.all[parentID].level+1;
             name = options.name ? options.name[level] : '';
             
             item = '<select name="'+name+'">';  
-            item += level==0 && single ? '<option value="'+tree.rootID+'">根目录</option>' : empty;
+            item += sFirst ? '<option value="'+tree.rootID+'">根目录</option>' : empty;
             item += getChild(child, level);
             item += '</select>';
             item = $(item);

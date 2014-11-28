@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
-//local: mongodb://localhost/todo_development
-mongoose.connect('mongodb://localhost/nojs', function(err){
+//local: mongodb://localhost/nojs
+mongoose.connect('mongodb://nolure:zlc19860919@dogen.mongohq.com:10086/nojs', function(err){
     if( err ){
         throw err
     }else{
@@ -56,7 +56,8 @@ exports.init = function(app){
                     if(err){
                         throw err;
                     }else{
-                        res.redirect('/a/menu');
+                        res.send({})
+                        //res.redirect('/a/menu');
                     }                    
                 })
             }) 
@@ -68,7 +69,8 @@ exports.init = function(app){
                 if( err ){
                     res.redirect('/a');
                 }else{
-                    res.redirect('/a/menu');
+                    res.send({})
+                    //res.redirect('/a/menu');
                 }
             })   
         }
