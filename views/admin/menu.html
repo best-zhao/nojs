@@ -3,6 +3,8 @@
 <h1><%=title%></h1>
 
 <div id="menu_manage" ng-controller="menuItems">
+    <input type="text" ng-model="names" value="{{names}}+12" />{{names}}
+    <div ng-click="slide(name,names)">1212</div>
     <span id="menu_items"></span>
     <span class="opt">
         <a href="/a/menu/del/{{id}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
@@ -58,7 +60,9 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
     $form = $('#menu_edit');
     
     angular.module('myApp', []).controller('menuItems', function($scope){
+        console.log($scope)
         $scope.id = tree.rootID;
+        //$scope.names = 'nolure'
         $scope.getID = function(id){
             $scope.id = id;
         }
@@ -66,6 +70,9 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
             { msg: '1Data Received!' },
             { msg: '2Data Received!' }
         ];
+        $scope.slide = function(a,b){
+            console.log(a,b)
+        }
     })
 
     $.getJSON('/getMenus', function(json){

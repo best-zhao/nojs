@@ -16,9 +16,38 @@ noJS.config({
 </script>
 </head>
 <body>
+<div nj-module="myModule">
+    <div>
+        <textarea data-name="{{name}}">{{name}}+abc</textarea>
+    </div>
+    <input type="text" nj-item="name" />
+    <div>name:{{name}} - {{name1}}</div>
+</div>
 
+<div nj-module="clickToggle">
+    <button type="button" nj-click="slide(name)">open</button>
+    <div class="d_hide">details……</div>
+</div>
 <script>
-noJS.use('$', function($){
+noJS.use('$,lib/nojs/model', function($,nj){
+    
+    var m1 = nj.module('myModule', function(){
+        this.name = 'myname';
+        //this.$set('name','nolure');
+        
+        var self = this;
+        setTimeout(function(){
+            self.$set('name1','myname1');
+        },1000)
+    });
+    //console.log(m1)
+    
+    var m2 = nj.module('clickToggle', function(){
+        this.name=1
+        this.slide = function(a,b){
+            console.log(a,b)
+        };
+    })
     
 })
 </script>
