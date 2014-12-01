@@ -4,7 +4,7 @@
 
 <div id="menu_manage" ng-controller="menuItems">
     <input type="text" ng-model="names" value="{{names}}+12" />{{names}}
-    <div ng-click="slide(name,names)">1212</div>
+    <div ng-click="aaa(a,b);aa=aa+1;console.log(12);slides(name1,name2);slide(name3,name4)">1212</div>
     <span id="menu_items"></span>
     <span class="opt">
         <a href="/a/menu/del/{{id}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
@@ -60,7 +60,7 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
     $form = $('#menu_edit');
     
     angular.module('myApp', []).controller('menuItems', function($scope){
-        console.log($scope)
+        //console.log($scope)
         $scope.id = tree.rootID;
         //$scope.names = 'nolure'
         $scope.getID = function(id){
@@ -70,8 +70,10 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
             { msg: '1Data Received!' },
             { msg: '2Data Received!' }
         ];
+        $scope.aa = 0
         $scope.slide = function(a,b){
-            console.log(a,b)
+            $scope.aa++;
+            console.log($scope.aa,b)
         }
     })
 

@@ -25,8 +25,8 @@ noJS.config({
 </div>
 
 <div nj-module="clickToggle">
-    <button type="button" nj-click="name++;console.log(name);slide(a,b)">open</button>
-    <div class="d_hide">details……</div>
+    <button type="button" nj-click="isopen=!isopen;console.log('name:',names);slide(1,2)">open</button>
+    <div class="">isopen:{{isopen}} details……</div>
 </div>
 <script>
 noJS.use('$,lib/nojs/model', function($,nj){
@@ -40,12 +40,12 @@ noJS.use('$,lib/nojs/model', function($,nj){
             self.$set('name1','myname1');
         },1000)
     });
-    //console.log(m1)
     
     var m2 = nj.module('clickToggle', function(){
-        this.name=1
+        this.names=1
         this.slide = function(a,b){
-            console.log(a,b)
+            
+            console.log('console',arguments.callee,b)
         };
     })
     

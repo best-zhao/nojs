@@ -52,8 +52,9 @@ define(function(require){
         var clicks = this.element.find('[nj-click]');
         
         clicks.each(function(){
-            var str = $(this).attr('nj-click'),
-            fn = new Function(str);
+            var str = $(this).attr('nj-click');
+            //var fn = new Function(str);
+            var isok = 'nj-click-init'+(+new Date)
             this.onclick = function(){
                 /**
                  * ****解决未定义变量问题****
@@ -63,45 +64,45 @@ define(function(require){
                  * 然后with原作用域下 依次定义这些变量后再执行函数
                  *
                  * case1: 抛出的错误中不光只有not defined 中途可能有其他错误 这时终止即可
-                 *        此外还需检测函数何时执行完毕 否则会出现死循环（添加一个额外变量，在函数末尾执行某一操作即可）
                  *     
                  */
-                var scope = function(){}, notDefinedVars = [];
-                for( var i in self.model ){
-                    scope[i] = self.model[i];
-                }
-                with(scope){
+                if( !this[isok] ){
+                
+                    var notDefinedVars = [];
+                    
                     function _try(){
-                        try{
-                            eval(str);
-                        }catch(e){
-                            var msg = e.message.split(' '), info = msg.slice(-1);
-                            if( info=='defined' ){
-                                eval('('+msg[0]+'=undefined)');
-                                notDefinedVars.push(msg[0]);
-                                _try();
+                        var scope = function(){};
+                        for( var i in self.model ){
+                            scope[i] = self.model[i];
+                        }
+                        with(scope){
+                            try{
+                                eval(str);
+                            }catch(e){
+                                var msg = e.message.split(' '), info = msg.slice(-1);
+                                if( info=='defined' ){
+                                    //定义未定义的变量
+                                    self.model[msg[0]] = undefined;
+                                    notDefinedVars.push(msg[0]);
+                                    _try();
+                                }
                             }
                         }
                     }
                     _try();
+                    
+                    console.log(notDefinedVars);
                 }
-                console.log(notDefinedVars);
+                this[isok] = 1;
 
-                var error;
                 with(self.model){
                     try{
                         eval(str);
                     }catch(e){
-                        //处理未定义的变量及属性
-                        error = true;
-                        var msg = e.message.split(' '), info = msg.slice(-1);
-                        if( info=='defined' ){
-                            eval('('+msg[0]+'=undefined)');
-                        }
-                    }finally{
-                        error && eval(str);
+                        
                     }
                 };
+                //self.apply('isopen');
             };
         })
         this.getSubscriber();
