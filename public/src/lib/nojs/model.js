@@ -9,14 +9,14 @@ define(function(require){
         validNode = /{{(\w+)}}/,
         validNodes = /{{(\w+)}}/g;
     
-    /*
+    /**
      * 以model为单位 一个页面可存在多个 也可互相嵌套
      * 在页面中通过在tag中添加'nj-module="myModule"'来启动
      * 
      */
     
     
-    /*
+    /**
      * 创建一个module
      * 
      */
@@ -40,7 +40,7 @@ define(function(require){
         
         this.domID = {};
         
-        /*
+        /**
          * [nj-item="*"]声明一个变量 并实现双向绑定
          * 一般为表单元素 （用户可输入的）匹配其value值
          */
@@ -50,15 +50,56 @@ define(function(require){
         })
         
         var clicks = this.element.find('[nj-click]');
+        
         clicks.each(function(){
             var str = $(this).attr('nj-click'),
             fn = new Function(str);
             this.onclick = function(){
+                /**
+                 * ****解决未定义变量问题****
+                 * 
+                 * 拷贝self.model所有变量及方法到一个新的变量scope中
+                 * 函数试着在scope中不断try/catch获取到所有未定义的变量 知道函数执行完毕
+                 * 然后with原作用域下 依次定义这些变量后再执行函数
+                 *
+                 * case1: 抛出的错误中不光只有not defined 中途可能有其他错误 这时终止即可
+                 *        此外还需检测函数何时执行完毕 否则会出现死循环（添加一个额外变量，在函数末尾执行某一操作即可）
+                 *     
+                 */
+                var scope = function(){}, notDefinedVars = [];
+                for( var i in self.model ){
+                    scope[i] = self.model[i];
+                }
+                with(scope){
+                    function _try(){
+                        try{
+                            eval(str);
+                        }catch(e){
+                            var msg = e.message.split(' '), info = msg.slice(-1);
+                            if( info=='defined' ){
+                                eval('('+msg[0]+'=undefined)');
+                                notDefinedVars.push(msg[0]);
+                                _try();
+                            }
+                        }
+                    }
+                    _try();
+                }
+                console.log(notDefinedVars);
+
+                var error;
                 with(self.model){
                     try{
                         eval(str);
                     }catch(e){
-                        console.error(e)
+                        //处理未定义的变量及属性
+                        error = true;
+                        var msg = e.message.split(' '), info = msg.slice(-1);
+                        if( info=='defined' ){
+                            eval('('+msg[0]+'=undefined)');
+                        }
+                    }finally{
+                        error && eval(str);
                     }
                 };
             };
