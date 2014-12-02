@@ -49,23 +49,48 @@ define(function(require){
             self.models.push(self.createModel(this));
         })
         
+        /**
+         * [nj-click="*"]绑定click事件
+         * 
+         */
         var clicks = this.element.find('[nj-click]');
         
         clicks.each(function(){
             var str = $(this).attr('nj-click');
+            console.log(str)
             //var fn = new Function(str);
-            var isok = 'nj-click-init'+(+new Date)
+            
+            /**
+             * 解析语句
+             * 支持语法：1.赋值 2.执行函数 其余语句过滤掉
+             * 
+             * 1. 替换{语句块}的内容及''的内容
+             * 2. 以';'分割语句
+             * 3. 
+             *     
+             */
+            var fnKey = 'nj-click-fn-'+(+new Date),
+                reStr = {};
+
+            str = str.replace(/\)\s*{[\w\W]*}/g, ')');
+            str = str.replace(/"(?:\\"|[^"])*"|'(?:\\'|[^'])*'/g, function(a,b,c){
+                if( a ){
+                    var key = 'nj-str-'+(+new Date);
+                    reStr[key] = a;
+                    return key;
+                }                
+            })
+            str = str.split(';');
+            str.forEach(function(s, i){
+                if( /[{}]+/g.test(s) ){
+                    str[i] = '';
+                }
+            })
+            console.log(str)
+
+
             this.onclick = function(){
-                /**
-                 * ****解决未定义变量问题****
-                 * 
-                 * 拷贝self.model所有变量及方法到一个新的变量scope中
-                 * 函数试着在scope中不断try/catch获取到所有未定义的变量 知道函数执行完毕
-                 * 然后with原作用域下 依次定义这些变量后再执行函数
-                 *
-                 * case1: 抛出的错误中不光只有not defined 中途可能有其他错误 这时终止即可
-                 *     
-                 */
+                
                 if( !this[isok] ){
                 
                     var notDefinedVars = [];
@@ -89,17 +114,18 @@ define(function(require){
                             }
                         }
                     }
-                    _try();
+                    //_try();
                     
-                    console.log(notDefinedVars);
+                    //console.log(notDefinedVars);
                 }
                 this[isok] = 1;
+                console.log(str.split(';'))
 
                 with(self.model){
                     try{
                         eval(str);
                     }catch(e){
-                        
+                        console.error(e)
                     }
                 };
                 //self.apply('isopen');
@@ -119,7 +145,7 @@ define(function(require){
                 element : el,
                 key : key
             };
-                
+            
             this.model[key] = this.model[key] || '';
             this.domID[id] = el;
             
@@ -139,10 +165,10 @@ define(function(require){
                 //el.$id = id;
                 //this.subIds.push(id);
                 
-                $(el).on('keydown', function(){
+                $(el).on('change keydown', function(){
                     var v = this;
                     setTimeout(function(){
-                        self.model[key] = v.value;
+                        self.model[key] = v[v.type=='checkbox' ? 'checked' : 'value'];
                         self.apply(key);
                     },0)
                 })
@@ -167,8 +193,11 @@ define(function(require){
                 }
                 //获取属性节点
                 attrs = slice.call(node.attributes, 0);
-                attrs.forEach(function(node){
-                    validNode.test(node.value) && subNodes.push(node);
+                attrs.forEach(function(n){
+                    if( validNode.test(n.value) ){
+                        n.$parentElement = node;
+                        subNodes.push(n);
+                    } 
                 })
                 
                 //textarea手动修改内容后 子节点会被替换 所以其包含的文本节点不用添加
@@ -228,22 +257,35 @@ define(function(require){
             subscriber.forEach(function(item){
                 var type = item.node.nodeType;
                 
-                if( item.writeAll || type==2 ){
+                if( item.writeAll ){
                     item.node.value = value;
                     
-                }else if( type==1 || type==3 ){//元素、文本节点
+                }else if( type==1 ||type==2 || type==3 ){//元素、属性、文本节点
+
                     var text = item.value || item.node.value, 
                         reg;
                     
-                    //该节点可能订阅多个相同或不同的属性 所以分批替换
-                    text.replace(validNodes, function(a,b){
-                        value = self.model[b];
-                        if( value!==undefined ){
-                            reg = eval('/{{'+b+'}}/g');
-                            text = text.replace(reg, value)
+                    //属性节点中checked disabled readonly单独处理
+                    if( type==2 ){
+                        var attrName = item.node.name, parentNode;
+                        if( /checked|disabled|readonly|multiple|selected/.test(attrName) ){
+                            parentNode = item.node.$parentElement;
+                            text = !!parseInt(value, 10);
+                            parentNode[text?'setAttribute':'removeAttribute'](attrName, attrName);
+                            return;
                         }
-                    })
-                    item.node[type==1?'value':'nodeValue'] = text;
+                    }else{
+
+                        //该节点可能订阅多个相同或不同的属性 所以分批替换
+                        text.replace(validNodes, function(a,b){
+                            value = self.model[b];
+                            if( value!==undefined ){
+                                reg = eval('/{{'+b+'}}/g');
+                                text = text.replace(reg, value)
+                            }
+                        })
+                    }
+                    item.node[type==1||type==2?'value':'nodeValue'] = text;
                 }               
             })
         }
