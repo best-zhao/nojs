@@ -21,7 +21,7 @@ noJS.config({
         <textarea data-name="{{name}}">{{name}}+abc</textarea>
     </div>
     <input type="text" nj-item="name" />
-    <div>name:{{name}} - {{name1}}</div>
+    <div data-class="{{name}}">name:{{name}} - {{name1}}</div>
     <input type="checkbox" nj-item="checked">
     <select name="" >
         <option value="0" selected="{{checked}}">0</option>
@@ -33,11 +33,10 @@ noJS.config({
 </div>
 
 <div nj-module="clickToggle">
-    <button type="button" nj-click="arr.push(1);console.log(arr);names++;slide('name',2);for(var i in a)console.log(a[i])">open</button>
-    <div class="">isopen:{{isopen}} details……</div>
+    <button type="button" nj-click="slide(1,2);isopen=isopen=='d_hide'?'d_show':'d_hide'">open</button>
+    <div class="{{isopen}}">isopen:{{isopen}} details……</div>
 </div>
 <script>
-var arr = []
 noJS.use('$,lib/nojs/model', function($,nj){
     
     var m1 = nj.module('myModule', function(){
@@ -51,9 +50,8 @@ noJS.use('$,lib/nojs/model', function($,nj){
     });
     
     var m2 = nj.module('clickToggle', function(){
-        this.names=1
         this.slide = function(a,b){
-            console.log(a)
+            console.log(a,b)
         };
     })
     
