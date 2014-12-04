@@ -6,8 +6,8 @@ define(function(require){
     
     var $ = require('$'),
         slice = Array.prototype.slice,
-        validNode = /{{(\w+)}}/,
-        validNodes = /{{(\w+)}}/g;
+        validNode = /{{([\w\.\+\-\*\/\%\!:\?\d]+)}}/,
+        validNodes = /{{([\w\.\+\-\*\/\%\!:\?\d]+)}}/g;
     
     /**
      * 以model为单位 一个页面可存在多个 也可互相嵌套
@@ -15,7 +15,143 @@ define(function(require){
      * 
      */
     
-    
+    //创建一个空函数
+    var noopMethod = function(){
+        return function(){};
+    };
+
+    /**
+     * 解析语句
+     * 支持语法：1.赋值计算和条件运算符 2.执行函数 其余语句过滤掉
+     */
+    function syntaxParse(str, model){
+        var reStr = {},
+            attrName = {method:[], arg:[]},
+            watchKey = [],
+            data = {
+                //replaceStr : reStr,
+                watchKey : watchKey
+            };
+
+
+        //替换 字符串内容
+        var skey = '_nj_str_', akey = 'nj_arg_', n = 0;
+        str = str.replace(/"(?:\\"|[^"])*"|'(?:\\'|[^'])*'/g, function(a,b,c){
+            if( a ){
+                var key = skey+(++n);
+                reStr[key] = a;
+                return key;
+            }
+        })
+
+        //替换 语句块
+        str = str.replace(/\)\s*{[\w\W]*}/g, ')');
+
+        //提取 方法名
+        str.replace(/([\w\.\+\-\*\/\%\!:\?]+)\s*\(/g, function(a,b){
+            attrName.method.indexOf(b)<0 && attrName.method.push(b);  
+        })
+
+        //提取 参数中的变量列表 并替换 所有()内容
+        str = str.replace(/\(([\s\w\(\),\.\+\-\*\/\%\!:\?]*)\)/g, function(a,b){
+            //b(1,c,d(d1,d2))
+            b = b.split(/[,\+\-\*\/\%\!:\?]/);
+            b.forEach(function(arg){
+                arg = arg.replace(/^\(|\)$/, '');//替换掉收尾括号
+                if( arg.indexOf('(')>0 ){//参数内容带有函数执行
+                    arg = arg.split('(');
+                    attrName.method.indexOf(arg[0])<0 && attrName.method.push(arg[0]);    
+                    arg = arg[1];
+                }
+                checkArgument(arg) && attrName.arg.indexOf(arg)<0 && attrName.arg.push(arg) //&& console.log(arg);
+            })
+
+            var key = ';'+akey+(++n)+';';
+            reStr[key] = a;
+            return key;
+        })
+        
+        
+
+        //是否为有效的变量
+        function checkArgument(arg){
+            arg = $.trim(arg);
+            if( !arg || reStr[arg] || /^(\d+|true|false|var)$/.test(arg) ){
+                return false;
+            }else{
+                return true;
+            }
+        }
+
+        //分割并过滤语句
+        str = str.split(';');
+
+        var regCompute = /[\+\-\*\/%\!=\?:]/;
+
+        str.forEach(function(s, i){
+
+            str[i] = s = $.trim(s);
+
+            //运算符语句匹配 a=b; a=a==1?2:1;
+            
+            if( !s || !regCompute.test(s) ){
+                return;
+            }
+
+            var computeVars = s.split(regCompute);
+            computeVars.forEach(function(m){
+                checkArgument(m) && attrName.arg.indexOf(m)<0 && attrName.arg.push(m);
+            })
+        })
+
+        function initMethod(method, isFunction){
+            var parent = model, 
+                arr = method.split('.'), 
+                key = arr[0], 
+                last = $.trim(arr.slice(-1)[0]);
+
+            //函数每次执行的时候需要监控的变量
+            !isFunction && key && watchKey.indexOf(key)<0 &&  watchKey.push(key);
+
+            arr.forEach(function(m){
+                m = $.trim(m);
+                if( !m || /^true|false&/.test(m) ){//空字符串 或 关键字
+                    return;
+                }
+                parent[m] = parent[m] || ((m==last&&!isFunction)?undefined:noopMethod());
+                parent = parent[m];
+            });
+        }
+
+        attrName.method.forEach(function(name){
+            initMethod(name, true);
+        })
+
+        for( var i=0,n=attrName.arg.length,name; i<n; i++ ){
+            name = attrName.arg[i];
+            if( !checkArgument(name) ){//过滤无效参数 
+                attrName.arg.splice(i, 1);
+                i--;
+                n--;
+                continue;
+            }
+            initMethod(name);
+        }    
+
+        str = str.join(';');
+        //还原被替换的字符串
+        for( var i in reStr ){
+            str = str.replace(eval('/'+i+'/g'), reStr[i]);
+        }
+
+        data.str = str;
+
+        console.log(str,'\n',attrName.method,attrName.arg);
+
+        return data;
+    }
+
+
     /**
      * 创建一个module
      * 
@@ -50,145 +186,41 @@ define(function(require){
         })
         
         /**
+         * "a='b'+ c +1"
+         * "a.b(1+1,c,d(d1,d2))?'show':'hide'"
+         * "slide(1,2);isopen=isopen=='d_hide'?'d_show':'d_hide'"
+         *
+         * 
+         */
+        console.log(syntaxParse("a.b(1+1,c,d(d1,d2))?'show':'hide'", this.model))
+
+        /**
          * [nj-click="*"]绑定click事件
          * 
          */
         var clicks = this.element.find('[nj-click]');
         
         clicks.each(function(){
-            var str = $(this).attr('nj-click');
-            //var fn = new Function(str);
-            
-            /**
-             * 解析语句
-             * 支持语法：1.赋值 2.执行函数 其余语句过滤掉
-             * 
-             * 1. 替换{语句块}的内容及''的内容
-             * 2. 以';'分割语句
-             * 3. 
-             *     
-             */
-            var fnKey = 'nj-click-fn-'+(+new Date),
-                reStr = {},
-                attrName = {method:[], arg:[], vars:[]},
-                watchKey = [];
-
-            str = str.replace(/\)\s*{[\w\W]*}/g, ')');
-
-            //替换字符串内容
-            var skey = 'nj_str_', n = 0;
-            str = str.replace(/"(?:\\"|[^"])*"|'(?:\\'|[^'])*'/g, function(a,b,c){
-                if( a ){
-                    var key = skey+(++n);
-                    reStr[key] = a;
-                    return key;
-                }
-            })
-            //console.log(str)
-
-            //分割并过滤语句
-            str = str.split(';');
-            str.forEach(function(s, i){
-
-                str[i] = s = $.trim(s);
-
-                /**
-                 * \)[^;$]   函数执行必须为一句单独的语句 避免for(var i a) console.log(a[i]) 
-                 * [{}]+     去除含语句块的
-                 */
-                if( /\)[^;$]|[{}]+/.test(s) ){
-                    str[i] = '';
-                    return;
-                }
-
-                /**
-                 * 匹配方法名称及属性名称
-                 */
-                var methods = /^([\w\.]+)\(/.exec(s),
-                    argVars = /\(([\w\s,\.\-+]+)\)$/.exec(s),
-                    //运算符 a=b; a=a==1?2:1;
-                    computeVars = /(?:^|[\(\s])([\w]+)[\+\-\*\/\!=]{1,2}([\w\?\:\+\-\*\/\!=]*)(?:$|[\s\),])/.exec(s);
-
-                //方法名
-                if( methods ){
-                    methods.shift();
-                    methods.forEach(function(m){
-                        attrName.method.push(m);
-                    })
-                }
-                //参数 可能是属性名 也可能是方法名
-                if( argVars ){
-                    argVars.shift();
-                    argVars.forEach(function(m){
-                        attrName.arg = attrName.arg.concat(m.split(/[\+\-\*\/=\?\:,]/));
-                    })
-                }
-                //运算的对象
-                if( computeVars ){
-                    computeVars.shift();
-                    computeVars.forEach(function(m){
-                        attrName.arg = attrName.arg.concat(m.split(/[\+\-\*\/=\?\:]/));
-                    })
-                }
-
-                //console.log(i, [].concat(attrName.method), [].concat(attrName.arg))
-            })
-            //console.log([].concat(attrName.method), [].concat(attrName.arg))
-
-            var noopMethod = function(){
-                return function(){};
-            };
-
-            //isFunction 当method作为参数或者运算对象时 最末尾的置为undefined 否则置为noop
-            function initMethod(method, isFunction){
-                var parent = self.model, arr = method.split('.'), last = $.trim(arr.slice(-1)[0]);
-                watchKey.push(arr[0]);
-                arr.forEach(function(m){
-                    //console.log('initMethod',m)
-                    m = $.trim(m);
-                    if( !m || /^true|false&/.test(m) ){//空字符串 或 关键字
-                        return;
-                    }
-                    parent[m] = parent[m] || ((m==last&&!isFunction)?undefined:noopMethod());
-                    parent = parent[m];
-                });
-            }
-
-            attrName.method.forEach(function(name){
-                initMethod(name, true);
-            })
-            attrName.arg.forEach(function(name){
-                //console.log('attrName.arg',name)
-                if( reStr[name] || /^\d+$/.test(name) ){//过滤被替换的字符串 
-                    return;
-                }
-                initMethod(name);
-            })
-
-            str = str.join(';');
-            //还原被替换的字符串
-            for( var i in reStr ){
-                str = str.replace(eval('/'+i+'/g'), reStr[i]);
-            }
-            //console.log(str)
+            var str = $(this).attr('nj-click'),
+                fnKey = 'nj-click-fn-'+(+new Date),
+                watchKey;
 
             this.onclick = function(){
-                
                 if( !this[fnKey] ){                
-                    
-                    //console.log(notDefinedVars);
+                    var data = syntaxParse(str, self.model);
+                    //console.log(data)
+                    watchKey = data.watchKey;
+                    this[fnKey] = data.str;
                 }
-                this[fnKey] = str;
-                
-
                 with(self.model){
                     eval(this[fnKey]);
                     try{
-
+                        
                     }catch(e){
-                        console.log(e)
+                        //console.error(e)
                     }
                 };
+                console.log(watchKey)
                 watchKey.forEach(function(key){
                     self.apply(key);
                 })
@@ -305,6 +337,7 @@ define(function(require){
             })
             //console.log(this.subscriber)
             for( var i in this.subscriber ){
+                //console.log(i)
                 this.apply(i);
             }
         },
@@ -312,8 +345,8 @@ define(function(require){
             var self = this,
                 subscriber = this.subscriber[key] || [],
                 value = this.model[key];
-                
-            if( value===undefined ){
+            
+            if( key.indexOf('.')<0 && value===undefined ){
                 return;
             }
             //遍历所以订阅该属性的节点
@@ -333,17 +366,27 @@ define(function(require){
                         var attrName = item.node.name, parentNode;
                         if( /checked|disabled|readonly|multiple|selected/.test(attrName) ){
                             parentNode = item.node.$parentElement;
-                            text = !!parseInt(value, 10);
-                            parentNode[text?'setAttribute':'removeAttribute'](attrName, attrName);
+                            //text = !!parseInt(value, 10);
+                            parentNode[value?'setAttribute':'removeAttribute'](attrName, attrName);
                             return;
                         }
                     }
                     //该节点可能订阅多个相同或不同的属性 所以分批替换
                     text.replace(validNodes, function(a,b){
-                        value = self.model[b];
-                        if( value!==undefined ){
-                            reg = eval('/{{'+b+'}}/g');
-                            text = text.replace(reg, value)
+                        //value = self.model[b];                        
+                        var $val;
+                        console.log(text,b)
+                        reg = eval('/{{'+b+'}}/g');
+                        with(self.model){
+                            try{
+                                $val = eval(b);
+                            }catch(e){
+
+                            }
+                        }
+                        //console.log('value:'+$val,reg,self.model.$val)
+                        if( $val!==undefined ){
+                            text = text.replace(reg, $val);
                         }
                     })
                     item.node[type==1||type==2?'value':'nodeValue'] = text;

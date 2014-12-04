@@ -20,11 +20,11 @@ noJS.config({
     <div>
         <textarea data-name="{{name}}">{{name}}+abc</textarea>
     </div>
-    <input type="text" nj-item="name" />
-    <div data-class="{{name}}">name:{{name}} - {{name1}}</div>
+    <input type="text" nj-item="name" value="" />
+    <div data-class="{{name}}">name:{{arr.x+1}} - {{name1}}</div>
     <input type="checkbox" nj-item="checked">
-    <select name="" >
-        <option value="0" selected="{{checked}}">0</option>
+    <select name="" disabled="{{checked}}">
+        <option value="0" selected="">0</option>
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
@@ -41,19 +41,21 @@ noJS.use('$,lib/nojs/model', function($,nj){
     
     var m1 = nj.module('myModule', function(){
         this.name = 'myname';
+        this.arr = {x:1};
         //this.$set('name','nolure');
         
         var self = this;
         setTimeout(function(){
             self.$set('name1','myname1');
-        },1000)
+        },2000)
     });
     
-    var m2 = nj.module('clickToggle', function(){
-        this.slide = function(a,b){
-            console.log(a,b)
-        };
-    })
+    // var m2 = nj.module('clickToggle', function(){
+    //     this.slide = function(a,b){
+    //         console.log(a,b)
+    //     };
+
+    // })
     
 })
 </script>

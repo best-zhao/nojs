@@ -3,8 +3,8 @@
 <h1><%=title%></h1>
 
 <div id="menu_manage" ng-controller="menuItems">
-    <input type="text" ng-model="names" value="{{names}}+12" />{{names}}
-    <div ng-click="aa=a*4;console.log(aa,a)">1212</div>
+    <input type="text" ng-model="names" value="{{names*2}}+12" />{{names}}
+    <div ng-click="console.log((12+c),fn('function(){console.log(123+a)}'))">1212</div>
     <span id="menu_items"></span>
     <span class="opt">
         <a href="/a/menu/del/{{id}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
@@ -79,8 +79,8 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
             { msg: '1Data Received!' },
             { msg: '2Data Received!' }
         ];
-        $scope.$scope = function(){
-            console.log('for')
+        $scope.fn = function(f){
+            console.log(f)
         }
         $scope.console = {};
         $scope.console.log = function(a,b){
