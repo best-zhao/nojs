@@ -167,57 +167,6 @@ define(function(require){
         return dom.$syntax = syntaxParse(str, model);
     }
 
-    //将节点本身、其属性节点及其childNodes中的文本节点 筛选出有效的订阅节点
-    function getSubscribeNodes(node){
-        var html = $.trim(node.outerHTML || node.nodeValue),
-            children, $children,
-            i, n, _node, text, attrs, subNodes = [];
-
-        if( !validNode.test(html) ){
-            return subNodes;
-        }
-
-        //获取属性节点
-        if( node.nodeType==1 ){
-            attrs = slice.call(node.attributes, 0);
-            attrs.forEach(function(n){
-                if( validNode.test(n.value) ){
-                    n.$parentElement = node;
-                    subNodes.push(n);
-                } 
-            })
-
-            //textarea手动修改内容后 子节点会被替换 所以其包含的文本节点不用添加
-            //<textarea>{{name}}+abc</textarea>
-            if( node.type=='textarea' ){
-                subNodes.push(node);
-                return subNodes;
-            }
-        }else if( validNode.test(html) ){//满足条件的文本节点
-            subNodes.push(node);
-            return subNodes;
-        }
-        
-
-        //将children中有用的文本节点添加到subNodes数组中
-        children = slice.call(node.childNodes, 0);
-        $children = $(node).children();
-        n = children.length;
-            
-        for( i=0; i<n; i++ ){
-            _node = children[i];
-            if( _node.nodeType!=3 ){
-                continue;
-            }
-            text = $.trim(_node.nodeValue);
-            if( text && validNode.test(text) ){
-                subNodes.push(_node);
-            }
-        }
-
-        return subNodes;
-    }
-
     //获取全部子节点 包括文本节点
     function getAllChildren(node, options){
         options = options || {};
@@ -238,7 +187,7 @@ define(function(require){
                 node.nodeType==1 && each(node.childNodes);
             }
         }
-        each(node.childNodes);
+        each($.type(node)=='array' ? node : node.childNodes);
 
         function push(node){
             if( options.filter ){
@@ -253,40 +202,7 @@ define(function(require){
         return children;
     }
 
-    //获取node中有效的订阅子节点及属性节点
-    function getValidSubscribe(node){
-        return getAllChildren(node, {
-            filter : function(node){
-                return getValidSubscribe.filter(node);
-            }
-        })
-    }
-    getValidSubscribe.filter = function(node){
-        var subNodes = [], type = node.nodeType;
-
-        //获取属性节点
-        if( type==1 ){
-            var attrs = slice.call(node.attributes, 0);
-            attrs.forEach(function(n){
-                console.log(n)
-                if( validNode.test(n.value) ){
-                    n.$parentElement = node;//记录属性节点所在的元素节点
-                    subNodes.push(n);
-                } 
-            })
-
-            //textarea手动修改内容后 子节点会被替换 所以其包含的文本节点不用添加
-            //<textarea>{{name}}+abc</textarea>
-            if( node.type=='textarea' ){
-                subNodes.push(node);
-            }
-        }else if( type==3 ){//满足条件的文本节点
-            var html = $.trim(node.nodeValue);
-            validNode.test(html) && subNodes.push(node);
-        }
-        
-        return subNodes;
-    }
+    //获取node中有效的订阅子节点及属性节点   
 
     /**
      * 创建一个module
@@ -298,6 +214,7 @@ define(function(require){
         this.models = [];
         
         this.subscriber = {};
+        this.subscriberArray = {};
         
         var self = this;
         
@@ -374,8 +291,10 @@ define(function(require){
                 })
             };
         })
-        this.getSubscriber();
-
+        this.getSubscriber(el);
+        for( var i in this.subscriber ){
+            this.apply(i);
+        }
     }
     Module.prototype = {
         createModel : function(el){
@@ -403,7 +322,8 @@ define(function(require){
                      * 因为这里是双向绑定 否则只替换{{name}}
                      */
                     writeAll : true
-                });               
+                });
+                el.$scope = this.model;               
                 
                 $(el).on('change keydown', function(){
                     var v = this;
@@ -422,54 +342,14 @@ define(function(require){
             model = model || this.model;
 
             var self = this,
-                subs = element[0].childNodes,
-                $subNodes = slice.call(element.find('*'), 0).concat(slice.call(subs, 0)),
-                subNodes = [];
+            subScope = model===this.model ? this.subscriber : this.subscriberArray,
 
-            $subNodes.forEach(function(node){
-                
-                var elementNode = node.nodeType==1;//元素节点
-                if( node.$filter || elementNode && /script|style/.test(node.tagName.toLowerCase()) ){
-                    //console.log(node.$filter, node, node.parentNode)
-                    return;
+            subNodes = getAllChildren(element, {
+                filter : function(node){
+                    return self.getValidSubscribe(node);
                 }
-                node.$filter = 1;
-                
-                var njEach = elementNode && node.getAttribute('nj-each'),
-                    childNodes = node.childNodes;
+            });
 
-                if( njEach ){
-                    var eachData = /^\s*([\w]+)\s+in\s+([\w]+)\s*$/.exec(njEach);
-                    if( !eachData ){
-                        return;
-                    }
-                    //to array
-                    childNodes = slice.call(childNodes, 0);
-
-                    //将其子元素拷贝一份作为each模板
-                    var eachNodesClone = childNodes
-                    // var eachNodesClone = childNodes.map(function(node){
-                    //     return node;
-                    // });
-
-                    //将其内部所有元素标记 $filter
-                    // slice.call($(node).find('*'), 0).concat(childNodes).forEach(function(n){
-                    //     n.$filter = 1;
-                    // });
-                    getAllChildren(node).forEach(function(n){
-                        n.$filter = 1;
-                    })
-                    node.innerHTML = '';
-                    node.$each = {
-                        index : eachData[1],
-                        templete : eachNodesClone
-                    }
-                    self.pushSubscriber(node, eachData[2]);
-                    return;
-                }
-                subNodes = subNodes.concat(getSubscribeNodes(node));
-            })
-            
             subNodes.forEach(function(node){
                 var keys = [], 
                     value = node.value || node.nodeValue;
@@ -479,18 +359,80 @@ define(function(require){
                 value.replace(validNodes, function(a,b){
                     b && keys.indexOf(b)<0 && keys.push(b);
                 });
-                self.pushSubscriber(node, keys); 
+                self.pushSubscriber(node, keys, null, subScope); 
+
+                node.$scope = model;
             })
             
-            for( var i in this.subscriber ){
-                this.apply(i);
-            }
         },
+        getValidSubscribe : function(node){
+            var self = this,
+                subNodes = [], 
+                type = node.nodeType,
+                elementNode = type==1;//元素节点
 
+            if( node.$filter || elementNode && /script|style/.test(node.tagName.toLowerCase()) ){
+                return subNodes;
+            }
+            node.$filter = 1;
+
+            //获取属性节点
+            if( type==1 ){
+
+                var attrs = slice.call(node.attributes, 0);
+                attrs.forEach(function(n){
+                    if( validNode.test(n.value) ){
+                        n.$parentElement = node;//记录属性节点所在的元素节点
+                        subNodes.push(n);
+                    } 
+                })
+
+                var njEach = elementNode && node.getAttribute('nj-each');
+
+                if( njEach ){
+                    var eachData = /^\s*([\w]+)\s+in\s+([\w]+)\s*$/.exec(njEach);
+                    if( !eachData ){
+                        return subNodes;
+                    }
+                    //to array
+                    childNodes = slice.call(node.childNodes, 0);
+
+                    //将其子元素拷贝一份作为each模板
+                    var eachNodesClone = childNodes;                    
+
+                    //将其内部所有元素标记 $filter                    
+                    getAllChildren(node).forEach(function(n){
+                        n.$filter = 1;
+                    })
+                    node.innerHTML = '';
+                    node.$each = {
+                        index : eachData[1],
+                        templete : eachNodesClone,
+                        //保存子模型 new Module()
+                        models : []
+                    }
+                    self.pushSubscriber(node, eachData[2]);
+                    return subNodes;
+                }
+
+                //textarea手动修改内容后 子节点会被替换 所以其包含的文本节点不用添加
+                //<textarea>{{name}}+abc</textarea>
+                if( node.type=='textarea' ){
+                    subNodes.push(node);
+                }
+            }else if( type==3 ){//满足条件的文本节点
+                var html = $.trim(node.nodeValue);
+                validNode.test(html) && subNodes.push(node);
+            }
+            
+            return subNodes;
+        },
         //保存获取到的订阅者
         //key: {{key}} 多个key为数组
-        pushSubscriber : function(node, key, data){
+        //@subScope : 数组单独保存一个对象this.subscriberArray 默认this.subscriber
+        pushSubscriber : function(node, key, data, subScope){
             var self = this, value = node.value || node.nodeValue, _key = key, keyType = $.type(key);
+            subScope = subScope || this.subscriber;
 
             if( keyType=='string' || data && data.writeAll ){
                 push(key);
@@ -509,7 +451,7 @@ define(function(require){
             vars.forEach(push);
 
             function push(k){
-                self.subscriber[k] = self.subscriber[k] || [];
+                subScope[k] = subScope[k] || [];
                 
                 data = $.extend(data, {
                     node : node,
@@ -520,7 +462,7 @@ define(function(require){
                     //提取的表达式
                     expressions  : keyType=='array' ? _key : [key]
                 })
-                self.subscriber[k].push(data);
+                subScope[k].push(data);
             }
         },
         //notApply：需要过滤的元素
@@ -543,25 +485,27 @@ define(function(require){
             
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
-
-                if( item.node===notApply ){
+                var node = item.node;
+                if( node===notApply ){
                     return;
                 }
 
+
                 if( observableArray ){
-                    self.applyArray(item.node, key);
+                    self.applyArray(node, key);
                     //console.log(item.node.$each, self.model[key])
                     return;
                 }
 
-                var type = item.node.nodeType;
+                var type = node.nodeType,
+                    scope;
                 
                 if( item.writeAll ){
-                    item.node.value = value;
+                    node.value = value;
                     
                 }else if( type==1 ||type==2 || type==3 ){//元素、属性、文本节点
 
-                    var text = item.value || item.node.value, 
+                    var text = item.value || node.value, 
                         reg;
 
                     if( !text ){
@@ -569,21 +513,20 @@ define(function(require){
                     }
                     //属性节点中checked disabled readonly单独处理
                     if( type==2 ){
-                        var attrName = item.node.name, parentNode;
+                        var attrName = node.name, parentNode;
                         if( /checked|disabled|readonly|multiple|selected/.test(attrName) ){
-                            parentNode = item.node.$parentElement;
+                            parentNode = node.$parentElement;
                             //text = !!parseInt(value, 10);
                             parentNode[value?'setAttribute':'removeAttribute'](attrName, attrName);
                             return;
                         }
                     }
-                    
+                    scope = node.$scope || self.model;
                     //该节点可能订阅多个相同或不同的属性 所以分批替换
                     text.replace(validNodes, function(a,b){
-                        //value = self.model[b];                        
                         var $val;
                         reg = eval('/{{'+b.replace(/([.\/\+\-\*\/\%\?:])/g, '\\$1')+'}}/g');
-                        with(self.model){
+                        with(scope){
                             $val = eval(b);
                             try{
                                 
@@ -595,27 +538,24 @@ define(function(require){
                         //console.log('value:'+$val,reg,self.model.$val)
                         if( $val!==undefined ){
                             text = text.replace(reg, $val);
-                            
                         }
-                        //console.log($val)
                     })
-                    //console.log(text)
 
-                    item.node[type==1||type==2?'value':'nodeValue'] = text;
+                    node[type==1||type==2?'value':'nodeValue'] = text;
                 }               
             })
         },
         applyArray : function(node, key){
             var self = this,
                 eachData = node.$each,
-                data = self.model[key],
+                array = self.model[key],
                 templete = eachData.templete;
 
             var frag = document.createDocumentFragment(),
                 groupNodes;
             
             //遍历数组
-            for( var i in data ){
+            for( var i in array ){
 
                 //获取该组所有节点及子节点
                 groupNodes = [];
@@ -624,9 +564,11 @@ define(function(require){
                     //从模板节点中拷贝 一份
                     var node = n.cloneNode(true);
                     frag.appendChild(node);
-                    //groupNodes = groupNodes.concat(getChildren(node, true));
+                    groupNodes.push(node);
                 })
-                //console.log(groupNodes)
+                //this.getSubscriber(groupNodes, array[i]);
+                console.log($('<div></div>').html(groupNodes));
+                //eachData.models.push(new Module())
             }
             node.appendChild(frag);
         }
