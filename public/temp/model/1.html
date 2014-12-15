@@ -18,10 +18,14 @@ noJS.config({
 <body>
 
 <div nj-module="arrayEach">
-    <input type="text" nj-item="names" data-name="{{names}}">{{names}}aaa
+    <input type="text" nj-item="names" data-name="{{names}}">{{names}}-aaa
     <ul nj-each="item in list">
-        <li data-name="{{item}}">{{item}} <span></span></li>
+        <li data-names="{{name}}">{{name}} <span></span>
+            <input type="text" nj-item="name" />
+            <a href="" nj-click="remove()">remove</a>
+        </li>
     </ul> 
+    <!-- <button class="nj_btn" nj-click="console(12)">test</button> -->
 </div>
 
 <!-- <div nj-module="myModule">
@@ -50,7 +54,13 @@ noJS.config({
 noJS.use('$,lib/nojs/model', function($,nj){
 
     nj.module('arrayEach', function(){
-        this.list = [1,2,3]
+        this.list = [{name:1,remove:function(){
+            console.log(this)
+        }},{name:2}]
+        
+        this.console = function(){
+            console.log(arguments)
+        }
     })
     
     // var m1 = nj.module('myModule', function(){

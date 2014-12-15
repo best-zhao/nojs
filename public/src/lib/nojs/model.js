@@ -1,5 +1,5 @@
 /**
- * nojs.model
+ * nojs mvc
  * 2014-11-28
  */
 define(function(require){
@@ -89,13 +89,13 @@ define(function(require){
 
         var regCompute = /[\+\-\*\/%\!=\?:]/,       //包含运算符的
             validStr = /[\w\.\+\-\*\/%\!=\?:]+/;    //不一定包含运算符的
-
+        
         str.forEach(function(s, i){
 
             str[i] = s = $.trim(s);
-
+            
             //运算符语句匹配 a=b; a=a==1?2:1;            
-            if( !s || !validStr.test(s) ){
+            if( !s || reStr[';'+s+';'] || !validStr.test(s) ){
                 return;
             }
 
@@ -130,7 +130,7 @@ define(function(require){
         methods.forEach(function(name){
             initMethod(name, true);
         })
-
+        
         for( var i=0,n=vars.length,name; i<n; i++ ){
             name = vars[i];
             if( !checkArgument(name) ){//过滤无效参数 
@@ -173,6 +173,9 @@ define(function(require){
         options = options || {};
         
         var children = [];
+        if( !node ){
+            return children;
+        }
 
         options.andSelf && push(node);
 
@@ -217,7 +220,7 @@ define(function(require){
         this.models = [];
         
         this.subscriber = {};
-        this.subscriberArray = {};
+        //this.subscriberArray = {};
         
         var self = this;
         
@@ -247,6 +250,7 @@ define(function(require){
                 //console.log(this.arr.x)
             }
             this.model = new model();
+            
         }
         
         this.domID = {};
@@ -276,8 +280,11 @@ define(function(require){
         var clicks = $el.find('[nj-click]');
         
         clicks.each(function(){
+            
             var str = $(this).attr('nj-click');
-            this.onclick = function(){
+            
+            this.onclick = function(e){
+                
                 var data = syntaxInitialize(this, str, self.model),
                     watchKey = data.watchKey;
                 
@@ -286,16 +293,17 @@ define(function(require){
                     try{
                         
                     }catch(e){
-                        //console.error(e)
+                        console.error(e)
                     }
                 };
                 watchKey.forEach(function(key){
                     self.apply(key);
                 })
+                e.preventDefault()
             };
         })
         this.getSubscriber(el);
-        //console.log(this.subscriber)
+        
         for( var i in this.subscriber ){
             this.apply(i);
         }
@@ -346,13 +354,15 @@ define(function(require){
             model = model || this.model;
 
             var self = this,
-            subScope = model===this.model ? this.subscriber : this.subscriberArray,
+            //subScope = model===this.model ? this.subscriber : this.subscriberArray,
 
             subNodes = getAllChildren(element, {
                 filter : function(node){
                     return self.getValidSubscribe(node);
                 }
             });
+            
+            //console.log(element)
 
             subNodes.forEach(function(node){
                 var keys = [], 
@@ -363,7 +373,7 @@ define(function(require){
                 value.replace(validNodes, function(a,b){
                     b && keys.indexOf(b)<0 && keys.push(b);
                 });
-                self.pushSubscriber(node, keys, null, subScope); 
+                self.pushSubscriber(node, keys, null); 
 
                 node.$scope = model;
             })
@@ -570,8 +580,7 @@ define(function(require){
                     groupNodes.push(node);
                 })
                 //this.getSubscriber(groupNodes, array[i]);
-                //console.log(groupNodes);
-                //eachData.models.push(new Module())
+                eachData.models.push(new Module(groupNodes, array[i]))
             }
             node.appendChild(frag);
         }
