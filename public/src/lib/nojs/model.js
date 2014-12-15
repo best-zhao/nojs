@@ -168,6 +168,7 @@ define(function(require){
     }
 
     //获取全部子节点 包括文本节点
+    //支持单个节点或者一组节点Array
     function getAllChildren(node, options){
         options = options || {};
         
@@ -206,10 +207,12 @@ define(function(require){
 
     /**
      * 创建一个module
-     * 
+     * @isArray:true 创建主module下each对象的实例
      */
-    function Module(el, model){
-        this.element = $(el);
+    function Module(el, model, isArray){
+        this.element = el;
+        //console.log(typeof el)
+        var $el = $(el);//转化为jQuery对象时会丢失文本节点
         this.model = model || {};
         this.models = [];
         
@@ -252,7 +255,7 @@ define(function(require){
          * [nj-item="*"]声明一个变量 并实现双向绑定
          * 一般为表单元素 （用户可输入的）匹配其value值
          */
-        var items = this.element.find('[nj-item]');
+        var items = $el.find('[nj-item]');
         items.each(function(){
             self.models.push(self.createModel(this));
         })
@@ -270,7 +273,7 @@ define(function(require){
          * [nj-click="*"]绑定click事件
          * 
          */
-        var clicks = this.element.find('[nj-click]');
+        var clicks = $el.find('[nj-click]');
         
         clicks.each(function(){
             var str = $(this).attr('nj-click');
@@ -292,6 +295,7 @@ define(function(require){
             };
         })
         this.getSubscriber(el);
+        //console.log(this.subscriber)
         for( var i in this.subscriber ){
             this.apply(i);
         }
@@ -476,7 +480,6 @@ define(function(require){
                 observableArray = /array|object/.test(valueType),
                 _key = key.split('.');
             
-            
             if( key.indexOf('.')<0 && value===undefined ){
                 //return;
             }
@@ -567,7 +570,7 @@ define(function(require){
                     groupNodes.push(node);
                 })
                 //this.getSubscriber(groupNodes, array[i]);
-                console.log($('<div></div>').html(groupNodes));
+                //console.log(groupNodes);
                 //eachData.models.push(new Module())
             }
             node.appendChild(frag);
@@ -583,7 +586,7 @@ define(function(require){
     
     return {
         module : function(name, model){
-            var el = $(document.body).find('[nj-module="'+name+'"]');
+            var el = $(document.body).find('[nj-module="'+name+'"]')[0];
             return new Module(el, model).model;
         }
     }
