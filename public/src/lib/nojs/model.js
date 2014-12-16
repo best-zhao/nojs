@@ -6,8 +6,8 @@ define(function(require){
     
     var $ = require('$'),
         slice = Array.prototype.slice,
-        validNode = /{{([\w\.\+\-\*\/\%\!:\?\d''""]+)}}/,
-        validNodes = /{{([\w\.\+\-\*\/\%\!:\?\d''""]+)}}/g;
+        validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""]+)\s*}}/,
+        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""]+)\s*}}/g;
     
     /**
      * 以model为单位 一个页面可存在多个 也可互相嵌套
@@ -83,8 +83,9 @@ define(function(require){
                 return true;
             }
         }
+        
 
-        //分割并过滤语句
+        //分割并过滤语句 提取相关变量名
         str = str.split(';');
 
         var regCompute = /[\+\-\*\/%\!=\?:]/,       //包含运算符的
@@ -96,6 +97,11 @@ define(function(require){
             
             //运算符语句匹配 a=b; a=a==1?2:1;            
             if( !s || reStr[';'+s+';'] || !validStr.test(s) ){
+                return;
+            }
+
+            //console.log;nj_arg_1; 替换()后 这里变量匹配可能会出现重复
+            if( methods.indexOf(s)>=0 && reStr[';'+str[i+1]+';'] ){
                 return;
             }
 
@@ -117,16 +123,19 @@ define(function(require){
             //函数每次执行的时候需要监控的变量
             !isFunction && key && watchKey.indexOf(key)<0 && watchKey.push(key);
 
-            arr.forEach(function(m){
+            arr.forEach(function(m, i){
                 m = $.trim(m);
                 if( !m || /^true|false&/.test(m) ){//空字符串 或 关键字
+                    return;
+                }
+                if( i==0 && isFunction && typeof window[m]!='undefined' ){//全局对象下存在的函数
                     return;
                 }
                 parent[m] = parent[m]===undefined ? ((m==last&&!isFunction)?undefined:noopMethod()) : parent[m];
                 parent = parent[m];
             });
         }
-
+        
         methods.forEach(function(name){
             initMethod(name, true);
         })
@@ -212,47 +221,62 @@ define(function(require){
      * 创建一个module
      * @isArray:true 创建主module下each对象的实例
      */
-    function Module(el, model, isArray){
+    function Module(el, model, options){
         this.element = el;
         //console.log(typeof el)
         var $el = $(el);//转化为jQuery对象时会丢失文本节点
-        this.model = model || {};
+        //this.model = model || {};
+        this.options = options = options || {};
         this.models = [];
         
         this.subscriber = {};
-        //this.subscriberArray = {};
         
-        var self = this;
+        var self = this,
+            _model = model,
+            modelType = $.type(model);
         
-        if( typeof model == 'function' ){
-            model.prototype.$set = function(key, value) {
-                
-                var parent = this, i=0,  _key = key.split('.'), n=_key.length, name = _key.slice(-1);
-                for( ; i<n-1; i++ ){
-                    if( !parent ){
-                        return;
+        if( typeof model != 'function' ){
+
+            model = function(){
+                //this.$data = _model;
+                this.$key = options.$key;
+                if( modelType == 'object' ){
+                    for( var i in _model ){
+                        this[i] = _model[i];
                     }
-                    parent = parent[_key[i]];
                 }
-
-                //a.b.c 这里的c可能为一个函数 需要不同处理
-                if( typeof parent[name]=='function' ){
-
-                    //函数可能存在多个参数 从$set的第二个参数开始均为其参数
-                    var args = slice.call(arguments, 1, arguments.length);
-                    parent[name].apply(null, args);
-
-                }else{
-                    //a.b.c = value 赋值
-                    parent[name] = value;
-                }
-                self.apply(key);
-                //console.log(this.arr.x)
             }
-            this.model = new model();
-            
         }
-        
+
+        model.prototype.$parent = this.options.$parent || this;
+        model.prototype.$set = function(key, value) {
+            
+            var parent = this, i=0,  _key = key.split('.'), n=_key.length, name = _key.slice(-1);
+            for( ; i<n-1; i++ ){
+                if( !parent ){
+                    return;
+                }
+                parent = parent[_key[i]];
+            }
+
+            //a.b.c 这里的c可能为一个函数 需要不同处理
+            if( typeof parent[name]=='function' ){
+
+                //函数可能存在多个参数 从$set的第二个参数开始均为其参数
+                var args = slice.call(arguments, 1, arguments.length);
+                parent[name].apply(null, args);
+
+            }else{
+                //a.b.c = value 赋值
+                parent[name] = value;
+            }
+            self.apply(key);
+            //console.log(this.arr.x)
+        }
+
+        this.model = new model();
+        //console.log(this.model)
+
         this.domID = {};
         
         /**
@@ -284,7 +308,6 @@ define(function(require){
             var str = $(this).attr('nj-click');
             
             this.onclick = function(e){
-                
                 var data = syntaxInitialize(this, str, self.model),
                     watchKey = data.watchKey;
                 
@@ -303,7 +326,7 @@ define(function(require){
             };
         })
         this.getSubscriber(el);
-        
+        //console.log(this.subscriber)
         for( var i in this.subscriber ){
             this.apply(i);
         }
@@ -321,7 +344,7 @@ define(function(require){
                 key : key
             };
             
-            this.model[key] = this.model[key] || '';
+            this.model[key] = typeof this.model[key]=='undefined' ? '' : this.model[key];
             this.domID[id] = el;
             
             if( isFormElement ){
@@ -340,9 +363,14 @@ define(function(require){
                 $(el).on('change keydown', function(){
                     var v = this;
                     setTimeout(function(){
-                        self.model[key] = v[v.type=='checkbox' ? 'checked' : 'value'];
+                        var val = v[v.type=='checkbox' ? 'checked' : 'value'];
+                        self.model[key] = val;
                         //参数2：手动输入时 不用更新当前对象
                         self.apply(key, v);
+                        // if( self.model.$data ){
+                        //     self.model.$data[key] = val;
+                        //     self.apply('$data.'+key, v);
+                        // }
                     },0)
                 })
             }
@@ -404,7 +432,7 @@ define(function(require){
                 var njEach = elementNode && node.getAttribute('nj-each');
 
                 if( njEach ){
-                    var eachData = /^\s*([\w]+)\s+in\s+([\w]+)\s*$/.exec(njEach);
+                    var eachData = /^\s*([\w]+)\s*$/.exec(njEach);
                     if( !eachData ){
                         return subNodes;
                     }
@@ -420,12 +448,12 @@ define(function(require){
                     })
                     node.innerHTML = '';
                     node.$each = {
-                        index : eachData[1],
+                        //index : eachData[1],
                         templete : eachNodesClone,
                         //保存子模型 new Module()
                         models : []
                     }
-                    self.pushSubscriber(node, eachData[2]);
+                    self.pushSubscriber(node, eachData[1]);
                     return subNodes;
                 }
 
@@ -445,7 +473,12 @@ define(function(require){
         //key: {{key}} 多个key为数组
         //@subScope : 数组单独保存一个对象this.subscriberArray 默认this.subscriber
         pushSubscriber : function(node, key, data, subScope){
-            var self = this, value = node.value || node.nodeValue, _key = key, keyType = $.type(key);
+            var self = this, 
+                value = node.value || node.nodeValue, 
+                _key = key, 
+                keyType = $.type(key),
+                rKey = /^\$(data|parent|root)\./;
+
             subScope = subScope || this.subscriber;
 
             if( keyType=='string' || data && data.writeAll ){
@@ -464,23 +497,42 @@ define(function(require){
 
             vars.forEach(push);
 
+
             function push(k){
+                console.log(k,vars || [_key],self.options)
+                //替换一些特殊的关键字 $data.name 实际上是订阅的name属性
+                var _k = k;
+                k = k.replace(rKey, function(a,b){
+                    if( b=='parent' ){
+                        //该节点访问的是父级 所以将其添加到父对象的订阅列表中
+                        self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
+                    }
+                    return '';
+                });
+                if( _k.indexOf('$parent.')==0 ){
+                    //return;
+                }
+
+
                 subScope[k] = subScope[k] || [];
                 
-                data = $.extend(data, {
+                data = $.extend({
                     node : node,
 
                     //保存原文本
                     value : value,
 
                     //提取的表达式
-                    expressions  : keyType=='array' ? _key : [key]
-                })
+                    //expressions  : keyType=='array' ? _key : [key],
+                    
+                    vars : vars || [k]
+                },data)
                 subScope[k].push(data);
             }
         },
         //notApply：需要过滤的元素
         apply : function(key, notApply){
+
             var self = this,
                 subscriber = this.subscriber[key] || [],
                 value = this.model[key],
@@ -489,6 +541,7 @@ define(function(require){
                 //数组或关联数组监控对象
                 observableArray = /array|object/.test(valueType),
                 _key = key.split('.');
+
             
             if( key.indexOf('.')<0 && value===undefined ){
                 //return;
@@ -510,13 +563,12 @@ define(function(require){
                     return;
                 }
 
-                var type = node.nodeType,
-                    scope;
+                var type = node.nodeType;
                 
                 if( item.writeAll ){
                     node.value = value;
                     
-                }else if( type==1 ||type==2 || type==3 ){//元素、属性、文本节点
+                }else{
 
                     var text = item.value || node.value, 
                         reg;
@@ -529,16 +581,22 @@ define(function(require){
                         var attrName = node.name, parentNode;
                         if( /checked|disabled|readonly|multiple|selected/.test(attrName) ){
                             parentNode = node.$parentElement;
-                            //text = !!parseInt(value, 10);
                             parentNode[value?'setAttribute':'removeAttribute'](attrName, attrName);
                             return;
                         }
                     }
-                    scope = node.$scope || self.model;
+
                     //该节点可能订阅多个相同或不同的属性 所以分批替换
                     text.replace(validNodes, function(a,b){
-                        var $val;
-                        reg = eval('/{{'+b.replace(/([.\/\+\-\*\/\%\?:])/g, '\\$1')+'}}/g');
+                        var $val, 
+                        scope = node.$scope || self.model;
+                        
+                        //部分关键字可改变作用域 $data $parent $root
+                        b = b.replace('$parent.', '$parent.model.');
+                        text = text.replace('$parent.', '$parent.model.');
+                        //console.log(node,b,scope,key)
+
+                        reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:])/g, '\\$1')+'\\s*}}/g');
                         with(scope){
                             $val = eval(b);
                             try{
@@ -547,8 +605,7 @@ define(function(require){
 
                             }
                         }
-
-                        //console.log('value:'+$val,reg,self.model.$val)
+                        //console.log('value:'+$val,reg, text)
                         if( $val!==undefined ){
                             text = text.replace(reg, $val);
                         }
@@ -562,6 +619,7 @@ define(function(require){
             var self = this,
                 eachData = node.$each,
                 array = self.model[key],
+                dataType = $.type(array),
                 templete = eachData.templete;
 
             var frag = document.createDocumentFragment(),
@@ -579,8 +637,12 @@ define(function(require){
                     frag.appendChild(node);
                     groupNodes.push(node);
                 })
-                //this.getSubscriber(groupNodes, array[i]);
-                eachData.models.push(new Module(groupNodes, array[i]))
+                eachData.models.push(new Module(groupNodes, array[i] , {
+                    $key : dataType=='array' ? parseInt(i) : i,
+                    //关联父对象
+                    $parent : self,
+                    isArray : true
+                }))
             }
             node.appendChild(frag);
         }

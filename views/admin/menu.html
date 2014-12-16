@@ -12,7 +12,7 @@
 
     <div class="messages">
         <div class="alert" ng-repeat="entry in log">
-            {{ entry.msg; }}<input ng-model="entry.msg" value="" />
+            {{ entry.msg; }}<input ng-model="entry.msg" value="" /><a href="" ng-click="entry.test()">click</a>
         </div>
     </div>
 
@@ -76,7 +76,9 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
             $scope.id = id;
         }
         $scope.log = [
-            { msg: '1Data Received!' },
+            { msg: '1Data Received!',test:function(){
+                console.log(this)
+            } },
             { msg: '2Data Received!' }
         ];
         $scope.fn = function(f){
