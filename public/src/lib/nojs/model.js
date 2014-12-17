@@ -51,12 +51,13 @@ define(function(require){
         str = str.replace(/\)\s*{[\w\W]*}/g, ')');
 
         //提取 方法名
-        str.replace(/([\w\.\+\-\*\/\%\!:\?]+)\s*\(/g, function(a,b){
+        str.replace(/([\$\w\.\+\-\*\/\%\!:\?]+)\s*\(/g, function(a,b){
+
             methods.indexOf(b)<0 && methods.push(b);  
         })
 
         //提取 参数中的变量列表 并替换 所有()内容
-        str = str.replace(/\(([\s\w\(\),\.\+\-\*\/\%\!:\?]*)\)/g, function(a,b){
+        str = str.replace(/\(([\s\w\$\(\),\.\+\-\*\/\%\!:\?]*)\)/g, function(a,b){
             //b(1,c,d(d1,d2))
             b = b.split(/[,\+\-\*\/\%\!:\?]/);
             b.forEach(function(arg){
@@ -66,13 +67,14 @@ define(function(require){
                     methods.indexOf(arg[0])<0 && methods.push(arg[0]);    
                     arg = arg[1];
                 }
-                checkArgument(arg) && vars.indexOf(arg)<0 && vars.push(arg) //&& console.log(arg);
+                checkArgument(arg) && vars.indexOf(arg)<0 && vars.push($.trim(arg)) //&& console.log(arg);
             })
 
             var key = ';'+akey+(++n)+';';
             reStr[key] = a;
             return key;
         })
+
 
         //是否为有效的变量
         function checkArgument(arg){
@@ -89,11 +91,16 @@ define(function(require){
         str = str.split(';');
 
         var regCompute = /[\+\-\*\/%\!=\?:]/,       //包含运算符的
-            validStr = /[\w\.\+\-\*\/%\!=\?:]+/;    //不一定包含运算符的
+            validStr = /[\$\w\.\+\-\*\/%\!=\?:]+/,    //不一定包含运算符的
+            keyword = /^(\$(?:parent|root)\.)/
         
         str.forEach(function(s, i){
 
             str[i] = s = $.trim(s);
+
+            if( keyword.test(s) ){//替换关键字
+                str[i] = s.replace(keyword, '$1model.');
+            }
             
             //运算符语句匹配 a=b; a=a==1?2:1;            
             if( !s || reStr[';'+s+';'] || !validStr.test(s) ){
@@ -110,8 +117,9 @@ define(function(require){
             computeVars.forEach(function(m){
                 checkArgument(m) && vars.indexOf(m)<0 && vars.push(m);
             })
-
+            
         })
+        //console.log(methods,vars)
 
         //初始化语句中未定义的变量及方法
         function initMethod(method, isFunction){
@@ -120,22 +128,32 @@ define(function(require){
                 key = arr[0], 
                 last = $.trim(arr.slice(-1)[0]);
 
+            //console.log(arr,watchKey,isFunction)
             //函数每次执行的时候需要监控的变量
-            !isFunction && key && watchKey.indexOf(key)<0 && watchKey.push(key);
+            (!isFunction) && key && !/^(\$(?:key|data)\.)/.test(key+'.') && watchKey.indexOf(key)<0 && watchKey.push(key);
+            
+            if( isFunction ){
+                //全局对象下存在的函数
+                if( typeof window[key]!='undefined' || key=='$parent' || key=='$root' ){
+                    return;
+                }
 
+                // if( key=='$array' ){
+                //     console.log(key)
+                //     return
+                // }
+               
+            }
             arr.forEach(function(m, i){
                 m = $.trim(m);
                 if( !m || /^true|false&/.test(m) ){//空字符串 或 关键字
-                    return;
-                }
-                if( i==0 && isFunction && typeof window[m]!='undefined' ){//全局对象下存在的函数
                     return;
                 }
                 parent[m] = parent[m]===undefined ? ((m==last&&!isFunction)?undefined:noopMethod()) : parent[m];
                 parent = parent[m];
             });
         }
-        
+        //console.log(methods,vars)
         methods.forEach(function(name){
             initMethod(name, true);
         })
@@ -219,7 +237,6 @@ define(function(require){
 
     /**
      * 创建一个module
-     * @isArray:true 创建主module下each对象的实例
      */
     function Module(el, model, options){
         this.element = el;
@@ -234,12 +251,14 @@ define(function(require){
         var self = this,
             _model = model,
             modelType = $.type(model);
-        
+        //console.log(model,modelType)
         if( typeof model != 'function' ){
 
             model = function(){
-                //this.$data = _model;
+                this.$data = _model;
                 this.$key = options.$key;
+                this.$array = options.$array;
+
                 if( modelType == 'object' ){
                     for( var i in _model ){
                         this[i] = _model[i];
@@ -247,8 +266,7 @@ define(function(require){
                 }
             }
         }
-
-        model.prototype.$parent = this.options.$parent || this;
+        //model.prototype.$parent = this.options.$parent || this;
         model.prototype.$set = function(key, value) {
             
             var parent = this, i=0,  _key = key.split('.'), n=_key.length, name = _key.slice(-1);
@@ -275,13 +293,14 @@ define(function(require){
         }
 
         this.model = new model();
-        //console.log(this.model)
+        this.model.$parent = this.options.$parent || this;
+
 
         this.domID = {};
         
         /**
          * [nj-item="*"]声明一个变量 并实现双向绑定
-         * 一般为表单元素 （用户可输入的）匹配其value值
+         * 一般为表单元素 （用户可输入的）匹配其value/checked值
          */
         var items = $el.find('[nj-item]');
         items.each(function(){
@@ -310,15 +329,15 @@ define(function(require){
             this.onclick = function(e){
                 var data = syntaxInitialize(this, str, self.model),
                     watchKey = data.watchKey;
-                
+                //console.log(self.model.$parent)
                 with(self.model){
-                    eval(this.$syntax.str);
                     try{
-                        
+                        eval(this.$syntax.str);
                     }catch(e){
                         console.error(e)
                     }
                 };
+                console.log(watchKey)
                 watchKey.forEach(function(key){
                     self.apply(key);
                 })
@@ -326,7 +345,7 @@ define(function(require){
             };
         })
         this.getSubscriber(el);
-        //console.log(this.subscriber)
+        console.log(this.subscriber)
         for( var i in this.subscriber ){
             this.apply(i);
         }
@@ -499,17 +518,19 @@ define(function(require){
 
 
             function push(k){
-                console.log(k,vars || [_key],self.options)
+                //console.log(k,vars || [_key],self.options)
                 //替换一些特殊的关键字 $data.name 实际上是订阅的name属性
                 var _k = k;
                 k = k.replace(rKey, function(a,b){
                     if( b=='parent' ){
+                        console.log(b,_k,keyType)
                         //该节点访问的是父级 所以将其添加到父对象的订阅列表中
                         self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
                     }
                     return '';
                 });
                 if( _k.indexOf('$parent.')==0 ){
+                    console.log(k)
                     //return;
                 }
 
@@ -532,7 +553,9 @@ define(function(require){
         },
         //notApply：需要过滤的元素
         apply : function(key, notApply){
-
+            if( !key || key=='$key' ){
+                return;
+            }
             var self = this,
                 subscriber = this.subscriber[key] || [],
                 value = this.model[key],
@@ -542,7 +565,16 @@ define(function(require){
                 observableArray = /array|object/.test(valueType),
                 _key = key.split('.');
 
-            
+            //监控数组发生变化时
+            if( key=='$array' && observableArray && !subscriber.length ){
+                console.log(this.model.$parent.subscriber[this.options.$arrayName])
+                this.model.$parent.apply(this.options.$arrayName)
+                return;
+            }
+
+
+            //console.log(observableArray,subscriber)
+
             if( key.indexOf('.')<0 && value===undefined ){
                 //return;
             }
@@ -555,7 +587,6 @@ define(function(require){
                 if( node===notApply ){
                     return;
                 }
-
 
                 if( observableArray ){
                     self.applyArray(node, key);
@@ -616,11 +647,41 @@ define(function(require){
             })
         },
         applyArray : function(node, key){
+            
             var self = this,
                 eachData = node.$each,
                 array = self.model[key],
                 dataType = $.type(array),
-                templete = eachData.templete;
+                templete = eachData.templete,
+                modelsLen = eachData.models.length;
+
+            if( modelsLen ){
+                //console.log(eachData.models[1].model.$data,array[0])
+                var isAdd = array.length > modelsLen,//数组是增加还是减少
+                    arrayModel;
+
+                for( var i=0; i<modelsLen; i++ ){
+                    arrayModel = eachData.models[i];
+                    arrayModel.model.$key = i;//更新$key
+                    if( arrayModel.model.$data !== array[i] ){
+                        if( isAdd ){
+
+                        }else{
+                            eachData.models.splice(i, 1);
+                            var el = arrayModel.element;
+                            el.forEach(function(n){
+                                node.removeChild(n);
+                            })
+                            i--;
+                            modelsLen--;
+                            //arrayModel = null;
+                        }
+                        
+                    }
+                }
+                return;
+            }
+            //console.log(array)
 
             var frag = document.createDocumentFragment(),
                 groupNodes;
@@ -637,14 +698,19 @@ define(function(require){
                     frag.appendChild(node);
                     groupNodes.push(node);
                 })
+                //console.log(i,array[i])
                 eachData.models.push(new Module(groupNodes, array[i] , {
                     $key : dataType=='array' ? parseInt(i) : i,
                     //关联父对象
                     $parent : self,
-                    isArray : true
+                    $array : array,
+                    $arrayName : key
                 }))
+                //console.log(array[i], i, self.model[key])
             }
             node.appendChild(frag);
+
+
         }
     }
     
