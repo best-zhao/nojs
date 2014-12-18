@@ -16,23 +16,32 @@ noJS.config({
 </script>
 </head>
 <body>
-
-<div nj-module="arrayEach">
+<style>
+    .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
+</style>
+<div nj-module="arrayEach" class="nj_module">
     <input type="text" nj-item="names">{{names}}-{{list.length}}
+    <textarea cols="" rows="4" style="vertical-align:top">{{listStr()}}</textarea>
     <ul nj-each="list">
-        <li data-names="{{names}}">{{$key}}  {{$parent.names+name}} <!-- <span>{{++$key}}</span> -->
+        <li data-names="{{names}}">{{$key}}  {{$parent.names+name}} 
             <input type="text" nj-item="name" />
             <a href="javascript:void(0)" 
-                class="{{$parent.list.length<2?'d_hide':''}}"
+                style="{{$parent.list.length<2?'display:none':''}}"
                 nj-click="$parent.list.splice($key,1);$parent.fns($key,$parent.list.length);"
 
                 >remove</a>
         </li>
     </ul> 
     <button class="nj_btn" nj-click="add()">add</button>
+
+    <!-- <ul nj-each="list1">
+        <li>name: {{$key}} 
+            <div nj-each="$data" style="margin-left:20px">key:{{$key}}-{{$data}} | </div>
+        </li>
+    </ul> -->
 </div>
 
-<!-- <div nj-module="myModule">
+<div nj-module="myModule" class="nj_module">
     <div>
         <textarea data-name="{{name}}">{{name}}+abc</textarea>
     </div>
@@ -47,61 +56,52 @@ noJS.config({
         <option value="3">3</option>
         <option value="4">4</option>
     </select>
-</div> -->
+</div>
 
-<!-- <div nj-module="clickToggle">
-    <button type="button" nj-click="toggle=!toggle">open</button>
+<div nj-module="clickToggle" class="nj_module">
+    <button type="button" nj-click="toggle =! toggle">open</button>
     <div class="{{toggle?'d_hide':''}}">isopen:{{toggle}} details……</div>
-</div> -->
+</div>
 
 <script>
 noJS.use('$,lib/nojs/model', function($,nj){
 
     nj.module('arrayEach', function(scope){
-        this.names = 'abc';
-        this.fns = function(n){
-            console.log(arguments)
-        }
+        this.names = 'abc';        
         this.list = [
-            {name:1, remove:function(){
-                console.log(this)
-            }},
-            {name:2}
+            {name:1}, {name:2}
         ]
+        this.listStr = function(){
+            return JSON.stringify(this.list);
+        }
+        this.list1 = {
+            '0' : [1,2,3],
+            '1' : [4,5]
+        }
         this.add = function(){
             this.$set('list.push', {name:this.list.length+1});
-            //this.list.push({name:this.list.length+1});
-            //scope.apply('list');
         }   
-        
     })
-    
-    // var m1 = nj.module('myModule', function(){
-    //     this.name = 'myname';
-    //     this.arr = {
-    //         x:{a:1, b:2},
-    //         y:function(){
-    //             console.log(this, arguments)
-    //         }
-    //     };
+    return;
+    nj.module('myModule', function(){
+        this.name = 'myname';
+        this.arr = {
+            x:{a:1, b:2}
+        };
 
-    //     this.$set('name','nolure');
-        
-    //     var self = this;
-    //     setTimeout(function(){
-    //         self.$set('name1','myname1');
-    //         //self.$set('arr.y', 1);//function
-    //         self.$set('arr.x.b', 3);
-    //     },2000)
-    // });
+        var self = this;
+        setTimeout(function(){
+            self.$set('name1','myname1');
+            self.$set('arr.x.b', 3);
+        },2000)
+    });
     
-    // var m2 = nj.module('clickToggle', function(){
-    //     this.slide = function(a,b){
-    //         console.log(a,b)
-    //     };
+    nj.module('clickToggle', function(){
+        this.slide = function(a,b){
+            console.log(a,b)
+        };
 
-    // })
-    
+    })
 
 })
 </script>

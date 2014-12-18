@@ -6,8 +6,8 @@ define(function(require){
     
     var $ = require('$'),
         slice = Array.prototype.slice,
-        validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>]+)\s*}}/,
-        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>]+)\s*}}/g;
+        validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),]+)\s*}}/,
+        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),]+)\s*}}/g;
     
     /**
      * 以model为单位 一个页面可存在多个 也可互相嵌套
@@ -73,7 +73,8 @@ define(function(require){
                 //     a = a.replace('$parent.', '$parent.model.');
                 // }                
                 //console.log(arg, a, checkArgument(arg) && vars.indexOf(arg)<0);
-                checkArgument(arg) && vars.indexOf(arg)<0 && vars.push($.trim(arg)) //&& console.log(arg);
+                arg = $.trim(arg)
+                checkArgument(arg) && vars.indexOf(arg)<0 && vars.push(arg) //&& console.log(arg);
             })
 
             var key = ';'+akey+(++n)+';';
@@ -122,6 +123,7 @@ define(function(require){
             var computeVars = s.split(regCompute);
             
             computeVars.forEach(function(m){
+                m = $.trim(m);
                 checkArgument(m) && vars.indexOf(m)<0 && vars.push(m);
             })
             
@@ -140,7 +142,7 @@ define(function(require){
 
             //console.log(arr,watchKey,isFunction)
             //函数每次执行的时候需要监控的变量
-            //(!isFunction) && key && !/^(\$(?:key|data)\.)/.test(key+'.') && watchKey.indexOf(key)<0 && watchKey.push(key);
+            !isFunction && key && !/^(\$(?:key|data)\.)/.test(key+'.') && watchKey.indexOf(key)<0 && watchKey.push(key);
             
             if( isFunction ){
                 //全局对象下存在的函数
@@ -189,7 +191,7 @@ define(function(require){
                 }
                 Parent = Parent[m];
             }
-            // console.log(watchKey,method)
+            //console.log(watchKey,method)
             
         }
 
@@ -323,21 +325,23 @@ define(function(require){
 
                 //函数可能存在多个参数 从$set的第二个参数开始均为其参数
                 var args = slice.call(arguments, 1, arguments.length);
+
                 if( $.type(parent)=='array' ){
                     Array.prototype[name].apply(parent, args);
                 }else{
                     parent[name].apply(null, args);
                 }
-
+                self.apply(_key.splice(0, n-1).join('.'));
+                return;
             }else{
                 //a.b.c = value 赋值
                 parent[name] = value;
             }
             self.apply(key);
-            //console.log(this.arr.x)
         }
 
         this.model = new model(this);
+        //console.log(this.model)
         var parent = this.options.$parent || this;
         this.model.$parent = parent.model;
         this.model.$parentScope = parent;
@@ -384,13 +388,16 @@ define(function(require){
                         console.error(e)
                     }
                 };
-                //console.log(watchKey)
+                // console.log(watchKey)
                 // watchKey.forEach(function(key){
                 //     self.apply(key);
                 // })
                 watchKey.forEach(function(item){
+                    if( typeof item=='string' ){//for vars
+                        self.apply(item);
+                        return;
+                    }
                     var scope = item.scope;
-                    //console.log(item)
                     item.key.forEach(function(key){
                         scope.apply(key);
                     })
@@ -505,7 +512,7 @@ define(function(require){
                 var njEach = elementNode && node.getAttribute('nj-each');
 
                 if( njEach ){
-                    var eachData = /^\s*([\w]+)\s*$/.exec(njEach);
+                    var eachData = /^\s*([\$\w]+)\s*$/.exec(njEach);
                     if( !eachData ){
                         return subNodes;
                     }
@@ -532,14 +539,19 @@ define(function(require){
                     return subNodes;
                 }
 
-                //textarea手动修改内容后 子节点会被替换 所以其包含的文本节点不用添加
-                //<textarea>{{name}}+abc</textarea>
-                if( node.type=='textarea' ){
+            }else if( type==3 ){//满足条件的文本节点
+
+                var html = $.trim(node.nodeValue);
+                if( validNode.test(html) ){
+
+                    //textarea手动修改内容后 子节点会被替换 所以其包含的文本节点不用添加 直接添加textarea节点本身
+                    //<textarea>{{name}}+abc</textarea>
+                    if( node.parentNode.type=='textarea' ){
+                        node = node.parentNode;
+                    }
+
                     subNodes.push(node);
                 }
-            }else if( type==3 ){//满足条件的文本节点
-                var html = $.trim(node.nodeValue);
-                validNode.test(html) && subNodes.push(node);
             }
             
             return subNodes;
@@ -548,6 +560,9 @@ define(function(require){
         //key: {{key}} 多个key为数组
         //@subScope : 数组单独保存一个对象this.subscriberArray 默认this.subscriber
         pushSubscriber : function(node, key, data, subScope){
+            if( !key ){
+                return
+            }
             var self = this, 
                 value = node.value || node.nodeValue, 
                 _key = key, 
@@ -567,8 +582,8 @@ define(function(require){
             }
            
             //提取相关变量
-            var d = syntaxInitialize(node, key, this),
-                vars = d.vars;
+            var d = syntaxInitialize(node, key, this)
+            var vars = d ? d.vars : [];
 
             vars.forEach(push);
 
@@ -607,6 +622,10 @@ define(function(require){
             if( !key ){
                 return;
             }
+            if( !this.model ){//this.model = new model()执行构造函数时 若函数里存在$set操作 此时this.model还未赋值
+                return;
+            }
+            //console.log(this,key)
             var self = this,
                 subscriber = this.subscriber[key] || [],
                 value = this.model[key],
@@ -641,6 +660,7 @@ define(function(require){
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
                 var node = item.node;
+                
                 if( node===notApply ){
                     return;
                 }
@@ -657,7 +677,7 @@ define(function(require){
                     node.value = value;
                     
                 }else{
-
+                    //console.log(key,node)
                     var text = item.value || node.value, 
                         reg;
 
@@ -684,7 +704,8 @@ define(function(require){
                         //text = text.replace('$parent.', '$parent.model.');
                         //console.log(node,b,scope,key)
 
-                        reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:])/g, '\\$1')+'\\s*}}/g');
+                        reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:\(\),])/g, '\\$1')+'\\s*}}/g');
+                        //console.log(reg, b)
                         with(scope){
                             $val = eval(b);
                             try{
@@ -704,7 +725,9 @@ define(function(require){
             })
         },
         applyArray : function(node, key){
-            
+            if( !node.$each ){
+                return;
+            }
             var self = this,
                 eachData = node.$each,
                 array = self.model[key],
