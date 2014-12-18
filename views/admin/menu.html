@@ -12,9 +12,10 @@
 
     <div class="messages">
         <div class="alert" ng-repeat="entry in log">
-            {{ entry.msg; }}<input ng-model="entry.msg" value="" /><a href="" ng-click="entry.test()">click</a>
+            {{ entry.msg; }}<input ng-model="entry.msg" value="" /><a href="" ng-click="$parent.log.splice($index,1)">click</a>
         </div>
     </div>
+    <button class="nj_btn" ng-click="log.push({msg:'12'})">add</button>
 
     
     <div ng-init="a=2">
@@ -77,9 +78,11 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
         }
         $scope.log = [
             { msg: '1Data Received!',test:function(){
-                console.log(this)
+                console.log(arguments)
             } },
-            { msg: '2Data Received!' }
+            { msg: '2Data Received!',test:function(){
+                console.log(arguments)
+            }}
         ];
         $scope.fn = function(f){
             console.log(f)

@@ -18,17 +18,18 @@ noJS.config({
 <body>
 
 <div nj-module="arrayEach">
-    <input type="text" nj-item="names">{{names}}-aaa
+    <input type="text" nj-item="names">{{names}}-{{list.length}}
     <ul nj-each="list">
-        <li data-names="{{names}}">{{$parent.names+name}} <!-- <span>{{++$key}}</span> -->
+        <li data-names="{{names}}">{{$key}}  {{$parent.names+name}} <!-- <span>{{++$key}}</span> -->
             <input type="text" nj-item="name" />
-            <a href="javascript:void(0)" class="{{$parent.list.length}}"
-                nj-click="$parent.list.splice($key,1);$parent.fns($key, $parent.list.length);"
+            <a href="javascript:void(0)" 
+                class="{{$parent.list.length<2?'d_hide':''}}"
+                nj-click="$parent.list.splice($key,1);$parent.fns($key,$parent.list.length);"
 
                 >remove</a>
         </li>
     </ul> 
-    <button class="nj_btn" nj-click="console.log(121)">test</button>
+    <button class="nj_btn" nj-click="add()">add</button>
 </div>
 
 <!-- <div nj-module="myModule">
@@ -56,7 +57,7 @@ noJS.config({
 <script>
 noJS.use('$,lib/nojs/model', function($,nj){
 
-    nj.module('arrayEach', function(){
+    nj.module('arrayEach', function(scope){
         this.names = 'abc';
         this.fns = function(n){
             console.log(arguments)
@@ -67,6 +68,11 @@ noJS.use('$,lib/nojs/model', function($,nj){
             }},
             {name:2}
         ]
+        this.add = function(){
+            this.$set('list.push', {name:this.list.length+1});
+            //this.list.push({name:this.list.length+1});
+            //scope.apply('list');
+        }   
         
     })
     
