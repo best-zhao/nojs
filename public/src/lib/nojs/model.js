@@ -6,8 +6,8 @@ define(function(require){
     
     var $ = require('$'),
         slice = Array.prototype.slice,
-        validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=]+)\s*}}/,
-        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=]+)\s*}}/g;
+        validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#]+)\s*}}/,
+        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#]+)\s*}}/g;
     
     /**
      * 以model为单位 一个页面可存在多个 也可互相嵌套
@@ -87,7 +87,10 @@ define(function(require){
         //是否为有效的变量
         function checkArgument(arg){
             arg = $.trim(arg);
-            if( !arg || reStr[arg] || /^(\d+|this|return|true|false|var|for)$/.test(arg) ){
+            if( !arg || reStr[arg] 
+                || /^(\d+|this|return|true|false|var|for|delete)$/.test(arg) //数字或关键字
+                || /^(\d|[^\w\$])/.test(arg) //非法变量名称
+            ){
                 return false;
             }else{
                 return true;
@@ -165,22 +168,24 @@ define(function(require){
                 if( m=='$parent'||m=='$root' ){
                     //Parent = Parent[m].model;
                     _scope = Parent[m+'Scope'];
-                    _i = i;
+                    _i = i+1;
                     //continue;
                 }
                 if( Parent[m]!==undefined ){
 
                     //执行数组原生方法
                     //console.log(isFunction,m,Parent[m],$.type(Parent[m]))
-                    if( isFunction && i==n-2 && $.type(Parent[m])=='array' && Array.prototype[last] ){
-                        //console.log(m,_scope, arr.slice(i,n-1));
-                        var _key = [arr.slice(_i+1, n-1).join('.')];//该数组及和该数组相关的key均需apply
-                        for( var j in _scope.subscriber ){
+                    if( isFunction && i==n-2 && Array.prototype[last] && $.type(Parent[m])=='array' ){
+                        //console.log(arr,_i,n,_scope.subscriber);
+                        var _key = arr.slice(_i, n-1).join('.');
+                        _key = _key ? [_key] : [];
+
+                        for( var j in _scope.subscriber ){//该数组及和该数组相关的key均需apply
                             if( j.indexOf(_key[0]+'.') == 0 ){
                                 _key.push(j);
                             }
                         }
-                        watchKey.push({
+                        _key.length && watchKey.push({
                             scope : _scope,
                             key : _key
                         });
@@ -327,6 +332,7 @@ define(function(require){
                 //函数可能存在多个参数 从$set的第二个参数开始均为其参数
                 var args = slice.call(arguments, 1, arguments.length);
 
+
                 if( $.type(parent)=='array' ){
                     Array.prototype[name].apply(parent, args);
                 }else{
@@ -335,8 +341,18 @@ define(function(require){
                 self.apply(_key.splice(0, n-1).join('.'));
                 return;
             }else{
+                var v = value, type = typeof value;
+                if( type=='string' ){
+                    v = '"'+value+'"';
+                }else if( type=='object' ){
+                    v = JSON.stringify(value)
+                }
+                var $$str = name+'='+v;
+                with(parent){
+                    eval($$str);
+                }
                 //a.b.c = value 赋值
-                parent[name] = value;
+                //parent[name] = value;
             }
             self.apply(key);
         }
@@ -387,10 +403,10 @@ define(function(require){
                     try{
                         eval(this.$syntax.str);
                     }catch(e){
-                        console.error(e)
+                        throw Error(e);
                     }
                 };
-                // console.log(watchKey)
+                console.log(data.methods, watchKey)
                 // watchKey.forEach(function(key){
                 //     self.apply(key);
                 // })
@@ -408,7 +424,7 @@ define(function(require){
             };
         })
         this.getSubscriber(el);
-        //console.log(this.subscriber)
+        // console.log(this.subscriber)
         for( var i in this.subscriber ){
             //var node = this.subscriber[i][0];
             this.apply(i);
@@ -416,6 +432,9 @@ define(function(require){
     }
     Module.prototype = {
         createModel : function(el){
+            if( el.$modelBind ){
+                return;
+            }
             var self = this,
             tagName = el.tagName.toLowerCase(),
             isFormElement = /input|select|textarea/.test(tagName),
@@ -426,6 +445,7 @@ define(function(require){
                 element : el,
                 key : key
             };
+            el.$modelBind = 1;
             
             //this.model[key] = typeof this.model[key]=='undefined' ? '' : this.model[key];
             this.domID[id] = el;
@@ -443,29 +463,45 @@ define(function(require){
                 });
                 el.$scope = this.model;   
 
-                var checkbox = el.type=='checkbox', _key = key;  
+                var checkbox = el.type=='checkbox',
+                    selectNode = /^select|optgroup/.test(el.type),
+                    eventName = checkbox||selectNode ? 'change' : 'keydown',
+                    _key = key;  
+                
                 if( el.type=='radio' ){//设置选中的radio默认值
                     if( el.checked ){
                         with(self.model){
                             eval(_key+'="'+el.value+'"');
                         }
-                    }                    
-                }else if( /^select/.test(el.type) ){//select默认值
-                    var selectVal = el.value||el.options[0].value;
-                    el.value = selectVal;
-                    with(self.model){
-                        eval(_key+'="'+selectVal+'"');
                     }
+                    eventName = 'change';                   
+                }else if( selectNode ){//select默认值
+                    var selectVal = el.value||el.options[0].value;
+                    //el.value = selectVal;
+                    // with(self.model){
+                    //     eval(_key+'="'+selectVal+'"');
+                    // }
                 }
 
-                function setDefault(){
-
-                }
-                
-                $(el).on('change keydown', function(){
+                $(el).on(eventName, function(){
                     var v = this;
+
+                    //同步关联select selectedOptions对象
+                    
+                    if( selectNode && v.$selectedKey ){
+                        var $selectedOptions = slice.call(v.selectedOptions, 0).map(function(option){
+                            //var index = option.index - v.$startIndex;
+                            return option.index;
+                        });
+                        with(self.model){
+                            eval(v.$selectedKey+'=['+$selectedOptions+']');
+                        }
+                    }
+                    
                     setTimeout(function(){
                         var val = v[checkbox ? 'checked' : 'value'];
+                        //console.log(v.selectedOptions,self.model.selectedOptions)
+                        
                         with(self.model){
                             if( checkbox ){
                                 eval(_key+'='+val);//选中状态 布尔值
@@ -478,7 +514,7 @@ define(function(require){
                         }
                         //参数2：手动输入时 不用更新当前对象
                         self.apply(key, v);
-                    },0)
+                    }, 0)
                 })
             }
             return model;
@@ -508,7 +544,7 @@ define(function(require){
                 value.replace(validNodes, function(a,b){
                     b && keys.indexOf(b)<0 && keys.push(b);
                 });
-                self.pushSubscriber(node, keys, null); 
+                self.pushSubscriber(node, keys); 
 
                 node.$scope = model;
             })
@@ -538,6 +574,8 @@ define(function(require){
 
                 if( njEach ){
                     var eachData = /^\s*([\$\w\|\s:]+)\s*$/.exec(njEach);
+                    
+
                     if( !eachData ){
                         return subNodes;
                     }
@@ -548,13 +586,53 @@ define(function(require){
                             eachData.splice(i,1);
                         }
                     })
-                    var options = eachData.slice(1, eachData.length).join(',');
+
+                    var options = eachData.slice(1, eachData.length).join(','), selectedKey, tagName;
                     if( options ){
+                        selectedKey = /(?:^|[,\|])selected\s*:\s*([\w\$]+)/.exec(options);
+                        selectedKey = selectedKey && selectedKey[1];
+
+                        var $$options = '({'+options+'})';
+
                         with(this.model){
-                            options = eval('({'+options+'})');
+                            //这里的变量 可能会存在于this.model自身属性相冲突的情况 
+                            try{
+                                $$options =  eval($$options);
+                            }catch(e){
+                                throw Error(e);
+                            }                            
+                        }
+                        //console.log($$options,this.model)
+                        options = $$options;
+
+                        //select下拉菜单的 选中项
+                        if( options.selected && selectedKey ){
+                            node.$selected = selectedKey;//this.apply(key) 中 对比 node.$selected==key表示selectedOptions更新
+
+                            this.pushSubscriber(node, selectedKey); 
+
+                            //option循环 select自动双向绑定 关联selectedOptions
+                            tagName = node.tagName.toLowerCase();
+
+                            if( tagName=='option' || tagName=='optgroup' || tagName=='select' ){
+                                var selectNode = tagName!='select' ? node.parentNode : node;//select element
+                                
+                                //用于select change事件中更新selectedOptions对象
+                                selectNode.$selectedOptions = options.selected;
+                                selectNode.$selectedKey = selectedKey;
+
+                                //当option repeat自身时 可能存在循环体之外的option
+                                var startIndex = tagName!='select' && options.repeat ? node.index : 0;
+                                //console.log(startIndex);
+                                selectNode.$startIndex = startIndex
+
+                                //将select元素添加为双向绑定对象 
+                                self.createModel(selectNode);
+                            }
                         }
                     }
                     options = options || {};
+
 
                     //将其子元素拷贝一份作为each模板
                     var templete = options.repeat ? [node] : slice.call(node.childNodes, 0),
@@ -565,7 +643,7 @@ define(function(require){
                     getAllChildren(node).forEach(function(n){
                         n.$filter = 1;
                     })
-                    
+
                     node.$each = {
                         templete : templete,
                         options : options,
@@ -580,6 +658,7 @@ define(function(require){
                     if( options.repeat ){//循环节点本身 本身作为模板
                         node.parentNode.removeChild(node);
                         node.removeAttribute('nj-each');
+                        
                         return subNodes;
                     }else{
                         node.innerHTML = '';
@@ -644,22 +723,24 @@ define(function(require){
             }
            
             //提取相关变量及方法
-            var d = syntaxInitialize(node, key, this)
-            var vars = d ? d.vars : [],
+            var d = syntaxInitialize(node, key, this),
+                vars = d ? d.vars : [],
                 methods = d ? d.methods : [];
 
             vars.forEach(push);
+
             //需要分析这些方法函数中涉及的相关变量 即依赖属性
             methods.forEach(function(k){
-                var fnStr;
-
+                var fnStr, $$k = k;
+                
                 with(self.model){
-                    fnStr = eval(k);
+                    fnStr = eval($$k);
                 }
+
                 if( typeof fnStr != 'function' ){
                     return;
                 }
-                fnStr = fnStr.toString().replace(/(?:^function\s*\(\){)|(?:}$)/g, '');
+                fnStr = fnStr.toString().replace(/(?:^function\s*\([^\)]*\){)|(?:}$)/g, '');
                 fnStr = $.trim(fnStr).replace(/[\r\n]/g, ';');
 
                 var vars = syntaxParse(fnStr, self).vars;
@@ -670,11 +751,12 @@ define(function(require){
             });
 
             function push(k){
-                //console.log(k,vars || [_key],self.options)
                 //替换一些特殊的关键字 $data.name 实际上是订阅的name属性
                 var _k = k;
+
                 k.replace(rKey, function(a,b){
                     if( b=='parent' ){
+
                         //该节点访问的是父级 所以将其添加到父对象的订阅列表中
                         self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
                     }
@@ -705,14 +787,11 @@ define(function(require){
             }
             var self = this,
                 subscriber = this.subscriber[key] || [],
-                value = this.model[key];
+                value = this.model[key],
+                $$key = key;
 
             with(this.model){
-                //console.log(key,eval('typeof '+key))
-                value = eval('typeof '+key)=='undefined' ? undefined : eval(key);
-            }
-            if( value===undefined ){
-                return;
+                value = eval('typeof '+$$key)=='undefined' ? undefined : eval($$key);
             }
             
             var valueType = $.type(value),
@@ -727,6 +806,11 @@ define(function(require){
                 }
             }
 
+            if( !subscriber.length ){
+                return;
+            }
+            // console.log(key,subscriber)
+
             //数组子项发生变化时 需更新数组本身 一般为用户表单输入数据
             if( this.model.$key!==undefined && this.model.$parentScope!==this && key.indexOf('$')<0 && notApply ){
                 //console.log(observableArray,key, this.model.$parent.list[0], notApply)
@@ -740,14 +824,6 @@ define(function(require){
             //     return;
             // }
 
-
-            //console.log(observableArray,subscriber)
-
-            if( value===undefined ){
-                //return;
-            }
-
-
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
                 var node = item.node;
@@ -755,14 +831,15 @@ define(function(require){
                 if( node===notApply || node.type=='radio' ){
                     return;
                 }
-                //console.log(node,node.type)
+
                 if( observableArray && node.$each ){
-                    self.applyArray(node, key);
-                    //console.log(item.node.$each, self.model[key])
+                    if( node.$selected==key ){//设置select默认选中项
+                        self.defaultSelected(node);
+                    }else{//更新each数组
+                        self.applyArray(node, key);
+                    }
                     return;
                 }
-
-
 
                 var type = node.nodeType;
                 
@@ -819,7 +896,6 @@ define(function(require){
             
         },
         applyArray : function(node, key){
-
             if( !node.$each ){
                 return;
             }
@@ -879,7 +955,13 @@ define(function(require){
                         var frag = document.createDocumentFragment();
                         addArray(array[i], i, frag);
                         arrayModel = eachData.models[i-1];//添加元素到上一个元素组的最后一个节点后面
-                        nodeSelf.insertBefore(frag, arrayModel.element[arrayModel.element.length-1]);
+                        
+                        var last = arrayModel.element[arrayModel.element.length-1];
+                        if( last.nextSibling ){
+                            nodeSelf.insertBefore(frag, last.nextSibling);
+                        }else{
+                            nodeSelf.appendChild(frag);
+                        }                        
                         continue;
                     }
                     if( arrayModel.model.$key != i ){//更新$key
@@ -926,11 +1008,7 @@ define(function(require){
             }else{
                 node.appendChild(frag);
             }
-
             
-            function defaultSelected(){
-                
-            }
             self.defaultSelected(node);
 
             function addArray(data, i, frag){
@@ -957,18 +1035,34 @@ define(function(require){
 
         //设置select默认选中值
         defaultSelected : function(node){
+            
+            var tagName = node.tagName.toLowerCase();
+            
+            if( !/^select|optgroup|option/.test(tagName) ){
+
+                return;
+            }
+            //console.log(node,tagName,node.type)
             var eachData = node.$each,
                 selected = eachData.options.selected,
-                nodeSelf = eachData.options.repeat ? eachData.parentNode : node;
+                selectNode;
 
-            if( /^select-/.test(nodeSelf.type) && selected ){
 
-                var options = slice.call(nodeSelf.options, 0);
-                eachData.models.forEach(function(m,i){
-                    if( selected.indexOf(m.model.$key) >= 0 ){
-                        options[i].selected = true;
-                    }
+            if( selected ){
+                
+                selectNode = !node.type ? node.parentNode : node;
+                selectNode = !selectNode.type ? selectNode.parentNode : selectNode;//select - optgroup - option
+
+                var options = slice.call(selectNode.options, 0);
+                options.length && selected.forEach(function(s,i){
+                    options[s].selected = true;
                 })
+
+                // eachData.models.forEach(function(m,i){
+                //     if( selected.indexOf(m.model.$key) >= 0 ){
+                //         options[i].selected = true;
+                //     }
+                // })
             }
         }
     }
