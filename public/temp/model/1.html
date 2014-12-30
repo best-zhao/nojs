@@ -21,10 +21,12 @@ noJS.config({
 </style>
 <div nj-module="arrayEach" class="nj_module">
     <input type="text" nj-item="names">{{names}}-{{list.length}}
-    <textarea cols="" rows="4" style="vertical-align:top">{{listStr()}}</textarea>
-    <ul nj-each="list">
-        <li>{{$key}}  {{$parent.names+name}} 
+    <textarea cols="" rows="4" style="vertical-align:top">{{listStr()}}--{{order}}</textarea>
+    <ul nj-each="list|orderBy:order">
+        <li>{{$key}}  {{$parent.names+'-'+name}} 
+            {{JSON.stringify($data)}}
             <input type="text" nj-item="name" />
+
             <a href="" 
                 style="color:{{$parent.list.length<2?'#ccc':''}}"
                 nj-click="$parent.list.length>1 && $parent.list.splice($key,1)"
@@ -32,6 +34,10 @@ noJS.config({
                 >remove</a>
         </li>
     </ul> 
+    <select name="" nj-item="order">
+        <option value="name">name</option>
+        <option value="value">value</option>
+    </select>
     <button class="nj_btn" nj-click="add()">add</button>
 
     <ul nj-each="list1">
@@ -52,11 +58,13 @@ noJS.config({
     <input type="radio" name="njRadio" nj-item="checked" checked="checked" value="1">
     <input type="radio" name="njRadio" nj-item="checked" value="2">{{checked}}
 
-    <select name="" disabled="{{checked>1}}"  nj-each="select|repeat:0|selected:selectedOptions">
-        <optgroup label="{{label}}">
-            <option value="{{value}}" nj-each="options|repeat:true">{{name}}</option>
+    <select name="" multiple1 disabled="{{checked>1}}" size="7" nj-item="arr.y">
+        <option value="">..</option>
+        <optgroup label="{{label}}" nj-each="select|repeat:true|a:2">
+            <option value="{{value}}" nj-each="options|repeat:true|a:1">{{name}}</option>
         </optgroup>
     </select>
+    <div><span class="gray9">selectOptions:</span> <code>{{JSON.stringify(arr.y)}}</code></div>
 </div>
 
 <div nj-module="clickToggle" class="nj_module">
@@ -67,7 +75,7 @@ noJS.config({
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
     nj.module('arrayEach', function(scope){
-        this.names = 'abc';        
+        this.names = '';        
         this.list = [
             {name:1}, {name:2}
         ]
@@ -95,9 +103,7 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
     return;
     nj.module('myModule', function(scope){
         this.name = 'myname';
-        this.arr = {
-            x:{a:1, b:2}
-        };
+        
         this.select = [
             {label:'group1', options:[
                 {name:'s1',value:1},
@@ -108,22 +114,28 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
                 {name:'s4',value:4}
             ]}
         ]
+        this.arr = {
+            x:{a:1, b:2},
+            y : this.select[0].options[0]
+        };
         // this.select = {
         //     '01' : {name:'s1',value:11},
         //     '02' : {name:'s2',value:22},
         //     '03' : {name:'s3',value:33}
-        // }
-        this.selectedOptions = [1]
+        /// }
 
         var self = this;
         setTimeout(function(){
             self.$set('name1','myname1');
             self.$set('arr.x.b', 3);
 
-            // self.$set('selectedOptions.push', 3);
-            //scope.apply('select')
-        },2000)
+            //self.select[0].options[0].name = 's11';
+            //self.select.splice(1,1);
+            
+            self.$set('arr.y', self.select[0].options[1]);
+        }, 1000)
     });
+    
     //return;
     
 

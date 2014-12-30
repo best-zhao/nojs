@@ -18,13 +18,11 @@
     <button class="nj_btn" ng-click="log.push({msg:'12'})">add</button>
 
     
-    <div ng-init="a=2">
-    <ul ng-switch on="a">
-      <li ng-switch-when="1">1</li>
-      <li ng-switch-when="2">2</li>
-      <li ng-switch-default>other</li>
-    </ul>
-  </div>
+    <form name="test_form" >
+    <select ng-model="a"   ng-options="x.name group by x.g for x in o" ng-change="show()">
+        <option value="">..</option>
+    </select>
+    </form>
 </div>
 
 
@@ -76,6 +74,9 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
         $scope.getID = function(id){
             $scope.id = id;
         }
+        $scope.o = [{name: 'AA', g: '00'}, {name: 'BB', g: '11'}, {name: 'CC', g: '00'}]
+        //$scope.a = $scope.o[1]
+
         $scope.log = [
             { msg: '1Data Received!',test:function(){
                 console.log(arguments)
@@ -84,13 +85,10 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
                 console.log(arguments)
             }}
         ];
-        $scope.fn = function(f){
-            console.log(f)
+        $scope.show = function(f){
+            console.log($scope.a)
         }
-        $scope.console = {};
-        $scope.console.log = function(a,b){
-            console.log(a,b)
-        }
+        
     })
 
     $.getJSON('/getMenus', function(json){
