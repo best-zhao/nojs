@@ -595,7 +595,7 @@ define(function(require){
                     if( options ){
                         // var selectedKey = /(?:^|[,\|])selected\s*:\s*([\w\$]+)/.exec(options);
                         // selectedKey = selectedKey && selectedKey[1];
-
+                        console.log(options)
                         var $$options = '({'+options+'})';
 
                         with(this.model){
@@ -822,7 +822,7 @@ define(function(require){
                     this.apply(i);
                 }
             }
-            console.log(key, subscriber)
+            //console.log(key, subscriber)
             if( !subscriber.length ){
                 return;
             }
