@@ -22,6 +22,14 @@ noJS.config({
 <div nj-module="arrayEach" class="nj_module">
     <input type="text" nj-item="names">{{names}}-{{list.length}}
     <textarea cols="" rows="4" style="vertical-align:top">{{listStr()}}--{{order}}</textarea>
+    
+    <p class="gray9 mb10">orderBy:
+    <select name="" nj-item="order">
+        <option value="name">name</option>
+        <option value="value">value</option>
+    </select>
+    </p>
+
     <ul nj-each="list|orderBy:order">
         <li>{{$key}}  {{$parent.names+'-'+name}} 
             {{JSON.stringify($data)}}
@@ -34,11 +42,9 @@ noJS.config({
                 >remove</a>
         </li>
     </ul> 
-    <select name="" nj-item="order">
-        <option value="name">name</option>
-        <option value="value">value</option>
-    </select>
+
     <button class="nj_btn" nj-click="add()">add</button>
+    
 
     <ul nj-each="list1">
         <li>name: {{$key}} <a href="" class="gray9" nj-click="$parent.remove($key)">remove</a>

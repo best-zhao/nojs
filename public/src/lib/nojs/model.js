@@ -490,12 +490,15 @@ define(function(require){
                         var val = v[checkbox ? 'checked' : 'value'],
                             $$str = checkbox ? (_key+'='+val) : (_key+'="'+val.replace(/\\/g,'\\\\')+'"');
 
+                        val = checkbox ? val : val.replace(/\\/g,'\\\\');
+
                         //同步关联select selectedOptions对象
                         if( selectNode ){
                             var selected = slice.call(v.selectedOptions, 0).map(function(option){
                                 return option.$data || option.value;
                             })
-                            $$str = _key+'='+JSON.stringify(v.multiple?selected:selected[0]);
+                            val = v.multiple ? selected : selected[0];
+                            // $$str = _key+'='+JSON.stringify(v.multiple?selected:selected[0]);
 
                             // var $selectedOptions = slice.call(v.selectedOptions, 0).map(function(option){
                             //     //var index = option.index - v.$startIndex;
@@ -505,13 +508,14 @@ define(function(require){
                             //     eval(v.$selectedKey+'=['+$selectedOptions+']');
                             // }
                         }
+                        new Function('a','b','a.'+_key+'=b;if(a.$data){a.$data.'+_key+'=b}')(self.model, val);
 
-                        with(self.model){
-                            eval($$str);
-                            if( self.model.$data ){
-                                $data[_key] = val;
-                            }
-                        }
+                        // with(self.model){
+                        //     eval($$str);
+                        //     if( self.model.$data ){
+                        //         $data[_key] = val;
+                        //     }
+                        // }
                         //参数2：手动输入时 不用更新当前对象
                         self.apply(key, v);
                     }, 0)
@@ -806,7 +810,6 @@ define(function(require){
             //     value = eval('typeof '+$$key)=='undefined' ? undefined : eval($$key);
             // }
             value = new Function('a','return a.'+key)(this.model);
-            console.log(key,value,this.model)
             
             var valueType = $.type(value),
                 //数组或关联数组监控对象
@@ -819,11 +822,10 @@ define(function(require){
                     this.apply(i);
                 }
             }
-
+            console.log(key, subscriber)
             if( !subscriber.length ){
                 return;
             }
-            // console.log(key,subscriber)
 
             //数组子项发生变化时 需更新数组本身 一般为用户表单输入数据
             if( this.model.$key!==undefined && this.model.$parentScope!==this && key.indexOf('$')<0 && notApply ){
