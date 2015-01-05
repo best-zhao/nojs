@@ -30,13 +30,13 @@
 
 <div id="qrcode" style="width:164px;height:164px"></div>
 <script>
-noJS.use('$,ui,lib/nojs/mods/icon,lib/nojs/mods/layer,lib/jquery/jquery.qrcode', function($,ui,icon,layer){
+noJS.use('$,ui,lib/nojs/mods/icon,lib/nojs/mods/layer', function($,ui,icon,layer){
     //new icon('nj_ico_loading');
     //layer.msg.show('loading');
     var el = $('#animate_test'),
         el1 = $('#animate_test1');
     
-    $('#qrcode').qrcode({width: 164,height: 164,text: "http://www.meidebi.com",glog:"http://www.meidebi.com/favicon.ico"});
+    //$('#qrcode').qrcode({width: 164,height: 164,text: "http://www.meidebi.com",glog:"http://www.meidebi.com/favicon.ico"});
 
     function animate(){
         el.width(90);
@@ -44,7 +44,7 @@ noJS.use('$,ui,lib/nojs/mods/icon,lib/nojs/mods/layer,lib/jquery/jquery.qrcode',
 
         ui.animate({
             speed : 1,
-            //easing : 'easeOutExpo',
+            easing : 'easeOutExpo',
             callback : function(complete){
                 var w = complete*400;
                 el.width(w)
@@ -53,7 +53,7 @@ noJS.use('$,ui,lib/nojs/mods/icon,lib/nojs/mods/layer,lib/jquery/jquery.qrcode',
 
         el1.animate({
             width : 400
-        },'normal')
+        }, '1000', 'easeOutExpo')
     }
     $('#reset_animate').click(function(){
         animate();

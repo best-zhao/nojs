@@ -2,29 +2,12 @@
 
 <h1><%=title%></h1>
 
-<div id="menu_manage" ng-controller="menuItems">
-    <input type="text" ng-model="names" value="{{names*2}}+12" />{{names}}
-    <div ng-click="console.log((12+c),fn('function(){console.log(123+a)}'))">1212</div>
+<div id="menu_manage">
     <span id="menu_items"></span>
     <span class="opt">
         <a href="/a/menu/del/{{id}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
     </span>
-
-    <div class="messages">
-        <div class="alert" ng-repeat="entry in log">
-            {{ entry.msg; }}<input ng-model="entry.msg" value="" /><a href="" ng-click="$parent.log.splice($index,1)">click</a>
-        </div>
-    </div>
-    <button class="nj_btn" ng-click="log.push({msg:'12'})">add</button>
-
-    
-    <form name="test_form" >
-    <select ng-model="a"   ng-options="x.name group by x.g for x in o" ng-change="show()">
-        <option value="">..</option>
-    </select>
-    </form>
 </div>
-
 
 <h2>添加菜单</h2>
 <form action="/a/menu/add" method="post" id="menu_edit">
@@ -56,7 +39,7 @@
 </form>
 <script>
 
-noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,form){
+noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', function($,layer,tree,form){
     tree.key = {
         id : '_id',
         parent : 'pid'
@@ -67,30 +50,6 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
     $pid = $('#menu_pid'),
     $form = $('#menu_edit');
     
-    angular.module('myApp', []).controller('menuItems', function($scope){
-        //console.log($scope)
-        $scope.id = tree.rootID;
-        //$scope.names = 'nolure'
-        $scope.getID = function(id){
-            $scope.id = id;
-        }
-        $scope.o = [{name: 'AA', g: '00'}, {name: 'BB', g: '11'}, {name: 'CC', g: '00'}]
-        //$scope.a = $scope.o[1]
-
-        $scope.log = [
-            { msg: '1Data Received!',test:function(){
-                console.log(arguments)
-            } },
-            { msg: '2Data Received!',test:function(){
-                console.log(arguments)
-            }}
-        ];
-        $scope.show = function(f){
-            console.log($scope.a)
-        }
-        
-    })
-
     $.getJSON('/getMenus', function(json){
         treeOptions = {
             data : json.data,
@@ -128,15 +87,20 @@ noJS.use('$,lib/nojs/mods/tree,lib/nojs/mods/form,ko,edit,ng', function($,tree,f
     })
 
     var Form = new form({
-      form : $form,
-      rules : {
-        'menu[name]' : {isNull:''}
-      },
-      ajaxSubmit : {
-        success : function(json){
-            location.reload();
+        form : $form,
+        rules : {
+            'menu[name]' : {isNull:''}
+        },
+        ajaxSubmit : {
+            beforeSend : function(){
+                layer.msg.show('loading');
+                editor.sync();
+            },
+            success : function(json){
+                layer.msg.hide();
+                location.reload();
+            }
         }
-      }
     })
 
 })

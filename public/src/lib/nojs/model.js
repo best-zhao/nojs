@@ -529,7 +529,6 @@ define(function(require){
             model = model || this.model;
 
             var self = this,
-            //subScope = model===this.model ? this.subscriber : this.subscriberArray,
 
             subNodes = getAllChildren(element, {
                 filter : function(node){
@@ -577,8 +576,7 @@ define(function(require){
                 var njEach = elementNode && node.getAttribute('nj-each');
 
                 if( njEach ){
-                    var eachData = /^\s*([\$\w\|\s:]+)\s*$/.exec(njEach);
-                    
+                    var eachData = /^\s*([\$\w\|\s:'"]+)\s*$/.exec(njEach);
 
                     if( !eachData ){
                         return subNodes;
@@ -588,6 +586,20 @@ define(function(require){
                         eachData[i] = e = $.trim(e);
                         if( !e ){
                             eachData.splice(i,1);
+                            return;
+                        }
+                        // 获取选项中的变量引用 nj-each="list|orderBy:order"
+                        // 将each对象添加到order的订阅列表中
+                        e = e.split(':');
+                        if( e[1] && /^[\w\$]+$/.test(e[1]) ){
+                            self.pushSubscriber(null, e[i], {
+                                action : {
+                                    //动作名称 如orderBy
+                                    name : e[0],
+                                    //each对象所对应的名称
+                                    key : eachData[0]
+                                }
+                            });
                         }
                     })
 
@@ -595,18 +607,23 @@ define(function(require){
                     if( options ){
                         // var selectedKey = /(?:^|[,\|])selected\s*:\s*([\w\$]+)/.exec(options);
                         // selectedKey = selectedKey && selectedKey[1];
-                        console.log(options)
+                        
                         var $$options = '({'+options+'})';
 
                         with(this.model){
-                            try{
-                                $$options =  eval($$options);
-                            }catch(e){
-                                throw Error(e);
-                            }
+                            $$options =  eval($$options);
                         }
                         //console.log($$options,this.model)
                         options = $$options;
+
+                        if( options.orderBy ){
+                            
+                            //console.log(array);
+                            
+
+
+                            //console.log(eachData[0],self.model[eachData[0]]);
+                        }
 
                         //select下拉菜单的 选中项
                         // if( options.selected && selectedKey ){
@@ -705,19 +722,16 @@ define(function(require){
             return subNodes;
         },
         //保存获取到的订阅者
-        //key: {{key}} 多个key为数组
-        //@subScope : 数组单独保存一个对象this.subscriberArray 默认this.subscriber
-        pushSubscriber : function(node, key, data, subScope){
+        //key: {{key}} string|array
+        pushSubscriber : function(node, key, data){
             if( !key ){
                 return
             }
             var self = this, 
-                value = node.value || node.nodeValue, 
+                value = node && (node.value || node.nodeValue), 
                 _key = key, 
                 keyType = $.type(key),
                 rKey = /^\$(data|parent|root)\./;
-
-            subScope = subScope || this.subscriber;
 
             if( keyType=='string' || data && data.writeAll ){
                 push(key, 'string');
@@ -728,7 +742,7 @@ define(function(require){
             if( $.type(key)=='array' ){
                 key = key.join(';');
             }
-           
+
             //提取相关变量及方法
             var d = syntaxInitialize(node, key, this),
                 vars = d ? d.vars : [],
@@ -736,7 +750,6 @@ define(function(require){
 
             vars.forEach(push,'vars');
             
-
             //需要分析这些方法函数中涉及的相关变量 即依赖属性
             methods.forEach(function(k){
                 var fnStr, $$k = k;
@@ -765,6 +778,7 @@ define(function(require){
                 })
             });
 
+
             function push(k){
                 //替换一些特殊的关键字 $data.name 实际上是订阅的name属性
                 var _k = k;
@@ -778,7 +792,7 @@ define(function(require){
                     //return '';
                 });
 
-                subScope[k] = subScope[k] || [];
+                self.subscriber[k] = self.subscriber[k] || [];
                 
                 data = $.extend({
                     node : node,
@@ -791,7 +805,7 @@ define(function(require){
                     
                     vars : vars || [k]
                 },data)
-                subScope[k].push(data);
+                self.subscriber[k].push(data);
             }
         },
         //notApply：需要过滤的元素
@@ -844,6 +858,10 @@ define(function(require){
             subscriber.forEach(function(item){
                 var node = item.node;
 
+                if( item.action ){//数组排序
+                    self.arrayOrder(value, item.action);
+                    return;
+                }
                 if( node===notApply || node.type=='radio' ){
                     return;
                 }
@@ -911,7 +929,7 @@ define(function(require){
             })
             
         },
-        applyArray : function(node, key){
+        applyArray : function(node, key, action){
             if( !node.$each ){
                 return;
             }
@@ -937,6 +955,19 @@ define(function(require){
             }
 
             if( modelsLen ){
+                if( action=='order'){
+                    // 获取最后一个子元素 
+                    var lastNode = nodeSelf.childNodes;
+                    lastNode = lastNode[lastNode.length-1];
+
+                    // 循环体最有一个元素
+                    var views = eachData.models[modelsLen-1].element;
+                    views = views[views.length-1];
+
+                    // 两者相等 表示循环体之外没有其他元素 主要针对repeat=true
+                    var moveAction = lastNode===views ? 'appendChild' : 'insertBefore';
+
+                }
                 if( dataType=='object' ){//关联数组
                     var key, hasKeys = [];
                     for( var i=0; i<modelsLen; i++ ){
@@ -995,6 +1026,19 @@ define(function(require){
                             var frag = document.createDocumentFragment();
                             addArray(array[i], i, frag);
                             nodeSelf.insertBefore(frag, arrayModel.element[0]);
+
+                        }else if( action=='order'){//排序
+                            //更新model
+                            eachData.models.splice(i, 1);
+                            eachData.models.push(arrayModel);
+
+                            //更新views
+                            var doms = arrayModel.element;
+                            doms.forEach(function(d){
+                                nodeSelf[moveAction](d, lastNode);
+                            })
+                            i--;
+
                         }else{
                             eachData.models.splice(i, 1);
                             var el = arrayModel.element;
@@ -1020,6 +1064,9 @@ define(function(require){
                     }
                 }
                 selectNode && self.defaultSelected(selectNode);
+                return;
+
+            }else if( action=='order' ){//排序时 dom还未应用
                 return;
             }
 
@@ -1069,6 +1116,35 @@ define(function(require){
                 }))
             }
 
+        },
+        //对数组进行排序
+        arrayOrder : function(orderBy, options){
+            //获取数组对象
+            var self = this, 
+                key = options.key,
+                array = new Function('a', 'return a.'+key)(this.model),
+
+            //将用于排序的子属性单独提取为一个数组
+            orderKey = array.map(function(a){
+                return new Function('a', 'return a.'+orderBy)(a);
+            }).sort();
+
+            var i=0, n = array.length, a;
+            for( ;i<n;i++ ){
+                a = array[i];
+                if( new Function('a', 'return a.'+orderBy)(a) !== orderKey[i] ){
+                    array.splice(i, 1);
+                    array.push(a);
+                    i--;
+                }
+            }
+
+            //应用到视图中
+            var subscriber = this.subscriber[key] || [];
+            subscriber.forEach(function(item){
+                var node = item.node;
+                node.$each && self.applyArray(node, key, 'order');
+            })
         },
 
         //设置select默认选中值

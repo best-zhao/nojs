@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>each</title>
+<link rel="stylesheet" href="/css/nojs/ui.css">
+<script src="/js/lib/nojs/noJS.js" id="nojs"></script>
+<script>
+noJS.config({
+    base : '/src/',
+    alias : {
+        '$' : 'lib/jquery/jquery',
+        'ui' : 'lib/nojs/ui'
+    }
+})
+</script>
+</head>
+<body>
+<style>
+    .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
+</style>
+<div nj-module="arrayEach" class="nj_module">
+    <textarea cols="100" rows="3" style="vertical-align:top">{{JSON.stringify(list)}}--{{order}}</textarea>
+    
+    <ul nj-each="list|orderBy:order">
+        <li>{{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-item="name">
+            <a href="" class="blue"
+                style="color:{{$parent.list.length<2?'#ccc':'#0074D7'}}"
+                nj-click="$parent.list.length>1 && $parent.list.splice($key,1)"
+
+                >remove</a>
+        </li>
+    </ul> 
+
+    <p class="gray9 mb10">orderBy:
+    <select name="" nj-item="order">
+        <option value="value">value</option>
+        <option value="name">name</option>
+    </select>
+    </p>
+
+    <button class="nj_btn" nj-click="add()">add</button>
+
+</div>
+
+<script>
+noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+    nj.module('arrayEach', function(scope){
+        this.list = [
+            {name:3,value:1}, {name:2,value:2}, {name:0,value:3}
+        ]
+        
+        this.add = function(){
+            this.$set('list.push', {name:this.list.length+1,value:'new'+this.list.length});
+        }      
+        
+    })    
+    
+    
+})
+</script>
+
+</body>
+</html>

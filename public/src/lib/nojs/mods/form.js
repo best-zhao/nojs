@@ -413,7 +413,7 @@ define(function(require){
 		    var self = this,
 		    options = $.extend({
 		        url : this.form[0].action,
-		        data : this.form.serialize(),
+		        //data : this.form.serialize(),
 		        type : 'post',
 		        dataType : 'json',
 		        context : this
@@ -430,9 +430,10 @@ define(function(require){
                 return;
             }
             if( bs ){
-                delete options.bs;
+                delete options.beforeSend;
             }
-		    
+            options.data = this.form.serialize();
+
 		    //dataType:'jsonp'跨域提交 get使用jquery默认处理方式 post使用iframe提交
 		    if( options.dataType=='jsonp' && options.type=='post' ){
 		        form.post(this.form, options);
