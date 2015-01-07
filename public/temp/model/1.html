@@ -63,11 +63,11 @@ noJS.config({
 
     <input type="radio" name="njRadio" nj-item="checked" checked="checked" value="1">
     <input type="radio" name="njRadio" nj-item="checked" value="2">{{checked}}
-
-    <select name="" multiple1 disabled="{{checked>1}}" size="7" nj-item="arr.y">
+    <a nj-href="{{checked>1}}">12</a>
+    <select name="" multiple1 nj-disabled="{{checked>1}}" size="" nj-item="arr.y">
         <option value="">..</option>
-        <optgroup label="{{label}}" nj-each="select|repeat:true|a:2">
-            <option value="{{value}}" nj-each="options|repeat:true|a:1">{{name}}</option>
+        <optgroup label="{{label}}" nj-each="select|repeat:true">
+            <option value="{{value}}" nj-each="options|repeat:true">{{name}}</option>
         </optgroup>
     </select>
     <div><span class="gray9">selectOptions:</span> <code>{{JSON.stringify(arr.y)}}</code></div>
@@ -80,33 +80,6 @@ noJS.config({
 
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
-    nj.module('arrayEach', function(scope){
-        this.names = '';        
-        this.list = [
-            {name:1}, {name:2}
-        ]
-        this.listStr = function(){
-            var a = JSON.stringify(this.list);
-            return a;
-        }
-        this.list1 = {
-            '11' : [1,2,3],
-            '12' : [4,5]
-        }
-        this.add = function(){
-            this.$set('list.push', {name:this.list.length+1});
-        }   
-        this.remove = function($key){
-            delete this.list1[$key];
-            scope.apply('list1');
-        }
-        var key = 12;
-        this.addList1 = function(){
-            this.list1[++key] = [key, 33];
-            scope.apply('list1');
-        }
-    })
-    return;
     nj.module('myModule', function(scope){
         this.name = 'myname';
         
@@ -142,7 +115,34 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
         }, 1000)
     });
     
-    //return;
+    nj.module('arrayEach', function(scope){
+        this.names = '';        
+        this.list = [
+            {name:1}, {name:2}
+        ]
+        this.listStr = function(){
+            var a = JSON.stringify(this.list);
+            return a;
+        }
+        this.list1 = {
+            '11' : [1,2,3],
+            '12' : [4,5]
+        }
+        this.add = function(){
+            this.$set('list.push', {name:this.list.length+1});
+        }   
+        this.remove = function($key){
+            delete this.list1[$key];
+            scope.apply('list1');
+        }
+        var key = 12;
+        this.addList1 = function(){
+            this.list1[++key] = [key, 33];
+            scope.apply('list1');
+        }
+    })
+    return;
+    
     
 
     nj.module('clickToggle', function(){

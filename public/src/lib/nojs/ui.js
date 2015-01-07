@@ -88,9 +88,11 @@
                 
             //JSON to string
             function stringify(data){
-                if( $.type(data) != 'object' ){
+                var type = $.type(data);
+                if( type != 'object' && type != 'array' ){
                     return;
                 }
+
                 var i, m, value, rect = [];
                 for( i in data ){
                     m = data[i];
@@ -101,7 +103,8 @@
                     value = typeof m=='string' ? '"'+value+'"' : value;
                     rect.push('"'+i+'":' + value);
                 }
-                return '{'+rect.join(',')+'}';
+                rect = rect.join(',')
+                return type == 'object' ? '{'+rect+'}' : '['+rect+']';
             }
             
             //string to JSON
@@ -164,7 +167,7 @@
     if( typeof Array.prototype.indexOf != 'function' ) {
         Array.prototype.indexOf = function(value){
             var index = -1;
-            this.forEach(function(val, i){
+            $.type(this)=='array' && this.forEach(function(val, i){
                 if( val === value ){
                     index = i;
                 }

@@ -7,7 +7,9 @@ define(function(require){
     var $ = require('$'),
         slice = Array.prototype.slice,
         validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#]+)\s*}}/,
-        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#]+)\s*}}/g;
+        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#]+)\s*}}/g,
+        $keywords = ['this','return','true','false','var','for','delete','function','if'],
+        ie8 = $.browser.msie && parseInt($.browser.version)<=8;
     
     /**
      * 以model为单位 一个页面可存在多个 也可互相嵌套
@@ -52,13 +54,13 @@ define(function(require){
         str = str.replace(/\)\s*{[\w\W]*}/g, ')');
 
         //提取 方法名
-        str.replace(/([\$\w\.\+\-\*\/\%\!:\?]+)\s*\(/g, function(a,b){
-
-            methods.indexOf(b)<0 && methods.push(b);  
+        str.replace(/([\$\w\.]+)\s*\(/g, function(a,b){
+            checkArgument(b) && methods.indexOf(b)<0 && methods.push(b);  
         })
 
+
         //提取 参数中的变量列表 并替换 所有()内容
-        str = str.replace(/\(([\s\w\$\(\),\.\+\-\*\/\%\!:\?=]*)\)/g, function(a,b){
+        str = str.replace(/\(([\s\w\$\(\),\.\+\-\*\/\%\!:\?=<>]*)\)/g, function(a,b){
             //b(1,c,d(d1,d2))
             b = b.split(/[,\+\-\*\/\%\!:\?=]/);
             b.forEach(function(arg){
@@ -83,12 +85,10 @@ define(function(require){
         })
         
 
-
         //是否为有效的变量
         function checkArgument(arg){
             arg = $.trim(arg);
-            if( !arg || reStr[arg] 
-                || /^(\d+|this|return|true|false|var|for|delete)$/.test(arg) //数字或关键字
+            if( !arg || reStr[arg] || $keywords.indexOf(arg)>=0
                 || /^(\d|[^\w\$])/.test(arg) //非法变量名称
             ){
                 return false;
@@ -131,6 +131,7 @@ define(function(require){
             })
             
         })
+        // console.log('str: ', str, methods,vars)
         // console.log(methods,vars)
 
         //初始化语句中未定义的变量及方法
@@ -221,10 +222,14 @@ define(function(require){
         for( var i in reStr ){
             str = str.replace(eval('/'+i+'/g'), reStr[i]);
         }
+        //参数替换可能和字符串替换互相包含 所以在此替换一遍
+        for( var i in reStr ){
+            str = str.replace(eval('/'+i+'/g'), reStr[i]);
+        }
 
         data.str = str;
 
-        //console.log(str,'\n',methods,vars);
+        //console.log('str: '+str,methods,vars);
 
         return data;
     }
@@ -235,10 +240,13 @@ define(function(require){
         if( !dom || !str){
             return;
         }
-        if( dom.$syntax ){
-            return dom.$syntax;
+        var data = $data(dom, '$syntax');
+        if( data ){
+            return data;
         }
-        return dom.$syntax = syntaxParse(str, scope);
+        data = syntaxParse(str, scope);
+        $data(dom, '$syntax', data);
+        return data;
     }
 
     //获取全部子节点 包括文本节点
@@ -282,18 +290,78 @@ define(function(require){
         return children;
     }
 
-    //获取node中有效的订阅子节点及属性节点   
+    //ie bug  
+    //get/set node节点上的数据 ie8不支持直接在非元素节点上添加数据 使用$data.cache保存数据
+    function $data(node, key, value){
+        if( typeof value == 'undefined' ){
+            return ie8 ? $data.get(node, key) : node[key];
+        }else{
+            if( ie8 ){
+                $data.set(node, key, value);
+            }else{
+                node[key] = value;
+            }
+        }
+    }
+    $data.cache = {};
+    $data.set = function(node, key, value){
+        var k = (+new Date)+''+parseInt(Math.random()*10000);
+
+        $data.cache[k] = {
+            node : node,
+            key : key,
+            value : value
+        }
+    }
+    $data.get = function(node, key){
+
+        for( var i in $data.cache ){
+            if( $data.cache[i].node===node && $data.cache[i].key===key ){
+                return $data.cache[i].value;
+            }
+        }
+    }
+
+    //ie bug
+    //将节点集合转为为标准数组
+    function nodeToArray(nodes){
+        return ie8 ? (function(){
+            var arr = [], i=0,n = nodes.length;
+            for( ;i<n;i++ ){
+                arr.push(nodes[i]);
+            }
+            return arr;
+        })() : slice.call(nodes, 0)
+    }
+
+
+    //ie bug :部分属性节点无法直接绑定语法 ie会视为无效属性 使用nj-attr来代替
+    //checked|disabled|readonly|multiple|selected
+    var $specialAttrs = ['href', 'style', 'checked', 'disabled', 'readonly', 'multiple', 'selected'];
+
+    //获取model属性'a.b'
+    function getAttribute(model, key){
+        var fn = [
+            'var value;',
+            'try{',
+                'value = a.'+key,
+            '}catch(e){',
+                'value = window.'+key,
+            '}',
+            'return value;'
+        ].join('');
+        //console.log(key)
+        return new Function('a', fn)(model);
+    }
 
     /**
      * 创建一个module
      */
     function Module(el, model, options){
         this.element = el;
-        //console.log(typeof el)
+        
         var $el = $(el);//转化为jQuery对象时会丢失文本节点
-        //this.model = model || {};
         this.options = options = options || {};
-        this.models = [];
         
         this.subscriber = {};
         
@@ -365,15 +433,6 @@ define(function(require){
         this.domID = {};
         
         /**
-         * [nj-item="*"]声明一个变量 并实现双向绑定
-         * 一般为表单元素 （用户可输入的）匹配其value/checked值
-         */
-        var items = $el.find('[nj-item]');
-        items.each(function(){
-            self.models.push(self.createModel(this));
-        })
-        
-        /**
          * "a='b'+ c +1"
          * "a.b(1+1,c,d(d1,d2))?'show':'hide'"
          * "slide(1,2);isopen=isopen=='d_hide'?'d_show':'d_hide'"
@@ -393,19 +452,21 @@ define(function(require){
             var str = $(this).attr('nj-click');
             
             this.onclick = function(e){
-                var data = syntaxInitialize(this, str, self),
-                    watchKey = data.watchKey;
+                e = e || window.event;
+                var $$data = syntaxInitialize(this, str, self),
+                    watchKey = $$data.watchKey;
 
                 self.model.$event = e;
 
                 with(self.model){
+                    eval('('+$$data.str+')');
                     try{
-                        eval(this.$syntax.str);
+                        
                     }catch(e){
-                        throw Error(e);
+                        //throw Error(e);
                     }
                 };
-                console.log(data.methods, watchKey)
+                //console.log($$data.methods, watchKey)
                 // watchKey.forEach(function(key){
                 //     self.apply(key);
                 // })
@@ -419,11 +480,12 @@ define(function(require){
                         scope.apply(key);
                     })
                 })
-                e.preventDefault()
+                return false;
+                //e.preventDefault()
             };
         })
         this.getSubscriber(el);
-        //console.log(this.subscriber)
+        // console.log(this.subscriber)
         for( var i in this.subscriber ){
             //var node = this.subscriber[i][0];
             this.apply(i);
@@ -431,9 +493,11 @@ define(function(require){
     }
     Module.prototype = {
         createModel : function(el){
-            if( el.$modelBind ){
+            if( $data(el, '$modelBind') ){
                 return;
             }
+
+
             var self = this,
             tagName = el.tagName.toLowerCase(),
             isFormElement = /input|select|textarea/.test(tagName),
@@ -444,7 +508,8 @@ define(function(require){
                 element : el,
                 key : key
             };
-            el.$modelBind = 1;
+            $data(el, '$modelBind', 1);
+
             
             //this.model[key] = typeof this.model[key]=='undefined' ? '' : this.model[key];
             this.domID[id] = el;
@@ -483,43 +548,81 @@ define(function(require){
                     el.value = selectVal;                    
                     new Function('a','b','a.'+_key+'=b')(self.model,selectVal);
                 }
-                $(el).on(eventName, function(){
-                    var v = this
+                $(el).on(eventName, handle);
 
-                    setTimeout(function(){
-                        var val = v[checkbox ? 'checked' : 'value'],
-                            $$str = checkbox ? (_key+'='+val) : (_key+'="'+val.replace(/\\/g,'\\\\')+'"');
+                //console.log(el.type)
+                if( el.type=='text' ){
+                    if( $.browser.msie ){
+                        el.onpropertychange = handle;
+                    }else{
+                        el.addEventListener("input", handle, false); 
+                    }
+                }   
 
-                        val = checkbox ? val : val.replace(/\\/g,'\\\\');
+                function handle(e){
+                    e = e || window.event;
+                    var v = this, code = e.keyCode
 
-                        //同步关联select selectedOptions对象
-                        if( selectNode ){
-                            var selected = slice.call(v.selectedOptions, 0).map(function(option){
-                                return option.$data || option.value;
-                            })
-                            val = v.multiple ? selected : selected[0];
-                            // $$str = _key+'='+JSON.stringify(v.multiple?selected:selected[0]);
+                    // 有效输入键
+                    if( code==undefined || code==8 || code==32         // e.keyCode [8 : backspace] [32 : space] 
+                        || code==229                // 中文键或全角 部分可输入字符
+                        || (code>47 && code<58)     // [48-57 : 0-9]
+                        || (code>64 && code<91)     // [65-90 : a-z]
+                        || (code>95 && code<112)    // [96-111 : 小键盘]
+                        || (code>185 && code<193)   // [186-192 : ;=<->/`]
+                        || (code>218 && code<223)   // [219-222 : [\]' ]
+                    ){
 
-                            // var $selectedOptions = slice.call(v.selectedOptions, 0).map(function(option){
-                            //     //var index = option.index - v.$startIndex;
-                            //     return option.index;
-                            // });
+                        setTimeout(function(){
+                            var val = v[checkbox ? 'checked' : 'value']
+                                //$$str = checkbox ? (_key+'='+val) : (_key+'="'+val.replace(/\\/g,'\\\\')+'"');
+
+                            //val = checkbox ? val : val.replace(/\\/g,'\\\\');
+
+                            //同步关联select selectedOptions对象
+                            if( selectNode ){
+                                // console.log(v.selectedOptions)
+                                // console.log(v.selectedIndex)
+                                
+                                // ie 不支持 v.selectedOptions
+                                var selectedOptions = v.selectedOptions || (function(){
+                                    var sel = [];
+                                    nodeToArray(v.options).forEach(function(option){
+                                        if( option.selected ){
+                                            sel.push(option);
+                                        }
+                                    })
+                                    return sel
+                                })();
+
+                                var selected = slice.call(selectedOptions, 0).map(function(option){
+                                    return option.$data || option.value;
+                                })
+                                val = v.multiple ? selected : selected[0];
+                                // $$str = _key+'='+JSON.stringify(v.multiple?selected:selected[0]);
+
+                                // var $selectedOptions = slice.call(v.selectedOptions, 0).map(function(option){
+                                //     //var index = option.index - v.$startIndex;
+                                //     return option.index;
+                                // });
+                                // with(self.model){
+                                //     eval(v.$selectedKey+'=['+$selectedOptions+']');
+                                // }
+                            }
+                            new Function('a','b','a.'+_key+'=b;if(a.$data){a.$data.'+_key+'=b}')(self.model, val);
+
                             // with(self.model){
-                            //     eval(v.$selectedKey+'=['+$selectedOptions+']');
+                            //     eval($$str);
+                            //     if( self.model.$data ){
+                            //         $data[_key] = val;
+                            //     }
                             // }
-                        }
-                        new Function('a','b','a.'+_key+'=b;if(a.$data){a.$data.'+_key+'=b}')(self.model, val);
+                            //参数2：手动输入时 不用更新当前对象
+                            self.apply(key, v);
+                        }, 0)
 
-                        // with(self.model){
-                        //     eval($$str);
-                        //     if( self.model.$data ){
-                        //         $data[_key] = val;
-                        //     }
-                        // }
-                        //参数2：手动输入时 不用更新当前对象
-                        self.apply(key, v);
-                    }, 0)
-                })
+                    }
+                }
             }
             return model;
         },
@@ -549,7 +652,7 @@ define(function(require){
                 });
                 self.pushSubscriber(node, keys); 
 
-                node.$scope = model;
+                //node.$scope = model;
             })
             
         },
@@ -562,16 +665,23 @@ define(function(require){
                 type = node.nodeType,
                 elementNode = type==1;//元素节点
 
-            if( node.$filter || elementNode && /script|style/.test(node.tagName.toLowerCase()) ){
+            if( $data(node, '$filter') || elementNode && /script|style/.test(node.tagName.toLowerCase()) ){
                 return subNodes;
             }
+
             //console.log(node.nodeType,node)
 
             //ie bug: 文本节点不支持自定义属性 
-            node.$filter = 1;
-
+            //node.$filter = 1;
+            $data(node, '$filter', 1);
             
             if( type==1 ){
+
+                /**
+                 * [nj-item="*"]声明一个变量 并实现双向绑定
+                 * 一般为表单元素 （用户可输入的）匹配其value/checked值
+                 */
+                node.getAttribute('nj-item') && self.createModel(node);
 
                 var njEach = elementNode && node.getAttribute('nj-each');
 
@@ -591,7 +701,13 @@ define(function(require){
                         // 获取选项中的变量引用 nj-each="list|orderBy:order"
                         // 将each对象添加到order的订阅列表中
                         e = e.split(':');
-                        if( e[1] && /^[\w\$]+$/.test(e[1]) ){
+                        if( e[1] && /^[\w\$]+$/.test(e[1]) && $keywords.indexOf(e[1])<0 ){
+
+                            // 预定义未定义的变量 否则下面options获取出错
+                            if( getAttribute(self.model, e[1])===undefined ){
+                                new Function('a', 'a.'+e[1]+'=undefined')(self.model, e[1]);
+                            }
+
                             self.pushSubscriber(null, e[i], {
                                 action : {
                                     //动作名称 如orderBy
@@ -611,19 +727,14 @@ define(function(require){
                         var $$options = '({'+options+'})';
 
                         with(this.model){
-                            $$options =  eval($$options);
+                            try{
+                                $$options =  eval($$options);
+                            }catch(e){
+                                $$options = {};
+                            }
                         }
-                        //console.log($$options,this.model)
                         options = $$options;
 
-                        if( options.orderBy ){
-                            
-                            //console.log(array);
-                            
-
-
-                            //console.log(eachData[0],self.model[eachData[0]]);
-                        }
 
                         //select下拉菜单的 选中项
                         // if( options.selected && selectedKey ){
@@ -652,17 +763,24 @@ define(function(require){
                         //     }
                         // }
                     }
-                    options = options || {};
+                    
 
 
                     //将其子元素拷贝一份作为each模板
-                    var templete = options.repeat ? [node] : slice.call(node.childNodes, 0),
+                    var templete = options.repeat ? [node] : nodeToArray(node.childNodes),
                         notes = document.createComment(eachData[0]+' each');    
                     templete.push(notes);
 
                     //将其内部所有元素标记 $filter                    
                     getAllChildren(node).forEach(function(n){
-                        n.$filter = 1;
+                        $data(n, '$filter', 1);
+                    })
+
+                    // 这里拷贝一份模板的副本 否则ie在node.innerHTML清空后templete子元素会消失
+                    templete = templete.map(function(n){
+                        var _n = n.cloneNode(true);
+                        options.repeat && _n.nodeType==1 && _n.removeAttribute('nj-each');
+                        return _n
                     })
 
                     node.$each = {
@@ -678,8 +796,6 @@ define(function(require){
                     
                     if( options.repeat ){//循环节点本身 本身作为模板
                         node.parentNode.removeChild(node);
-                        node.removeAttribute('nj-each');
-                        
                         return subNodes;
                     }else{
                         node.innerHTML = '';
@@ -687,23 +803,15 @@ define(function(require){
                 }
 
                 //获取属性节点
-                var _attrs = node.attributes, attrs = [], n = _attrs.length, i;
-                if( n ){
-                    //slice.call(node.attributes, 0) ie报错
-                    for( i=0; i<n; i++ ){
-                        attrs.push(_attrs[i]);
-                    }
-                    
-                    attrs.forEach(function(n){
-                        if( validNode.test(n.value) ){
-
-                            n.$parentElement = node;//记录属性节点所在的元素节点
-                            subNodes.push(n);
-                        } 
-                    })
-                }
+                //ie bug style属性包含{{}}的 ie会视为无效属性 自动去除 使用nj-style替换
+                nodeToArray(node.attributes).forEach(function(n){
+                    if( validNode.test(n.value) ){
+                        //记录属性节点所在的元素节点
+                        $data(n, '$parentElement', node);
+                        subNodes.push(n);
+                    } 
+                })
                 
-
             }else if( type==3 ){//满足条件的文本节点
 
                 var html = $.trim(node.nodeValue);
@@ -748,15 +856,19 @@ define(function(require){
                 vars = d ? d.vars : [],
                 methods = d ? d.methods : [];
 
+            // console.log(vars, node)
             vars.forEach(push,'vars');
+
             
             //需要分析这些方法函数中涉及的相关变量 即依赖属性
             methods.forEach(function(k){
                 var fnStr, $$k = k;
-                
-                with(self.model){
-                    fnStr = eval($$k);
-                }
+
+                try{
+                    fnStr = new Function('a', 'return a.'+k)(self.model);
+                }catch(e){
+                    fnStr = new Function('a', 'return a.'+k)(window);
+                }               
 
                 if( typeof fnStr != 'function' ){
                     return;
@@ -772,20 +884,21 @@ define(function(require){
                 fnStr = $.trim(fnStr).replace(/[\r\n]/g, ';');
 
                 var vars = syntaxParse(fnStr, self).vars;
-                
                 vars.forEach(function(k){
-                    push(k,'methods')
+                    push(k, 'methods')
                 })
             });
 
 
             function push(k){
+                if( /^\d+$/.test(k) || $keywords.indexOf(k)>=0 ){
+                    return;
+                }
                 //替换一些特殊的关键字 $data.name 实际上是订阅的name属性
                 var _k = k;
 
                 k.replace(rKey, function(a,b){
                     if( b=='parent' ){
-
                         //该节点访问的是父级 所以将其添加到父对象的订阅列表中
                         self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
                     }
@@ -811,29 +924,22 @@ define(function(require){
         //notApply：需要过滤的元素
         apply : function(key, notApply){
             
-            if( !key || !this.model ){//this.model = new model()执行构造函数时 若函数里存在$set操作 此时this.model还未赋值
+            if( !key || key=='function' || !this.model ){//this.model = new model()执行构造函数时 若函数里存在$set操作 此时this.model还未赋值
                 return;
             }
+            
             var self = this,
                 subscriber = this.subscriber[key] || [],
-                value = this.model[key],
-                $$key = key;
-
-            // with(this.model){
-
-            //     value = eval('typeof '+$$key)=='undefined' ? undefined : eval($$key);
-            // }
-            value = new Function('a','return a.'+key)(this.model);
+                value = getAttribute(this.model, key),
             
-            var valueType = $.type(value),
                 //数组或关联数组监控对象
-                observableArray = /array|object/.test(valueType),
-                _key = key.split('.');
+                isArray = /array|object/.test($.type(value));
+
 
             //a.b为a.b.c的上级 上级更新 其所有下级也要同时更新
             for( var i in this.subscriber ){
                 if( i.indexOf(key+'.')==0 ){
-                    this.apply(i);
+                    this.apply(i, notApply);
                 }
             }
             //console.log(key, subscriber)
@@ -841,14 +947,15 @@ define(function(require){
                 return;
             }
 
+            //console.log(this.model.order)
             //数组子项发生变化时 需更新数组本身 一般为用户表单输入数据
             if( this.model.$key!==undefined && this.model.$parentScope!==this && key.indexOf('$')<0 && notApply ){
-                //console.log(observableArray,key, this.model.$parent.list[0], notApply)
+                // console.log(isArray,key, this.model.$parent.list[0], notApply)
                 this.model.$parentScope.apply(this.options.$arrayName, notApply);
             }
 
             //监控数组发生变化时
-            // if( key=='$array' && observableArray && !subscriber.length ){
+            // if( key=='$array' && isArray && !subscriber.length ){
             //     //console.log(this.model.$parentScope.subscriber[this.options.$arrayName])
             //     this.model.$parentScope.apply(this.options.$arrayName)
             //     return;
@@ -856,83 +963,104 @@ define(function(require){
 
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
-                var node = item.node;
-
                 if( item.action ){//数组排序
                     self.arrayOrder(value, item.action);
                     return;
                 }
+                var node = item.node;
                 if( node===notApply || node.type=='radio' ){
                     return;
                 }
-                if( /^select/.test(node.type) ){
-                    self.defaultSelected(node);//设置select默认选中项
-                    return;
-                }
-
-                if( observableArray && node.$each ){
-                    self.applyArray(node, key);//更新each数组
-                    return;
-                }
-
-                var type = node.nodeType;
-                
-                if( item.writeAll ){
-                    node.value = value;
-
-                }else{
-                    var text = item.value || node.value, 
-                        reg;
-
-                    if( !text ){
-                        return;
-                    }
-
-                    var $val
-                    //该节点可能订阅多个相同或不同的属性 所以分批替换
-                    text.replace(validNodes, function(a,b){
-                        var scope = node.$scope || self.model;
-                        
-                        //部分关键字可改变作用域 $data $parent $root
-                        //b = b.replace('$parent.', '$parent.model.');
-                        //text = text.replace('$parent.', '$parent.model.');
-                        //console.log(node,b,scope,key)
-
-                        reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:\(\),])/g, '\\$1')+'\\s*}}/g');
-                        with(scope){
-                            $val = eval(b);
-                            try{
-                                
-                            }catch(e){
-
-                            }
-                        }
-                        
-                        if( $val!==undefined ){
-                            text = text.replace(reg, $val);
-                        }
-                        //console.log('value:'+$val,reg, text)
-                    })
-
-                    //属性节点中checked disabled readonly单独处理
-                    if( type==2 ){
-                        var attrName = node.name, parentNode;
-                        if( /checked|disabled|readonly|multiple|selected/.test(attrName) ){
-                            parentNode = node.$parentElement //|| node.ownerElement;
-                            //这里不能通过ownerElement获取文本节点所在元素节点 removeAttribute会移除原本的文本节点
-                            parentNode[$val?'setAttribute':'removeAttribute'](attrName, attrName);
-                            return;
-                        }
-                    }
-                    node[type==1||type==2?'value':'nodeValue'] = text;
-                }               
+                self.updateNode(item, key, value, isArray);          
             })
             
+        },
+        updateNode : function(item, key, value, isArray){
+            var self = this, node = item.node, value;
+            
+            value = value || getAttribute(this.model, key);
+            isArray = isArray || /array|object/.test($.type(value));
+
+            if( /^select/.test(node.type) ){
+                self.defaultSelected(node);//设置select默认选中项
+                return;
+            }
+
+            if( isArray && node.$each ){
+                self.applyArray(node, key);//更新each数组
+                return;
+            }
+
+            var type = node.nodeType;
+            //console.log(type, node, key, notApply)
+            
+            if( item.writeAll ){
+                node.value = value;
+
+            }else{
+                var text = item.value || node.value, 
+                    reg;
+
+                if( !text ){
+                    return;
+                }
+
+                var $val;
+                //该节点可能订阅多个相同或不同的属性 所以分批替换
+                text.replace(validNodes, function(a,b){
+                    var scope = node.$scope || self.model;
+                    
+                    //部分关键字可改变作用域 $data $parent $root
+                    //b = b.replace('$parent.', '$parent.model.');
+                    //text = text.replace('$parent.', '$parent.model.');
+                    //console.log(node,b,scope,key)
+
+                    reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:\(\),])/g, '\\$1')+'\\s*}}/g');
+                    
+                    //$val = new Function('a', 'return a.'+b)(scope);
+                    with(scope){
+                        $val = eval('('+b+')');
+                    }
+                    if( $val!==undefined ){
+                        text = text.replace(reg, $val);
+                    }
+                    //console.log('value:'+$val,reg, text)
+                })
+
+                //属性节点中checked disabled readonly单独处理
+                if( type==2 ){
+
+                    var attrName = node.name.replace(/^nj-/, ''), 
+                        parentNode = $data(node, '$parentElement') || node.ownerElement;
+
+                    
+                    if( attrName=='style' ){//ie67 bug 直接设置style属性无效
+                        //parentNode.setAttribute('style', text);
+                        var css = text.split(';');
+                        css.forEach(function(s){
+                            s = $.trim(s).split(':');
+                            var attr = s[0], val = s[1];
+                            if( !attr ){
+                                return;
+                            }
+                            parentNode.style[attr] = val;
+                        })
+
+                    }else{
+                        parentNode[attrName] = $val ? true : false;
+                        return;
+                    }
+                }
+
+                //type==2 && console.log(node,node.name)
+                node[type==1||type==2?'value':'nodeValue'] = text;
+            } 
         },
         applyArray : function(node, key, action){
             if( !node.$each ){
                 return;
             }
+
             var self = this,
                 eachData = node.$each,
 
@@ -977,6 +1105,7 @@ define(function(require){
                         if( array[key]===undefined ){
                             eachData.models.splice(i, 1);
                             var el = arrayModel.element;
+                            console.log(el)
                             el.forEach(function(n){
                                 nodeSelf.removeChild(n);
                             })
@@ -990,7 +1119,10 @@ define(function(require){
                         if( hasKeys.indexOf(i)<0 ){//新增
                             var frag = document.createDocumentFragment();
                             addArray(array[i], i, frag);
-                            nodeSelf.insertBefore(frag, node.childNodes[templete.length*modelsLen]);
+
+                            
+                            var last = node.childNodes[templete.length*modelsLen-1];
+                            nodeSelf[last.nextSibling?'insertBefore':'appendChild'](frag, last.nextSibling);
                         }
                     }
                     selectNode && self.defaultSelected(selectNode);
@@ -1067,6 +1199,7 @@ define(function(require){
                 return;
 
             }else if( action=='order' ){//排序时 dom还未应用
+                // console.log(action)
                 return;
             }
 
@@ -1074,8 +1207,9 @@ define(function(require){
             var frag = document.createDocumentFragment();
             
             //遍历数组
+            //这里如果数组扩展了其他方法 需要过滤掉
             for( var i in array ){
-                addArray(array[i], i, frag);
+                !Array.prototype[i] && addArray(array[i], i, frag);
             }
 
             if( eachData.options.repeat ){
@@ -1094,7 +1228,6 @@ define(function(require){
             function addArray(data, i, frag){
                 //获取该组所有节点及子节点
                 var groupNodes = [];
-
                 templete.forEach(function(n){
                     //从模板节点中拷贝 一份
                     var node = n.cloneNode(true);
@@ -1119,13 +1252,16 @@ define(function(require){
         },
         //对数组进行排序
         arrayOrder : function(orderBy, options){
+            if( !orderBy ){
+                //return;
+            }
             //获取数组对象
             var self = this, 
                 key = options.key,
-                array = new Function('a', 'return a.'+key)(this.model),
+                array = new Function('a', 'return a.'+key)(this.model);
 
             //将用于排序的子属性单独提取为一个数组
-            orderKey = array.map(function(a){
+            var orderKey = array.map(function(a){
                 return new Function('a', 'return a.'+orderBy)(a);
             }).sort();
 
@@ -1143,7 +1279,7 @@ define(function(require){
             var subscriber = this.subscriber[key] || [];
             subscriber.forEach(function(item){
                 var node = item.node;
-                node.$each && self.applyArray(node, key, 'order');
+                node.$each ? self.applyArray(node, key, 'order') : self.updateNode(item, key);
             })
         },
 
@@ -1160,13 +1296,15 @@ define(function(require){
 
             var selected = $.type($$sel)=='array' ? $$sel : [$$sel];
 
-            slice.call(node.options, 0).forEach(function(option){
+            nodeToArray(node.options).forEach(function(option){
                 if( option.$data ){
                     option.selected = selected.indexOf(option.$data)>=0 && true;
                 }
             })           
         }
     }
+
+    
     
     // $(function(){
     //     var modules = $(document.body).find('[nj-module]');
