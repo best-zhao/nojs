@@ -21,7 +21,7 @@ noJS.config({
 </style>
 <div nj-module="arrayEach" class="nj_module">
     <input type="text" nj-item="names">{{names}}-{{list.length}}
-    <textarea cols="" rows="4" style="vertical-align:top">{{listStr()}}--{{order}}</textarea>
+    <textarea cols="60" rows="4" style="vertical-align:top">{{listStr()}}--{{order}}</textarea>
     
     <p class="gray9 mb10">orderBy:
     <select name="" nj-item="order">
@@ -46,11 +46,11 @@ noJS.config({
     <button class="nj_btn" nj-click="add()">add</button>
     
 
-    <ul nj-each="list1">
+    <!-- <ul nj-each="list1">
         <li>name: {{$key}} <a href="" class="gray9" nj-click="$parent.remove($key)">remove</a>
-            <div nj-each="$data" style="margin-left:20px">key:{{$key}}-{{$data}} | </div>
+            <div nj-each="$data" style="margin-left:20px">{{$key}} : {{$data}} | </div>
         </li>
-    </ul>
+    </ul> -->
     <a href="" nj-click="addList1()">add list1</a>
 </div>
 
@@ -80,6 +80,32 @@ noJS.config({
 
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+    nj.module('arrayEach', function(scope){
+        this.names = '';        
+        this.list = [
+            {name:1}, {name:2}
+        ]
+        this.listStr = function(){
+            var a = JSON.stringify(this.list);
+            return a;
+        }
+        this.list1 = {
+            '11' : [1,2,3],
+            '12' : [4,5]
+        }
+        this.add = function(){
+            this.$set('list.push', {name:this.list.length+1});
+        }   
+        this.remove = function($key){
+            delete this.list1[$key];
+            scope.apply('list1');
+        }
+        var key = 12;
+        this.addList1 = function(){
+            this.list1[++key] = [key, 33, 44];
+            scope.apply('list1');
+        }
+    })
     nj.module('myModule', function(scope){
         this.name = 'myname';
         
@@ -114,34 +140,6 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
             self.$set('arr.y', self.select[0].options[1]);
         }, 1000)
     });
-    
-    nj.module('arrayEach', function(scope){
-        this.names = '';        
-        this.list = [
-            {name:1}, {name:2}
-        ]
-        this.listStr = function(){
-            var a = JSON.stringify(this.list);
-            return a;
-        }
-        this.list1 = {
-            '11' : [1,2,3],
-            '12' : [4,5]
-        }
-        this.add = function(){
-            this.$set('list.push', {name:this.list.length+1});
-        }   
-        this.remove = function($key){
-            delete this.list1[$key];
-            scope.apply('list1');
-        }
-        var key = 12;
-        this.addList1 = function(){
-            this.list1[++key] = [key, 33];
-            scope.apply('list1');
-        }
-    })
-    return;
     
     
 

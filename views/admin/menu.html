@@ -48,15 +48,34 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', fun
     treeOptions, 
     el = $('#menu_items'), 
     $pid = $('#menu_pid'),
-    $form = $('#menu_edit');
-    
-    $.getJSON('/getMenus', function(json){
+    $form = $('#menu_edit'),
+    pid;
+
+    KindEditor.options.filterMode = false;
+    editor = KindEditor.create("#menu_content", {
+        items : ['source', 'bold', 'forecolor','|','table','emoticons', '|', 'link', 'unlink','multiimage','code']
+    })
+
+    var menuKey = 'nojsMenuData',
+        data = $.localStorage.get(menuKey);
+
+    if( data ){
+        data = JSON.parse(data);
+        menuInit(data);
+    }else{
+        $.getJSON('/getMenus', function(json){
+            menuInit(json.data);
+            $.localStorage.set(menuKey, JSON.stringify(json.data));
+        })
+    }
+
+    function menuInit(data){
         treeOptions = {
-            data : json.data,
+            data : data,
             level : 0
         }
         treeOptions.onSelect = function(id, data){
-
+            pid = id;
             //pid select
             var options = $.extend({
                 name : ['menu[pid]'],
@@ -79,12 +98,7 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', fun
             
         }
         tree.select(el, treeOptions);
-    })
-
-    KindEditor.options.filterMode = false;
-    editor = KindEditor.create("#menu_content", {
-        items : ['source', 'bold', 'forecolor','|','table','emoticons', '|', 'link', 'unlink','multiimage','code']
-    })
+    }
 
     var Form = new form({
         form : $form,
@@ -98,6 +112,7 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', fun
             },
             success : function(json){
                 layer.msg.hide();
+                $.localStorage.remove(menuKey);//修改菜单时 删除本地数据
                 location.reload();
             }
         }

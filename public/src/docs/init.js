@@ -21,21 +21,33 @@ define(function(require){
         }
     })
 
-    //domain.rs+'/src/docs/config.json'
-    $.getJSON('/getMenus', function(json){
-        json.data.forEach(function(m){
+    var menuKey = 'nojsMenuData',
+        data = $.localStorage.get(menuKey);
+
+    if( data ){
+        data = JSON.parse(data);
+        menuInit(data);
+    }else{
+        //domain.rs+'/src/docs/config.json'
+        $.getJSON('/getMenus', function(json){
+            menuInit(json.data);
+            $.localStorage.set(menuKey, JSON.stringify(json.data));
+        })
+    }    
+
+    function menuInit(data){
+        data.forEach(function(m){
             if( m.content ){
                 m.link = '/docs_'+m._id;
-            }            
-
+            }
         });
         docs.init({
-            menu : {nojs:{data:json.data}},
+            menu : {nojs:{data:data}},
             treeKey : {
                 id : '_id',
                 parent : 'pid'
             },
-            defaultNode : 'nojs_info',
+            defaultNode : data[0]._id,
             beforeSend : function(){
                 //docs.$content.fadeTo(200, 0);
                 demo.destroy();
@@ -49,7 +61,7 @@ define(function(require){
                 demoIndex && demo.show(demoIndex);
             }
         });
-    })
+    }
 
     
 

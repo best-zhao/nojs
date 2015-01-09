@@ -87,7 +87,6 @@ define(function(require){
     }
     menu.load = function(data){
         data = data || G.data;
-        
         $.ajax({
             url : data.url,
             type : 'get',
