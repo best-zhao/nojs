@@ -6,8 +6,8 @@ define(function(require){
     
     var $ = require('$'),
         slice = Array.prototype.slice,
-        validNode  = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#\[\]]+)\s*}}/,
-        validNodes = /{{\s*([\$\w\.\+\-\*\/\%\!:\?\d''""<>&\(\),\s=#\[\]]+)\s*}}/g,
+        validNode  = /{{\s*([\w\W]+?)\s*}}/,
+        validNodes = /{{\s*([\w\W]+?)\s*}}/g,
         $keywords = ['this','return','true','false','var','for','delete','function','if'],
         ie8 = $.browser.msie && parseInt($.browser.version)<=8;
     
@@ -30,7 +30,6 @@ define(function(require){
         var model = scope.model,
             reStr = {},
             data = {
-                //replaceStr : reStr,
                 watchKey : [],
                 methods : [],
                 vars : []
@@ -39,59 +38,66 @@ define(function(require){
             methods = data.methods,
             vars = data.vars;
 
-
-        //替换 字符串内容
-        var skey = '_nj_str_', akey = 'nj_arg_', n = 0;
-        str = str.replace(/("(?:\\"|[^"])*"|'(?:\\'|[^'])*')/g, function(a,b){
-            if( b ){
-                var key = skey+(++n);
-                reStr[key] = b;
-                return key;
+        str.replace(/"(?:\\"|[^"])*"|'(?:\\'|[^'])*'|\/(?:\\\/|[^\/\r\n])+\/(?=[^\/])|((?:\$|\b)[\$\w\.]+)\b(\(?)/g, function(a,b,c){
+            if( c ){
+                checkArgument(b) && methods.indexOf(b)<0 && methods.push(b);
+            }else if( b ){
+                checkArgument(b) && vars.indexOf(b)<0 && vars.push(b);
             }
         })
 
-        //替换 语句块
-        str = str.replace(/\)\s*{[\w\W]*}/g, ')');
+        //替换 字符串内容
+        // var skey = '_nj_str_', akey = 'nj_arg_', n = 0;
+        // str = str.replace(/("(?:\\"|[^"])*"|'(?:\\'|[^'])*')/g, function(a,b){
+        //     if( b ){
+        //         var key = skey+(++n);
+        //         reStr[key] = b;
+        //         return key;
+        //     }
+        // })
 
-        //替换 [] 中的属性引用
-        str = str.replace(/(\[[\$\w]+\])/g, '');
+        // //替换 语句块
+        // str = str.replace(/\)\s*{[\w\W]*}/g, ')');
 
-        //提取 方法名
-        str.replace(/([\$\w\.]+)\s*\(/g, function(a,b){
-            checkArgument(b) && methods.indexOf(b)<0 && methods.push(b);  
-        })
+        // //替换 [] 中的属性引用
+        // str = str.replace(/(\[[\$\w]+\])/g, '');
+
+        // //提取 方法名
+        // str.replace(/([\$\w\.]+)\s*\(/g, function(a,b){
+        //     checkArgument(b) && methods.indexOf(b)<0 && methods.push(b);  
+        // })
 
 
         //提取 参数中的变量列表 并替换 所有()内容
-        str = str.replace(/\(([\s\w\$\(\),\.\+\-\*\/\%\!:\?=<>]*)\)/g, function(a,b){
-            //b(1,c,d(d1,d2))
-            b = b.split(/[,\+\-\*\/\%\!:\?=]/);
-            b.forEach(function(arg){
-                arg = arg.replace(/^\(|\)$/, '');//替换掉收尾括号
-                if( arg.indexOf('(')>0 ){//参数内容带有函数执行
-                    arg = arg.split('(');
-                    methods.indexOf(arg[0])<0 && methods.push(arg[0]);    
-                    arg = arg[1];
-                }
-                //替换改变作用域的关键字 $parent.list>$parent.model.list
-                // if( arg.indexOf('$parent')==0 ){
-                //     a = a.replace('$parent.', '$parent.model.');
-                // }                
-                //console.log(arg, a, checkArgument(arg) && vars.indexOf(arg)<0);
-                arg = $.trim(arg)
-                checkArgument(arg) && vars.indexOf(arg)<0 && vars.push(arg) //&& console.log(arg);
-            })
+        // str = str.replace(/\(([\s\w\$\(\),\.\+\-\*\/\%\!:\?=<>]*)\)/g, function(a,b){
+        //     //b(1,c,d(d1,d2))
+        //     b = b.split(/[,\+\-\*\/\%\!:\?=]/);
+        //     b.forEach(function(arg){
+        //         arg = arg.replace(/^\(|\)$/, '');//替换掉收尾括号
+        //         if( arg.indexOf('(')>0 ){//参数内容带有函数执行
+        //             arg = arg.split('(');
+        //             methods.indexOf(arg[0])<0 && methods.push(arg[0]);    
+        //             arg = arg[1];
+        //         }
+        //         //替换改变作用域的关键字 $parent.list>$parent.model.list
+        //         // if( arg.indexOf('$parent')==0 ){
+        //         //     a = a.replace('$parent.', '$parent.model.');
+        //         // }                
+        //         //console.log(arg, a, checkArgument(arg) && vars.indexOf(arg)<0);
+        //         arg = $.trim(arg)
+        //         checkArgument(arg) && vars.indexOf(arg)<0 && vars.push(arg) //&& console.log(arg);
+        //     })
 
-            var key = ';'+akey+(++n)+';';
-            reStr[key] = a;
-            return key;
-        })
+        //     var key = ';'+akey+(++n)+';';
+        //     reStr[key] = a;
+        //     return key;
+        // })
         
 
         //是否为有效的变量
         function checkArgument(arg){
             arg = $.trim(arg);
-            if( !arg || reStr[arg] || $keywords.indexOf(arg)>=0
+            if( !arg || $keywords.indexOf(arg)>=0
                 || /^(\d|[^\w\$])/.test(arg) //非法变量名称
             ){
                 return false;
@@ -99,43 +105,6 @@ define(function(require){
                 return true;
             }
         }
-        
-
-        //分割并过滤语句 提取相关变量名
-        str = str.split(';');
-
-        var regCompute = /[\+\-\*\/%\!=\?:<>\s]/,       //包含运算符的
-            validStr = /[\$\w\.\+\-\*\/%\!=\?:<>]+/,    //不一定包含运算符的
-            keyword = /^(\$(?:parent|root)\.)/
-        
-
-        str.forEach(function(s, i){
-
-            str[i] = s = $.trim(s);
-
-            // if( keyword.test(s) ){//替换关键字
-            //     str[i] = s.replace(keyword, '$1model.');
-            // }
-            
-            //运算符语句匹配 a=b; a=a==1?2:1;            
-            if( !s || reStr[';'+s+';'] || !validStr.test(s) ){
-                return;
-            }
-
-            //console.log;nj_arg_1; 替换()后 这里变量匹配可能会出现重复
-            if( methods.indexOf(s)>=0 && reStr[';'+str[i+1]+';'] ){
-                return;
-            }
-
-            var computeVars = s.split(regCompute);
-            computeVars.forEach(function(m){
-                m = $.trim(m);
-                checkArgument(m) && vars.indexOf(m)<0 && methods.indexOf(m)<0 && vars.push(m);
-            })
-            
-        })
-        // console.log('str: ', str, methods,vars)
-        // console.log(methods,vars)
 
         //初始化语句中未定义的变量及方法
         function initMethod(method, isFunction){
@@ -204,36 +173,15 @@ define(function(require){
             //console.log(watchKey,method)
         }
 
-        // console.log(methods,vars)
-        
         methods.forEach(function(name){
             initMethod(name, true);
         })
-        
-        for( var i=0,n=vars.length,name; i<n; i++ ){
-            name = vars[i] = vars[i].replace(/^this\./, '');
-            if( !checkArgument(name) ){//过滤无效参数 
-                vars.splice(i, 1);
-                i--;
-                n--;
-                continue;
-            }
-            initMethod(name);
-        }    
+           
+        vars.forEach(function(v){
+            initMethod(v);
+        })
 
-        str = str.join(';');
-        //还原被替换的字符串
-        for( var i in reStr ){
-            str = str.replace(eval('/'+i+'/g'), reStr[i]);
-        }
-        //参数替换可能和字符串替换互相包含 所以在此替换一遍
-        for( var i in reStr ){
-            str = str.replace(eval('/'+i+'/g'), reStr[i]);
-        }
-
-        data.str = str;
-
-        //console.log('str: '+str,methods,vars);
+        // console.log('str: '+str, methods, vars, watchKey)
 
         return data;
     }
@@ -338,24 +286,88 @@ define(function(require){
         })() : slice.call(nodes, 0)
     }
 
-
     //ie bug :部分属性节点无法直接绑定语法 ie会视为无效属性 使用nj-attr来代替
     //checked|disabled|readonly|multiple|selected
     var $specialAttrs = ['href', 'style', 'checked', 'disabled', 'readonly', 'multiple', 'selected'];
 
     //获取model属性'a.b'
-    function getAttribute(model, key){
+    function getAttribute(model, key, _global){
+        _global = _global===false ? false : true;//model获取失败 是否从取window对象取属性
         var fn = [
             'var value;',
             'try{',
                 'value = a.'+key,
             '}catch(e){',
-                'value = window.'+key,
+                'if(b){ value = window.'+key+' }',
             '}',
             'return value;'
         ].join('');
         //console.log(key)
-        return new Function('a', fn)(model);
+        return new Function('a','b', fn)(model, _global);
+    }
+
+    /**
+     * 获取函数中相关变量
+     */
+    function getFnVars(fn){
+        var arr = []
+        if( typeof fn != 'function' ){
+            return arr;
+        }
+        var fnStr = fn.toString();
+        
+        //原生函数
+        if( /^function[\s\w\(\)]+{[\s\n]*\[native code\][\s\n]*}/.test(fnStr) ){
+            return arr;
+        }
+        
+        fnStr = fnStr.replace(/(?:^function\s*\([^\)]*\){)|(?:}$)/g, '');
+        // 匹配 $scope.a.b
+        fnStr.replace(/"(?:\\"|[^"])*"|'(?:\\'|[^'])*'|\/\*[\S\s]*?\*\/|\/(?:\\\/|[^\/\r\n])+\/(?=[^\/])|\/\/.*|[^\w]\$scope\.([\$\w\.]+)\b/g, function(a,b,c){
+            b && arr.indexOf(b)<0 && arr.push(b);
+        })
+        // console.log(arr)
+        return arr
+    }
+
+    /**
+     * 比较2个对象是否相同 内部属性
+     */
+    function getDifferents(newObj, oldObj){
+        var type = $.type(newObj),
+            data = {state:true, items:[]};
+
+        if( (type != 'array' && type != 'object') || $.type(oldObj) != type ){
+            return data;
+        }
+
+        var i, m1, m2, key, _data;
+        for( i in newObj ){
+            key = 'i';
+            m1 = newObj[m];
+            m2 = newObj[m];
+            type = $.type(m1);
+
+            if( type=='function' ){
+                continue;
+            }
+
+            if( m1===m2 ){
+                
+                if( /array|object/.test(type) ){//可能是array|object
+                    _data = getDifferents(m1, m2);
+                    if( !_data.state ){
+                        data.state = false;
+                    }
+                }
+
+            }else{//string|number|boolean
+                data.state = false;
+                data.items.push(key);
+            }
+        }
+
+        return data;
     }
 
     /**
@@ -371,11 +383,12 @@ define(function(require){
         
         var self = this,
             _model = model,
-            modelType = $.type(model);
+            modelType = $.type(model),
+            Model;
         
         if( typeof model != 'function' ){
 
-            model = function(){
+            Model = function(){
                 this.$data = _model;
                 this.$key = options.$key;
                 //this.$array = options.$array;
@@ -386,8 +399,12 @@ define(function(require){
                     }
                 }
             }
+        }else{
+            Model = function(){
+                model(this);
+            }
         }
-        model.prototype.$set = function(key, value) {
+        Model.prototype.$set = function(key, value) {
             
             var parent = this, i=0,  _key = key.split('.'), n=_key.length, name = _key.slice(-1)[0];
             for( ; i<n-1; i++ ){
@@ -428,7 +445,7 @@ define(function(require){
             self.apply(key);
         }
 
-        this.model = new model(this);
+        this.model = new Model(this);
         var parent = this.options.$parent || this;
         this.model.$parent = parent.model;
         this.model.$parentScope = parent;
@@ -440,7 +457,7 @@ define(function(require){
          *
          * 
          */
-        //console.log(syntaxParse("name", this.model))
+        // console.log(syntaxParse("list1.push(1);slide(1,2);isopen=isopen=='d_hide'?'d_show':'d_hide'", this))
 
         /**
          * [nj-click="*"]绑定click事件
@@ -467,10 +484,27 @@ define(function(require){
                         //throw Error(e);
                     }
                 };
-                //console.log($$data.methods, watchKey)
-                // watchKey.forEach(function(key){
-                //     self.apply(key);
-                // })
+                // console.log($$data.methods, watchKey)
+
+                //从执行的方法列表中提取相关联的属性名称
+                $$data.methods.forEach(function(m){
+                    getFnVars(getAttribute(self.model,m,false)).forEach(function(k){
+                        var key = k.split('.');
+                        
+                        if( key.length>1 ){
+                            //单数处理数组的相关方法 如list.push
+                            key = key.slice(0, key.length-1).join('.');
+                            if( $.type(getAttribute(self.model,key,false)) != 'array' ){
+                                return;
+                            }
+                        }else{
+                            key = k;
+                        }
+                        watchKey.indexOf(key)<0 && watchKey.push(key);
+                    });
+                })
+                // console.log(watchKey)
+                
                 watchKey.forEach(function(item){
                     if( typeof item=='string' ){//for vars
 
@@ -492,7 +526,7 @@ define(function(require){
             };
         })
         this.getSubscriber(el);
-        //console.log(this.subscriber)
+        // console.log(this.subscriber)
         for( var i in this.subscriber ){
             //var node = this.subscriber[i][0];
             this.apply(i);
@@ -871,41 +905,20 @@ define(function(require){
                 vars = d ? d.vars : [],
                 methods = d ? d.methods : [];
 
-            vars.forEach(push,'vars');
+            vars.forEach(push);
+
+            // console.log(1212,vars)
 
             //需要分析这些方法函数中涉及的相关变量 即依赖属性
             methods.forEach(function(k){
-                var fnStr, $$k = k;
-
-                try{
-                    fnStr = new Function('a', 'return a.'+k)(self.model);
-                }catch(e){
-                    fnStr = new Function('a', 'return a.'+k)(window);
-                }               
-
-                if( typeof fnStr != 'function' ){
-                    return;
-                }
-                fnStr = fnStr.toString();
+                var fn = getAttribute(self.model, k, false),
+                    vars = getFnVars(fn);
                 
-                //原生函数
-                if( /^function[\s\w\(\)]+{[\s\n]*\[native code\][\s\n]*}/.test(fnStr) ){
-                    return;
-                }
-                
-                fnStr = fnStr.replace(/(?:^function\s*\([^\)]*\){)|(?:}$)/g, '');
-                fnStr = $.trim(fnStr).replace(/[\r\n]/g, ';');
-                
-
-                var vars = syntaxParse(fnStr, self).vars;
-
-                vars.forEach(function(k){
-                    push(k, 'methods')
-                })
+                vars.forEach(push);
             });
 
 
-            function push(k, type){
+            function push(k){
                 if( /^\d+$/.test(k) || $keywords.indexOf(k)>=0 ){
                     return;
                 }
@@ -915,7 +928,7 @@ define(function(require){
                 k.replace(rKey, function(a,b){
                     if( b=='parent' ){
                         //该节点访问的是父级 所以将其添加到父对象的订阅列表中
-                        self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
+                        // self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
                     }
                     //return '';
                 });
@@ -935,14 +948,14 @@ define(function(require){
                 },data)
                 self.subscriber[k].push(data);
             }
-        },
+        },        
         //notApply：需要过滤的元素
         apply : function(key, notApply){
             if( !key || key=='function' || !this.model ){//this.model = new model()执行构造函数时 若函数里存在$set操作 此时this.model还未赋值
                 return;
             }
 
-            // console.log(key, this.model.$key)
+            console.log(key, this.model.$key)
             var self = this,
                 subscriber = this.subscriber[key] || [],
                 value = getAttribute(this.model, key),
@@ -988,8 +1001,7 @@ define(function(require){
                     return;
                 }
                 self.updateNode(item, key, value, isArray);          
-            })
-            
+            })            
         },
         updateNode : function(item, key, value, isArray){
             var self = this, node = item.node, value;
@@ -1003,7 +1015,6 @@ define(function(require){
             }
 
             if( isArray && node.$each ){
-                // console.log(111, key)
                 self.applyArray(node, key);//更新each数组
                 return;
             }
@@ -1022,16 +1033,11 @@ define(function(require){
                 }
 
 
-                var $val;
+                var $val, scope = node.$scope || self.model;
                 //该节点可能订阅多个相同或不同的属性 所以分批替换
                 text.replace(validNodes, function(a,b){
-                    var scope = node.$scope || self.model;
                     
-                    //部分关键字可改变作用域 $data $parent $root
-                    //b = b.replace('$parent.', '$parent.model.');
-                    //text = text.replace('$parent.', '$parent.model.');
-
-                    reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:\(\),])/g, '\\$1')+'\\s*}}/g');
+                    reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:\(\),\[\]])/g, '\\$1')+'\\s*}}/g');
                     
                     //$val = new Function('a', 'return a.'+b)(scope);
                     with(scope){
@@ -1231,6 +1237,7 @@ define(function(require){
                         }
                         
                     }else{
+                        console.log(1)
                         //内部属性可能发生变化
                         //arrayModel.model.$data = array[i];
                         if( $.type(array[i])=='object' ){
@@ -1300,13 +1307,17 @@ define(function(require){
                     $arrayName : key
                 }))
             }
-
         },
         //对数组进行排序
+        //sort函数返回1：在当前基础上反序 -1 
         arrayOrder : function(orderBy, options){
-            if( !orderBy ){
+            //multiple select 传入的orderBy为一个数组
+            
+            if( $.type(orderBy)=='array' ){
+                orderBy = orderBy[0];
                 //return;
             }
+            
             //获取数组对象
             var self = this, 
                 key = options.key,
@@ -1321,11 +1332,11 @@ define(function(require){
                 if( dataType=='array' && Array.prototype[i] ){
                     continue;
                 }
-                orderKey.push(new Function('a', 'return a.'+orderBy)(array[i]))
+                orderBy && orderKey.push(new Function('a', 'return a.'+orderBy)(array[i]))
             }
             // console.log(orderBy)
             //只有一项 不用排序
-            if( orderKey.length==1 ){
+            if( orderKey.length<=1 ){
                 return;
             }
             orderKey.sort();
@@ -1406,3 +1417,9 @@ define(function(require){
         }
     }
 })
+
+/**
+ * 【参考资料】
+ * Object.observe 监控对象 : http://www.web-tinker.com/article/20661.html
+ * 
+ */

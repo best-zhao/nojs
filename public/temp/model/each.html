@@ -21,23 +21,19 @@ noJS.config({
     .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
 </style>
 <div nj-module="arrayEach" class="nj_module">
-    <textarea cols="100" rows="3" style="vertical-align:top">{{ JSON.stringify(list) }}--</textarea>
+    <textarea cols="100" rows="3" style="vertical-align:top">{{ listStr() }}--</textarea>
     {{browser}}
     <ul nj-each="list1">
-        <li>{{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-item="name">
-            <a href="javascript:void(0)" 
-                nj-click="$parent.list1.length>1 && $parent.list1.splice($key,1)"
-
-                >remove</a>
+        <li>{{11+$key}}   name:{{name}}, value:{{value}} 
+            <input type="text" nj-item="name">
+            <a href="" nj-click="$parent.list1.length>1 && $parent.list1.splice($key,1)">remove</a>
         </li>
     </ul> <br />
 
-    <ul>
-        <li nj-each="list|orderBy:order|repeat:true">{{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-item="name">
-            <a href="javascript:void(0)" 
-                nj-click="delete $parent.list[$key]"
-
-                >remove</a>
+    <!-- <ul>
+        <li nj-each="list|orderBy:order|repeat:true">
+            {{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-item="name">
+            <a href="" nj-click="delete $parent.list[$key]">remove</a>
         </li>
     </ul> 
 
@@ -45,8 +41,9 @@ noJS.config({
     <select name="" nj-item="order" multiple>
         <option value="value">value</option>
         <option value="name">name</option>
+        <option value="">empty</option>
     </select>
-    </p>
+    </p> -->
 
     <button class="nj_btn" nj-click="add()">add</button>
 
@@ -54,23 +51,26 @@ noJS.config({
 
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
-    nj.module('arrayEach', function(scope){
-        this.browser = $.browser.msie && parseInt($.browser.version)<=8 ? true : false;
-        this.list1 = [
-            {name:33,value:22},{name:22,value:11},{name:11,value:33}
+    nj.module('arrayEach', function($scope){
+        $scope.browser = $.browser.msie && parseInt($.browser.version)<=8 ? true : false;
+        $scope.list1 = [
+            {name:33,value:22}
         ]
 
-        this.list = {
+        $scope.list = {
             'a' : {name:3,value:22},
             'b' : {name:2,value:11},
             'c' : {name:1,value:33}
         }
 
-        
-        this.add = function(){
-            this.$set('list.push', {name:this.list.length+1,value:'new'+this.list.length});
-        }      
-        
+        $scope.add = function(){
+            $scope.list1.push({name:$scope.list1.length+1,value:'new'+$scope.list1.length});
+        }
+
+        $scope.listStr = function(){
+            return JSON.stringify($scope.list1);
+        }
+
     })    
     
     
