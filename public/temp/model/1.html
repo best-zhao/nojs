@@ -46,12 +46,12 @@ noJS.config({
     <button class="nj_btn" nj-click="add()">add</button>
     
 
-    <!-- <ul nj-each="list1">
-        <li>name: {{$key}} <a href="" class="gray9" nj-click="$parent.remove($key)">remove</a>
+    <ul nj-each="list1">
+        <li>name: {{$key}} <a href="javascript:void(0)" class="gray9" nj-click="$parent.remove($key)">remove</a>
             <div nj-each="$data" style="margin-left:20px">{{$key}} : {{$data}} | </div>
         </li>
-    </ul> -->
-    <a href="" nj-click="addList1()">add list1</a>
+    </ul>
+    <a href="javascript:void(0)" nj-click="addList1()">add list1</a>
 </div>
 
 <div nj-module="myModule" class="nj_module">
@@ -81,7 +81,7 @@ noJS.config({
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
     nj.module('arrayEach', function($scope){
-        $scope.names = '';        
+        $scope.names = 'NAMES'; 
         $scope.list = [
             {name:1}, {name:2}
         ]
@@ -94,7 +94,7 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
             '12' : [4,5]
         }
         $scope.add = function(){
-            $scope.$set('list.push', {name:$scope.list.length+1});
+            $scope.list.push({name:$scope.list.length+1})
         }   
         $scope.remove = function($key){
             delete $scope.list1[$key];
@@ -131,9 +131,6 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
             $scope.$set('name1','myname1');
             $scope.$set('arr.x.b', 3);
 
-            //$scope.select[0].options[0].name = 's11';
-            //$scope.select.splice(1,1);
-            
             $scope.$set('arr.y', $scope.select[0].options[1]);
         }, 1000)
     });

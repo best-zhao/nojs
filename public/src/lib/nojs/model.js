@@ -107,6 +107,15 @@ define(function(require){
         }
 
         //初始化语句中未定义的变量及方法
+        function hasSameKey(key, scope){
+            var state;
+            watchKey.forEach(function(k){
+                if( k.key==key && k.scope==scope ){
+                    state = true;
+                }
+            })
+            return state;
+        }
         function initMethod(method, isFunction){
             if( method=='$key' ){
                 return;
@@ -114,13 +123,26 @@ define(function(require){
             var Parent = model, 
                 arr = method.split('.'), 
                 key = arr[0], 
-                last = $.trim(arr.slice(-1)[0]);
+                last = $.trim(arr.slice(-1)[0]),
+                _key, _scope = scope;
 
-            
             //函数每次执行的时候需要监控的变量
-            !isFunction && key && !/^(\$(?:key|data)\.)/.test(key+'.') && watchKey.indexOf(key)<0 && 
-                watchKey.push(method.indexOf('$parent.')==0 ? arr.slice(0,2).join('.') : key);
-
+            if( !isFunction && key && !/^(\$(?:key|data)\.)/.test(key+'.') ){
+                if( method.indexOf('$parent.')==0 ){
+                    _key = arr.slice(1,arr.length).join('.');
+                    _scope = model.$parentScope
+                }else{
+                    _key = key;
+                }
+                
+                if( !hasSameKey(_key, _scope) ){
+                    watchKey.push({
+                        key : _key,
+                        scope : _scope
+                    });
+                }
+                
+            }
             //if( isFunction ){
                 //全局对象下存在的函数
                 if( Parent[key]===undefined && window[key]!==undefined ){
@@ -133,7 +155,8 @@ define(function(require){
                 // }
                
             //}
-            var i=0, n=arr.length, m, _scope = scope, _i = 0;
+            var i=0, n=arr.length, m, _i = 0;
+            _scope = scope;
             for( ; i<n; i++ ){
                 m = $.trim(arr[i]);
                 if( !m || /^true|false&/.test(m) ){//空字符串 或 关键字
@@ -145,25 +168,21 @@ define(function(require){
                     _i = i+1;
                     //continue;
                 }
-                if( Parent[m]!==undefined ){
+                if( Parent[m] !== undefined ){
 
                     //执行数组原生方法
                     // console.log(isFunction,m,Parent[m],$.type(Parent[m]),i,n)
                     if( isFunction && i==n-2 && Array.prototype[last] && $.type(Parent[m])=='array' ){
-                        //console.log(arr,_i,n,_scope.subscriber);
-                        var _key = arr.slice(_i, n-1).join('.');
-                        _key = _key ? [_key] : [];
-
-                        for( var j in _scope.subscriber ){//该数组及和该数组相关的key均需apply
-                            if( j.indexOf(_key[0]+'.') == 0 ){
-                                _key.push(j);
-                            }
-                        }
-                        _key.length && watchKey.push({
-                            scope : _scope,
-                            key : _key
-                        });
-                        break;
+                        
+                        _key = arr.slice(_i, n-1).join('.');
+                        // console.log(arr,_i,n,_key);
+                        if( _key && !hasSameKey(_key, _scope) ){                            
+                            watchKey.push({
+                                scope : _scope,
+                                key : _key
+                            });
+                            break;
+                        }                        
                     }
                 }else{
                     Parent[m] = (m==last&&!isFunction) ? undefined : noopMethod();
@@ -331,11 +350,12 @@ define(function(require){
     }
 
     /**
-     * 比较2个对象是否相同 内部属性
+     * 比较2个对象内部属性是否相同 
      */
     function getDifferents(newObj, oldObj){
         var type = $.type(newObj),
-            data = {state:true, items:[]};
+            data = {state:true, items:[]},
+            isArray;
 
         if( (type != 'array' && type != 'object') || $.type(oldObj) != type ){
             return data;
@@ -343,25 +363,36 @@ define(function(require){
 
         var i, m1, m2, key, _data;
         for( i in newObj ){
-            key = 'i';
-            m1 = newObj[m];
-            m2 = newObj[m];
+            key = i;
+            m1 = newObj[i];
+            m2 = oldObj[i];
             type = $.type(m1);
 
             if( type=='function' ){
                 continue;
             }
 
-            if( m1===m2 ){
-                
-                if( /array|object/.test(type) ){//可能是array|object
-                    _data = getDifferents(m1, m2);
-                    if( !_data.state ){
-                        data.state = false;
-                    }
+            if( /array|object/.test(type) ){//array|object
+                isArray = type == 'array';
+                if( isArray && m1.length!=m2.length ){
+                    data.state = false;
+                    data.items.push(key);
+                    continue;
                 }
+                key = isArray ? '' : i+'.';
 
-            }else{//string|number|boolean
+                _data = getDifferents(m1, m2);
+                
+                //console.log(_data,_data.items)
+
+                //只写入不相同时的状态
+                if( !_data.state ){
+                    data.state = false;
+                    _data.items.forEach(function(k){
+                        data.items.push(key+k);
+                    })
+                }
+            }else if( m1!==m2 ){//string|number|boolean
                 data.state = false;
                 data.items.push(key);
             }
@@ -369,6 +400,9 @@ define(function(require){
 
         return data;
     }
+
+    //var d1 = {x:{a:1},y:{b:1},z:[1,2]},d2 = {x:{a:1},y:{b:2},z:[1,2,3]}
+    //console.log(getDifferents(d1,d2))
 
     /**
      * 创建一个module
@@ -484,42 +518,42 @@ define(function(require){
                         //throw Error(e);
                     }
                 };
-                // console.log($$data.methods, watchKey)
+
+                var keys = watchKey.map(function(k){
+                    return k.key;
+                })
+                // console.log($$data.methods, watchKey, keys)
 
                 //从执行的方法列表中提取相关联的属性名称
                 $$data.methods.forEach(function(m){
-                    getFnVars(getAttribute(self.model,m,false)).forEach(function(k){
+
+                    //这里需注意所执行方法所在的作用域是否与这里相同
+                    var scope = m.indexOf('$parent.')==0 ? self.model.$parentScope : self;
+
+                    getFnVars(getAttribute(self.model, m, false)).forEach(function(k){
                         var key = k.split('.');
                         
                         if( key.length>1 ){
                             //单数处理数组的相关方法 如list.push
-                            key = key.slice(0, key.length-1).join('.');
-                            if( $.type(getAttribute(self.model,key,false)) != 'array' ){
-                                return;
+                            var _key = key.slice(0, key.length-1).join('.');
+                            if( $.type(getAttribute(self.model,_key,false)) == 'array' ){
+                                key = _key;
+                            }else{
+                                key = key.join('.')
                             }
                         }else{
                             key = k;
                         }
-                        watchKey.indexOf(key)<0 && watchKey.push(key);
+                        if( keys.indexOf(key)<0 ){
+                            watchKey.push({key:key, scope:scope});
+                            keys.push(key);
+                        }
                     });
                 })
-                // console.log(watchKey)
+                console.log(watchKey,keys)
                 
                 watchKey.forEach(function(item){
-                    if( typeof item=='string' ){//for vars
-
-                        if( item.indexOf('$parent.') == 0 ){
-                            item = item.replace('$parent.', '');
-                            self.model.$parentScope.apply(item);
-                            return;
-                        }
-                        self.apply(item);
-                        return;
-                    }
-                    var scope = item.scope;
-                    item.key.forEach(function(key){
-                        scope.apply(key);
-                    })
+                    item.scope.apply(item.key);
                 })
                 return false;
                 //e.preventDefault()
@@ -528,7 +562,6 @@ define(function(require){
         this.getSubscriber(el);
         // console.log(this.subscriber)
         for( var i in this.subscriber ){
-            //var node = this.subscriber[i][0];
             this.apply(i);
         }
     }
@@ -550,6 +583,7 @@ define(function(require){
             if( !isFormElement ){
                 return;
             }    
+
             //el本身也是订阅者
             this.pushSubscriber(el, key, {
                 /*
@@ -559,27 +593,28 @@ define(function(require){
                  */
                 writeAll : true
             });
-            el.$scope = this.model;   
+            $data(el, '$scope', this.model);
 
             var checkbox = el.type=='checkbox',
                 selectNode = /^select/.test(el.type),
                 eventName = checkbox||selectNode||el.type=='radio' ? 'change' : 'input',
                 _key = key,
                 $$str;  
-            
+
+            //未定义的key设置空字符串
+            if( getAttribute(self.model, key)===undefined ){
+                new Function('a','b','a.'+key+'=b')(self.model, '');
+            }
+
             if( el.type=='radio' ){//设置选中的radio默认值
-                if( el.checked ){
-                    // $$str = _key+'="'+el.value+'"';
-                    // with(self.model){
-                    //     eval($$str);
-                    // }
-                    new Function('a','b','a.'+_key+'=b')(self.model,el.value);
+                if( el.checked ){                    
+                    new Function('a','b','a.'+key+'=b')(self.model, el.value);
                 }
-            }else if( selectNode ){//select默认值
-                
+            }else if( selectNode && !el.getAttribute('nj-each') ){//select默认值
+
                 var selectVal = el.value || el.options[0].value;
-                el.value = selectVal;                    
-                new Function('a','b','a.'+_key+'=b')(self.model,selectVal);
+                el.value = selectVal;
+                new Function('a','b','a.'+key+'=b')(self.model, selectVal);
             }
 
             function handle(e){
@@ -632,7 +667,7 @@ define(function(require){
                             //     eval(v.$selectedKey+'=['+$selectedOptions+']');
                             // }
                         }
-                        new Function('a','b','a.'+_key+'=b;if(a.$data){a.$data.'+_key+'=b}')(self.model, val);
+                        new Function('a','b','a.'+key+'=b;if(a.$data){a.$data.'+key+'=b}')(self.model, val);
 
                         // with(self.model){
                         //     eval($$str);
@@ -643,20 +678,21 @@ define(function(require){
                         //参数2：手动输入时 不用更新当前对象
                         
                         self.apply(key, v);
+
+                        //双向绑定的对象都绑定了相关的事件 如外部需添加额外的监听函数 则使用预定义的事件名称绑定函数即可 避免重复绑定事件
+                        //如： <input nj-item="name">  可以这样添加事件 $scope.$name$change = function(e){}
+                        var fn = getAttribute(self.model, '$'+key+'$change');
+                        fn && fn.call(el, e);
                     }, 0)
 
                 }
             }
             
             if( el.type=='text' && $.browser.msie ){
-                if( !ie8 ){
-                    el.onpropertychange = handle;//ie9 10 11
-                    return;
-                }else{
+                if( ie8 ){
                     eventName = 'keydown';
                 }
             }
-            // console.log(el.type,eventName)
             
             $(el).on(eventName, handle);
             // el.addEventListener(eventName, handle, false); 
@@ -690,8 +726,7 @@ define(function(require){
                     b && keys.indexOf(b)<0 && keys.push(b);
                 });
                 self.pushSubscriber(node, keys); 
-
-                //node.$scope = model;
+                $data(node, '$scope', model);
             })
             
         },
@@ -730,6 +765,7 @@ define(function(require){
                     if( !eachData ){
                         return subNodes;
                     }
+
                     eachData = eachData[1].split('|');
                     eachData.forEach(function(e,i){
                         eachData[i] = e = $.trim(e);
@@ -756,7 +792,8 @@ define(function(require){
                             });
                         }
                     })
-
+                    
+                
                     var options = eachData.slice(1, eachData.length).join(',');
                     
                     if( options ){
@@ -807,13 +844,10 @@ define(function(require){
                         options = {}
                     }
 
-
                     //将其子元素拷贝一份作为each模板
                     var templete = options.repeat ? [node] : nodeToArray(node.childNodes),
                         notes = document.createComment(eachData[0]+' each');    
                     templete.push(notes);
-
-
 
                     //将其内部所有元素标记 $filter                    
                     getAllChildren(node).forEach(function(n){
@@ -834,10 +868,10 @@ define(function(require){
                         parentNode : node.parentNode,
                         nextSibling : node.nextSibling,
                         //保存子模型 new Module()
-                        models : []
+                        models : [],
+                        arrayKey : eachData[0]
                     }
                     self.pushSubscriber(node, eachData[0]);
-
                     
                     if( options.repeat ){//循环节点本身 本身作为模板
                         node.parentNode.removeChild(node);
@@ -923,15 +957,13 @@ define(function(require){
                     return;
                 }
                 //替换一些特殊的关键字 $data.name 实际上是订阅的name属性
-                var _k = k;
+                var _k = k;                
 
-                k.replace(rKey, function(a,b){
-                    if( b=='parent' ){
-                        //该节点访问的是父级 所以将其添加到父对象的订阅列表中
-                        // self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
-                    }
-                    //return '';
-                });
+                //该节点访问的是父级 所以将其添加到父对象的订阅列表中
+                if( rKey.test(k) ){
+                    self.options.$parent.pushSubscriber(node, k.replace(rKey, ''));
+                    return;
+                }
 
                 self.subscriber[k] = self.subscriber[k] || [];
                 
@@ -954,8 +986,6 @@ define(function(require){
             if( !key || key=='function' || !this.model ){//this.model = new model()执行构造函数时 若函数里存在$set操作 此时this.model还未赋值
                 return;
             }
-
-            console.log(key, this.model.$key)
             var self = this,
                 subscriber = this.subscriber[key] || [],
                 value = getAttribute(this.model, key),
@@ -1000,6 +1030,7 @@ define(function(require){
                 if( node===notApply || node.type=='radio' ){
                     return;
                 }
+                
                 self.updateNode(item, key, value, isArray);          
             })            
         },
@@ -1009,13 +1040,13 @@ define(function(require){
             value = value || getAttribute(this.model, key);
             isArray = isArray || /array|object/.test($.type(value));
 
-            if( /^select/.test(node.type) ){
-                self.defaultSelected(node);//设置select默认选中项
+            if( isArray && node.$each && node.$each.arrayKey==key ){
+                self.applyArray(node, key);//更新each数组
                 return;
             }
-
-            if( isArray && node.$each ){
-                self.applyArray(node, key);//更新each数组
+            if( /^select/.test(node.type) ){
+                //设置select默认选中项
+                self.defaultSelected(node); 
                 return;
             }
 
@@ -1033,7 +1064,7 @@ define(function(require){
                 }
 
 
-                var $val, scope = node.$scope || self.model;
+                var $val, scope = $data(node, '$scope') || self.model;
                 //该节点可能订阅多个相同或不同的属性 所以分批替换
                 text.replace(validNodes, function(a,b){
                     
@@ -1080,8 +1111,6 @@ define(function(require){
                     
                 }
                 node[type==1||type==2?'value':'nodeValue'] = text;
-
-                
                 
             } 
         },
@@ -1111,8 +1140,9 @@ define(function(require){
             if( /^select|optgroup|option/.test(node.tagName.toLowerCase()) && nodeSelf.type ){
                 selectNode = nodeSelf;
             }
-
+            
             if( modelsLen ){
+
                 if( action=='order'){
                     // 获取最后一个子元素 
                     var lastNode = nodeSelf.childNodes;
@@ -1237,7 +1267,13 @@ define(function(require){
                         }
                         
                     }else{
-                        console.log(1)
+                        var diff = getDifferents(array[i], arrayModel.model);
+                        
+                        if( diff.state ){
+                            // console.log(12,i,diff)
+                            continue;
+                        }
+
                         //内部属性可能发生变化
                         //arrayModel.model.$data = array[i];
                         if( $.type(array[i])=='object' ){

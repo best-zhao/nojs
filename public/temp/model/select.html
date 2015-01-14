@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>select</title>
+<link rel="stylesheet" href="/css/nojs/ui.css">
+<script src="/js/lib/nojs/noJS.js" id="nojs"></script>
+<script>
+noJS.config({
+    base : '/src/',
+    alias : {
+        '$' : 'lib/jquery/jquery',
+        'ui' : 'lib/nojs/ui'
+    }
+})
+</script>
+</head>
+<body>
+<style>
+    .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
+</style>
+<div nj-module="modSelect" class="nj_module">
+
+    <select name="" nj-item="sels" nj-each="items">
+        <option value="{{value}}">{{name}}</option>
+    </select>
+    {{JSON.stringify(sels)}}
+    <input type="text" nj-item="name">
+</div>
+
+<script>
+noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+    nj.module('modSelect', function($scope){
+        $scope.items = [
+            {name:1,value:1}, {name:2,value:2}
+        ]
+    })    
+    
+    
+})
+</script>
+
+</body>
+</html>

@@ -24,13 +24,13 @@ noJS.config({
     <textarea cols="100" rows="3" style="vertical-align:top">{{ listStr() }}--</textarea>
     {{browser}}
     <ul nj-each="list1">
-        <li>{{11+$key}}   name:{{name}}, value:{{value}} 
+        <li>{{11+$key}}   name:{{name}}, items:{{$parent.list1.length}} 
             <input type="text" nj-item="name">
             <a href="" nj-click="$parent.list1.length>1 && $parent.list1.splice($key,1)">remove</a>
         </li>
     </ul> <br />
 
-    <!-- <ul>
+    <ul>
         <li nj-each="list|orderBy:order|repeat:true">
             {{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-item="name">
             <a href="" nj-click="delete $parent.list[$key]">remove</a>
@@ -43,7 +43,7 @@ noJS.config({
         <option value="name">name</option>
         <option value="">empty</option>
     </select>
-    </p> -->
+    </p>
 
     <button class="nj_btn" nj-click="add()">add</button>
 
@@ -54,7 +54,7 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
     nj.module('arrayEach', function($scope){
         $scope.browser = $.browser.msie && parseInt($.browser.version)<=8 ? true : false;
         $scope.list1 = [
-            {name:33,value:22}
+            {name:33,value:22,items:[0,1,2]}
         ]
 
         $scope.list = {
@@ -64,7 +64,11 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
         }
 
         $scope.add = function(){
-            $scope.list1.push({name:$scope.list1.length+1,value:'new'+$scope.list1.length});
+            $scope.list1.push({
+                name : $scope.list1.length+1,
+                value : 'new'+$scope.list1.length,
+                items : [0, $scope.list1.length, 2]
+            });
         }
 
         $scope.listStr = function(){
