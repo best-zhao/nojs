@@ -559,7 +559,7 @@ define(function(require){
                         }
                     });
                 })
-                console.log(watchKey,keys)
+                // console.log(watchKey,keys)
                 
                 watchKey.forEach(function(item){
                     item.scope.apply(item.key);
@@ -684,13 +684,19 @@ define(function(require){
                         //         $data[_key] = val;
                         //     }
                         // }
-                        //参数2：手动输入时 不用更新当前对象
+                        
+                        //参数2：手动输入时 
+                        //@v: 不用更新当前对象
                         
                         self.apply(key, v);
 
+
                         //双向绑定的对象都绑定了相关的事件 如外部需添加额外的监听函数 则使用预定义的事件名称绑定函数即可 避免重复绑定事件
-                        //如： <input nj-item="name">  可以这样添加事件 $scope.$name$change = function(e){}
-                        var fn = getAttribute(self.model, '$'+key+'$change');
+                        //如： <input nj-item="name.a">  可以这样添加事件 $scope.name_a_change = function(e){}
+                        
+                        var fnKey = key.split('.');
+                        fnKey.push('change');
+                        var fn = self.model[fnKey.join('_')];
                         fn && fn.call(el, e);
                     }, 0)
 
@@ -1066,13 +1072,15 @@ define(function(require){
                 // 缓存数据 避免连续多次更新相同key-value
                 this.cache[key] = {
                     key : key,
+                    node : node,
                     value : isArray ? $.extend(true,valueType=='array'?[]:{},value) : value
                 };
 
                 setTimeout(function(){
                     delete self.cache[key];
                 }, 1)
-            }else{
+
+            }else if( node===this.cache[key].node ){
                 // 比较数据是否发生变化
                 var diff = getDifferents(value, this.cache[key].value, valueType);
                 
@@ -1155,7 +1163,7 @@ define(function(require){
 
                 //将该节点上想关联的key-value保存 避免重复更新同一节点(同一节点可能关联多个key)
                 //比如 {{a+b}} {{b+a}} 类似的文本节点 apply(a)后就没必要apply(b)
-                item.vars.forEach(function(k){
+                item.vars.length>1 && item.vars.forEach(function(k){
                     if( k == key ){
                         return;
                     }
@@ -1165,6 +1173,7 @@ define(function(require){
 
                     self.cache[k] = {
                         key : k,
+                        node : node,
                         value : isArray ? $.extend(true,valueType=='array'?[]:{},val) : val
                     };
                 })
