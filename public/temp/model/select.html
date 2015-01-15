@@ -22,22 +22,30 @@ noJS.config({
 </style>
 <div nj-module="modSelect" class="nj_module">
 
-    <select name="" nj-item="sels" nj-each="items">
-        <option value="{{value}}">{{name}}</option>
+    <select name="" nj-item="sels">
+        <option value="empty">empty</option>
+        <option value="{{value}}" nj-each="items|repeat:true">{{ name }}</option>
     </select>
-    {{JSON.stringify(sels)}}
-    <input type="text" nj-item="name">
+    {{ sels && JSON.stringify(sels) }} - {{values()}} - {{names+'_a'}}
+
 </div>
 
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+
     nj.module('modSelect', function($scope){
         $scope.items = [
             {name:1,value:1}, {name:2,value:2}
         ]
-    })    
-    
-    
+        $scope.names = 'nolure';
+        $scope.sels = $scope.items[0];
+
+        $scope.values = function(){
+            console.log('value:', $scope.sels, $scope.sels && $scope.sels.value, $scope.names)
+            return $scope.sels && $scope.sels.value 
+        }
+    })
+
 })
 </script>
 

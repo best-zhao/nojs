@@ -352,12 +352,18 @@ define(function(require){
     /**
      * 比较2个对象内部属性是否相同 
      */
-    function getDifferents(newObj, oldObj){
-        var type = $.type(newObj),
+    function getDifferents(newObj, oldObj, dataType){
+        var type = dataType || $.type(newObj),
             data = {state:true, items:[]},
             isArray;
 
-        if( (type != 'array' && type != 'object') || $.type(oldObj) != type ){
+        //普通数据类型
+        if( type != 'array' && type != 'object' || newObj===null || newObj===undefined ){
+            data.state = newObj === oldObj;
+            return data;
+        }
+
+        if(  $.type(oldObj) != type ){
             return data;
         }
 
@@ -381,7 +387,7 @@ define(function(require){
                 }
                 key = isArray ? '' : i+'.';
 
-                _data = getDifferents(m1, m2);
+                _data = getDifferents(m1, m2, type);
                 
                 //console.log(_data,_data.items)
 
@@ -402,7 +408,7 @@ define(function(require){
     }
 
     //var d1 = {x:{a:1},y:{b:1},z:[1,2]},d2 = {x:{a:1},y:{b:2},z:[1,2,3]}
-    //console.log(getDifferents(d1,d2))
+    // console.log(getDifferents(1,[]))
 
     /**
      * 创建一个module
@@ -414,6 +420,9 @@ define(function(require){
         this.options = options = options || {};
         
         this.subscriber = {};
+
+        this.cache = {};
+        this.cacheTimer = null;
         
         var self = this,
             _model = model,
@@ -536,7 +545,7 @@ define(function(require){
                         if( key.length>1 ){
                             //单数处理数组的相关方法 如list.push
                             var _key = key.slice(0, key.length-1).join('.');
-                            if( $.type(getAttribute(self.model,_key,false)) == 'array' ){
+                            if( $.type(getAttribute(self.model, _key, false)) == 'array' && Array.prototype[key.slice(-1)[0]] ){
                                 key = _key;
                             }else{
                                 key = key.join('.')
@@ -602,7 +611,7 @@ define(function(require){
                 $$str;  
 
             //未定义的key设置空字符串
-            if( getAttribute(self.model, key)===undefined ){
+            if( el.type=='text' && getAttribute(self.model, key)===undefined ){
                 new Function('a','b','a.'+key+'=b')(self.model, '');
             }
 
@@ -612,9 +621,9 @@ define(function(require){
                 }
             }else if( selectNode && !el.getAttribute('nj-each') ){//select默认值
 
-                var selectVal = el.value || el.options[0].value;
-                el.value = selectVal;
-                new Function('a','b','a.'+key+'=b')(self.model, selectVal);
+                //var selectVal = el.value || el.options[0].value;
+                //el.value = selectVal;
+                //new Function('a','b','a.'+key+'=b')(self.model, selectVal);
             }
 
             function handle(e){
@@ -918,7 +927,7 @@ define(function(require){
                 value = node && (node.value || node.nodeValue), 
                 _key = key, 
                 keyType = $.type(key),
-                rKey = /^\$(data|parent|root)\./;
+                rKey = /^\$(parent|root)\./;
 
             if( node && node.type=='textarea' ){
                 value = node.innerHTML;
@@ -941,14 +950,15 @@ define(function(require){
 
             vars.forEach(push);
 
-            // console.log(1212,vars)
-
             //需要分析这些方法函数中涉及的相关变量 即依赖属性
             methods.forEach(function(k){
                 var fn = getAttribute(self.model, k, false),
                     vars = getFnVars(fn);
                 
-                vars.forEach(push);
+                vars.forEach(function(v){
+                    var val = getAttribute(self.model, v, false);
+                    val!==undefined && push(v);
+                });
             });
 
 
@@ -965,7 +975,15 @@ define(function(require){
                     return;
                 }
 
-                self.subscriber[k] = self.subscriber[k] || [];
+                var subItems = self.subscriber[k] = self.subscriber[k] || [],
+                    nodeList = subItems.map(function(item){
+                        return item.node
+                    })
+
+                //防止重复节点
+                if( nodeList.indexOf(node)>=0 ){
+                    return;
+                }
                 
                 data = $.extend({
                     node : node,
@@ -978,7 +996,7 @@ define(function(require){
                     
                     vars : vars || [k]
                 },data)
-                self.subscriber[k].push(data);
+                subItems.push(data);
             }
         },        
         //notApply：需要过滤的元素
@@ -993,6 +1011,7 @@ define(function(require){
                 //数组或关联数组监控对象
                 isArray = /array|object/.test($.type(value));
 
+            // console.log(222,subscriber,key)
 
             //a.b为a.b.c的上级 上级更新 其所有下级也要同时更新
             for( var i in this.subscriber ){
@@ -1035,10 +1054,33 @@ define(function(require){
             })            
         },
         updateNode : function(item, key, value, isArray){
-            var self = this, node = item.node, value;
+            var self = this, node = item.node, value, valueType;
             
             value = value || getAttribute(this.model, key);
-            isArray = isArray || /array|object/.test($.type(value));
+
+            valueType = $.type(value);
+            isArray = isArray || /array|object/.test(valueType);
+
+            if( this.cache[key]===undefined ){
+
+                // 缓存数据 避免连续多次更新相同key-value
+                this.cache[key] = {
+                    key : key,
+                    value : isArray ? $.extend(true,valueType=='array'?[]:{},value) : value
+                };
+
+                setTimeout(function(){
+                    delete self.cache[key];
+                }, 1)
+            }else{
+                // 比较数据是否发生变化
+                var diff = getDifferents(value, this.cache[key].value, valueType);
+                
+                if( diff.state && $data(node,'$nj_init') ){//无变化且已初始化的节点
+                    return;
+                }
+            }
+            
 
             if( isArray && node.$each && node.$each.arrayKey==key ){
                 self.applyArray(node, key);//更新each数组
@@ -1062,21 +1104,21 @@ define(function(require){
                 if( !text ){
                     return;
                 }
-
+                $data(node,'$nj_init', 1);//标识节点已更新至少一次
 
                 var $val, scope = $data(node, '$scope') || self.model;
+
                 //该节点可能订阅多个相同或不同的属性 所以分批替换
                 text.replace(validNodes, function(a,b){
                     
                     reg = eval('/{{\\s*'+b.replace(/([\$\.\/\+\-\*\/\%\?:\(\),\[\]])/g, '\\$1')+'\\s*}}/g');
-                    
+                    // console.log(b,reg)
                     //$val = new Function('a', 'return a.'+b)(scope);
                     with(scope){
                         $val = eval('('+b+')');
                     }
-                    if( $val!==undefined ){
-                        text = text.replace(reg, $val);
-                    }
+                    
+                    text = text.replace(reg, $val===undefined?'':$val);
 
                 })
 
@@ -1088,7 +1130,6 @@ define(function(require){
                     var parentNode = $data(node, '$parentElement') || node.ownerElement;
 
                     if( attrName=='style' ){//ie67 bug 直接设置style属性无效
-                        //parentNode.setAttribute('style', text);
                         var css = text.split(';');
                         css.forEach(function(s){
                             s = $.trim(s).split(':');
@@ -1111,6 +1152,22 @@ define(function(require){
                     
                 }
                 node[type==1||type==2?'value':'nodeValue'] = text;
+
+                //将该节点上想关联的key-value保存 避免重复更新同一节点(同一节点可能关联多个key)
+                //比如 {{a+b}} {{b+a}} 类似的文本节点 apply(a)后就没必要apply(b)
+                item.vars.forEach(function(k){
+                    if( k == key ){
+                        return;
+                    }
+                    var val = getAttribute(self.model, k);
+                    valueType = $.type(val);
+                    isArray = /array|object/.test(valueType);
+
+                    self.cache[k] = {
+                        key : k,
+                        value : isArray ? $.extend(true,valueType=='array'?[]:{},val) : val
+                    };
+                })
                 
             } 
         },
