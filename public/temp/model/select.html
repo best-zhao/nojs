@@ -6,15 +6,7 @@
 <title>select</title>
 <link rel="stylesheet" href="/css/nojs/ui.css">
 <script src="/js/lib/nojs/noJS.js" id="nojs"></script>
-<script>
-noJS.config({
-    base : '/src/',
-    alias : {
-        '$' : 'lib/jquery/jquery',
-        'ui' : 'lib/nojs/ui'
-    }
-})
-</script>
+<script src="/js/conf.js"></script>
 </head>
 <body>
 <style>
@@ -30,8 +22,17 @@ noJS.config({
 
 </div>
 
+<iframe width="100%" height="300" src="http://jsfiddle.net/nolure/b2Lh0vbd/embedded/result,js,html,css" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<script type="text/templete" id="nj_tmpl">
+    <ul>
+        <li>12</li>
+        <li>12</li>
+    </ul>
+</script>
+
 <script>
-noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+noJS.use('$,ui,nj', function($,ui,nj){
 
     nj.module('modSelect', function($scope){
         $scope.items = [
@@ -47,6 +48,13 @@ noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
     })
 
 })
+
+var tmpl = document.getElementById('nj_tmpl'),
+    el = document.createElement('div');
+
+el.innerHTML = tmpl.innerHTML.replace(/^\s*|\s*$/g, '');
+console.log(el.childNodes)
+
 </script>
 
 </body>

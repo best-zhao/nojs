@@ -39,9 +39,9 @@ noJS.config({
 
     <p class="gray9 mb10">orderBy:
     <select name="" nj-item="order" multiple>
+        <option value="">empty</option>
         <option value="value">value</option>
         <option value="name">name</option>
-        <option value="">empty</option>
     </select>
     </p>
 
@@ -50,9 +50,12 @@ noJS.config({
 </div>
 
 <script>
-noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+noJS.use('$,ui,nj', function($,ui,nj){
+
     nj.module('arrayEach', function($scope){
+
         $scope.browser = $.browser.msie && parseInt($.browser.version)<=8 ? true : false;
+
         $scope.list1 = [
             {name:33,value:22,items:[0,1,2]}
         ]

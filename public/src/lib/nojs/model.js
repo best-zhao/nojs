@@ -569,21 +569,21 @@ define(function(require){
             };
         })
         this.getSubscriber(el);
-        // console.log(this.subscriber)
+        // console.log(this.subscriber, this.model)
         for( var i in this.subscriber ){
             this.apply(i);
         }
     }
     Module.prototype = {
-        createModel : function(el){
+        createModel : function(el, key){
             if( $data(el, '$modelBind') ){
                 return;
             }
 
             var self = this,
-            tagName = el.tagName.toLowerCase(),
-            isFormElement = /input|select|textarea/.test(tagName),
-            key = $(el).attr('nj-item');
+                tagName = el.tagName.toLowerCase(),
+                isFormElement = /input|select|textarea/.test(tagName)
+            
             $data(el, '$modelBind', 1);
 
             
@@ -614,16 +614,17 @@ define(function(require){
             if( el.type=='text' && getAttribute(self.model, key)===undefined ){
                 new Function('a','b','a.'+key+'=b')(self.model, '');
             }
-
+            
             if( el.type=='radio' ){//设置选中的radio默认值
                 if( el.checked ){                    
                     new Function('a','b','a.'+key+'=b')(self.model, el.value);
                 }
-            }else if( selectNode && !el.getAttribute('nj-each') ){//select默认值
+            }else if( selectNode && !$data(el, '$eachNode') ){
 
-                //var selectVal = el.value || el.options[0].value;
-                //el.value = selectVal;
-                //new Function('a','b','a.'+key+'=b')(self.model, selectVal);
+                //select默认值 nj-each除外
+                var selectVal = el.value || el.options[0].value;
+                el.value = selectVal;
+                new Function('a','b','a.'+key+'=b')(self.model, selectVal);
             }
 
             function handle(e){
@@ -703,10 +704,8 @@ define(function(require){
                 }
             }
             
-            if( el.type=='text' && $.browser.msie ){
-                if( ie8 ){
-                    eventName = 'keydown';
-                }
+            if( el.type=='text' && ie8 ){
+                eventName = 'keydown';
             }
             
             $(el).on(eventName, handle);
@@ -721,12 +720,21 @@ define(function(require){
 
             subNodes = getAllChildren(element, {
                 filter : function(node){
-                    return self.getValidSubscribe(node);
+                    var validNodes = self.getValidSubscribe(node);
+
+                    /**
+                     * [nj-item="*"]声明一个变量 并实现双向绑定
+                     * 一般为表单元素 （用户可输入的）匹配其value/checked值
+                     */
+                    if( node && node.nodeType==1 ){
+                        var model = node.getAttribute('nj-item');
+                        model && self.createModel(node, model);
+                    }
+
+                    return validNodes;
                 }
             });
             
-            //console.log(element)
-
             subNodes.forEach(function(node){
                 var keys = [], 
                     value = node.value || node.nodeValue;
@@ -742,8 +750,7 @@ define(function(require){
                 });
                 self.pushSubscriber(node, keys); 
                 $data(node, '$scope', model);
-            })
-            
+            })            
         },
         getValidSubscribe : function(node){
             if( !node ){
@@ -765,12 +772,6 @@ define(function(require){
             $data(node, '$filter', 1);
             
             if( type==1 ){
-
-                /**
-                 * [nj-item="*"]声明一个变量 并实现双向绑定
-                 * 一般为表单元素 （用户可输入的）匹配其value/checked值
-                 */
-                node.getAttribute('nj-item') && self.createModel(node);
 
                 var njEach = elementNode && node.getAttribute('nj-each');
 
@@ -876,6 +877,8 @@ define(function(require){
                         return _n
                     })
 
+                    //标记节点未each节点 
+                    $data(options.repeat ? node.parentNode : node, '$eachNode', 1);
 
                     node.$each = {
                         templete : templete,

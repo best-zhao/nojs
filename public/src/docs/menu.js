@@ -80,23 +80,30 @@ define(function(require){
         document.title = data.name+' - '+title; 
         this.box.siblings('.nj_tree').find('a.current').removeClass('current');
         
-        menu.load(_data);
+        menu.load(_data, data);
         
         //记录最后访问的节点
         $.localStorage.set('lastNode', id);
     }
-    menu.load = function(data){
+    menu.load = function(data, treeData){
         data = data || G.data;
+        if( treeData && treeData.content ){
+            setTimeout(function(){
+                call(treeData.content);
+            }, 1)
+            return;
+        }
         $.ajax({
             url : data.url,
             type : 'get',
             dataType : 'html',
             headers : {noAjax:true},
-            success : function(html){
-                G.$content.html(html);
-                G.complete && G.complete(data);                
-            }
+            success : call
         })
+        function call(html){
+            G.$content.html(html);
+            G.complete && G.complete(data);  
+        }
     };
     
     function treeInit(){
