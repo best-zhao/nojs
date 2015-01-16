@@ -358,12 +358,13 @@ define(function(require){
             isArray;
 
         //普通数据类型
-        if( type != 'array' && type != 'object' || newObj===null || newObj===undefined ){
+        if( !/array|object|function/.test(type) || newObj===null || newObj===undefined ){
             data.state = newObj === oldObj;
             return data;
         }
 
         if(  $.type(oldObj) != type ){
+            data.state = false;
             return data;
         }
 
@@ -378,7 +379,7 @@ define(function(require){
                 continue;
             }
 
-            if( /array|object/.test(type) ){//array|object
+            if( /array|object|function/.test(type) ){//array|object
                 isArray = type == 'array';
                 if( isArray && m1.length!=m2.length ){
                     data.state = false;
@@ -416,7 +417,6 @@ define(function(require){
     function Module(el, model, options){
         this.element = el;
         
-        var $el = $(el);//转化为jQuery对象时会丢失文本节点
         this.options = options = options || {};
         
         this.subscriber = {};
@@ -490,22 +490,16 @@ define(function(require){
 
         this.model = new Model(this);
         var parent = this.options.$parent || this;
+        
         this.model.$parent = parent.model;
         this.model.$parentScope = parent;
         
-        /**
-         * "a='b'+ c +1"
-         * "a.b(1+1,c,d(d1,d2))?'show':'hide'"
-         * "slide(1,2);isopen=isopen=='d_hide'?'d_show':'d_hide'"
-         *
-         * 
-         */
-        // console.log(syntaxParse("list1.push(1);slide(1,2);isopen=isopen=='d_hide'?'d_show':'d_hide'", this))
 
         /**
          * [nj-click="*"]绑定click事件
          * 
          */
+        var $el = $(el);//转化为jQuery对象时会丢失文本节点
         var clicks = $el.find('[nj-click]');
         
         clicks.each(function(){
@@ -583,7 +577,7 @@ define(function(require){
             var self = this,
                 tagName = el.tagName.toLowerCase(),
                 isFormElement = /input|select|textarea/.test(tagName)
-            
+
             $data(el, '$modelBind', 1);
 
             

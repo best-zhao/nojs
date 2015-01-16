@@ -22,8 +22,6 @@
 
 </div>
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/nolure/b2Lh0vbd/embedded/result,js,html,css" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
-
 <script type="text/templete" id="nj_tmpl">
     <ul>
         <li>12</li>
@@ -42,18 +40,18 @@ noJS.use('$,ui,nj', function($,ui,nj){
         $scope.sels = $scope.items[0];
 
         $scope.values = function(){
-            console.log('value:', $scope.sels, $scope.sels && $scope.sels.value, $scope.names)
+            console.log('value:', $scope.sels)
             return $scope.sels && $scope.sels.value 
         }
     })
 
 })
 
-var tmpl = document.getElementById('nj_tmpl'),
-    el = document.createElement('div');
+// var tmpl = document.getElementById('nj_tmpl'),
+//     el = document.createElement('div');
 
-el.innerHTML = tmpl.innerHTML.replace(/^\s*|\s*$/g, '');
-console.log(el.childNodes)
+// el.innerHTML = tmpl.innerHTML.replace(/^\s*|\s*$/g, '');
+// console.log(el.childNodes)
 
 </script>
 
