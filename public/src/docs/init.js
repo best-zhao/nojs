@@ -36,10 +36,13 @@ define(function(require){
     }    
 
     function menuInit(data){
+        
         data.forEach(function(m){
             if( m.content ){
                 m.link = '/docs_'+m._id;
             }
+            delete m.init;
+            delete m.level;
         });
         docs.init({
             menu : {nojs:{data:data}},
