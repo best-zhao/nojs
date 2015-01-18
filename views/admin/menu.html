@@ -2,10 +2,10 @@
 
 <h1><%=title%></h1>
 
-<div id="menu_manage">
+<div id="menu_manage" nj-module="menuManage">
     <span id="menu_items"></span>
     <span class="opt">
-        <a href="/a/menu/del/{{id}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
+        <a href="{{sid!=-1?'/a/menu/del/'+sid:''}}" nj-style="display:{{sid==-1?'none':''}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
     </span>
 </div>
 
@@ -39,7 +39,10 @@
 </form>
 <script>
 
-noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', function($,layer,tree,form){
+noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit,nj', function($,layer,tree,form, edit, nj){
+    
+    var menuTree = {};
+    
     tree.key = {
         id : '_id',
         parent : 'pid'
@@ -50,7 +53,7 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', fun
     $pid = $('#menu_pid'),
     $form = $('#menu_edit'),
     pid;
-
+    
     KindEditor.options.filterMode = false;
     editor = KindEditor.create("#menu_content", {
         items : ['source', 'bold', 'forecolor','|','table','emoticons', '|', 'link', 'unlink','multiimage','code']
@@ -98,6 +101,12 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit', fun
             
         }
         tree.select(el, treeOptions);
+        
+        el.find('select').attr('nj-item', 'sid');
+        nj.module('menuManage', function($scope){
+            $scope.menu = menuTree;
+            $scope.sid = -1;
+        })
     }
 
     var Form = new form({
