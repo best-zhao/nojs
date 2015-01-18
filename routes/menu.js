@@ -1,6 +1,15 @@
 var mongoose = require('mongoose');
 //local: mongodb://localhost/nojs
-mongoose.connect('mongodb://nolure:zlc19860919@dogen.mongohq.com:10086/nojs', function(err){
+//mongodb://用户名:密码@连接地址:端口/数据库名称
+var dbUrl = 'mongodb://nolure:zlc19860919@dogen.mongohq.com:10086/nojs'
+var dbBd = 'mongodb://bdvxIZCpfeojiqv6jPISnPd3:3ZqhgmOZ4hlUg1hWprR0op6UFs7KZtWB@mongo.duapp.com:8908/KgbxDwExNeMVguxixWmK'
+
+// var mongodb = require('../config/db');
+// exports.init = function(){
+    // mongodb();
+// }
+// return;
+mongoose.connect(dbBd, function(err){
     if( err ){
         throw err
     }else{
