@@ -10,7 +10,7 @@ var dbBd = 'mongodb://bdvxIZCpfeojiqv6jPISnPd3:3ZqhgmOZ4hlUg1hWprR0op6UFs7KZtWB@
 // }
 // return;
 
-mongoose.connect(dbBd, function(err){
+mongoose.connect(dbUrl, function(err){
     if( err ){
         throw err
     }else{
