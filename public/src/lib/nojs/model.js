@@ -6,25 +6,32 @@ define(function(require){
     
     var $ = require('$'),
         slice = Array.prototype.slice,
-        validNode  = /{{\s*([\w\W]+?)\s*}}/,
-        validNodes = /{{\s*([\w\W]+?)\s*}}/g,
         $keywords = ['this','return','true','false','var','for','delete','function','if'],
         ie8 = $.browser.msie && parseInt($.browser.version)<=8;
     
-    /**
-     * 以model为单位 一个页面可存在多个 也可互相嵌套
-     * 在页面中通过在tag中添加'nj-module="myModule"'来启动
-     * 
-     */
-    
-    //创建一个空函数
-    var noopMethod = function(){
-        return function(){};
-    };
+    var _config = {
+
+        //模板标签起始符号
+        startSymbol : '{{',
+        endSymbol : '}}',
+
+        //一些主要的指令名称
+        controller : 'nj-module',
+        model : 'nj-item',
+        each : 'nj-each',
+
+        //相关事件
+        click : 'nj-click'
+    },
+
+    // 有效的模板语法标签 /{{\s*([\w\W]+?)\s*}}/
+    validReg = _config.startSymbol+'\\s*([\\w\\W]+?)\\s*'+_config.endSymbol,
+    validNode = new RegExp(validReg),
+    validNodes = new RegExp(validReg, 'g');
 
     /**
      * 解析语句
-     * 支持语法：1.赋值计算和条件运算符 2.执行函数 其余语句过滤掉
+     * 提取变量名及方法名
      */
     function syntaxParse(str, scope){
         var model = scope.model,
@@ -185,7 +192,7 @@ define(function(require){
                         }                        
                     }
                 }else{
-                    Parent[m] = (m==last&&!isFunction) ? undefined : noopMethod();
+                    Parent[m] = (m==last&&!isFunction) ? undefined : function(){};
                 }
                 Parent = Parent[m];
             }
@@ -276,8 +283,15 @@ define(function(require){
     }
     $data.cache = {};
     $data.set = function(node, key, value){
+        if( value===null ){//remove
+            for( var i in $data.cache ){
+                if( $data.cache[i].node===node && $data.cache[i].key===key ){
+                    delete $data.cache[i];
+                    return;
+                }
+            }
+        }
         var k = (+new Date)+''+parseInt(Math.random()*10000);
-
         $data.cache[k] = {
             node : node,
             key : key,
@@ -408,13 +422,14 @@ define(function(require){
         return data;
     }
 
-    //var d1 = {x:{a:1},y:{b:1},z:[1,2]},d2 = {x:{a:1},y:{b:2},z:[1,2,3]}
-    // console.log(getDifferents(1,[]))
 
     /**
-     * 创建一个module
+     * 创建一个控制器 生成一个独立的scope
+     * 数组循环每个子项都会单独生成一个controller
+     * @el: <div nj-controller="myController"> 或者 tag Array
+     * @options {name:controllerName}
      */
-    function Module(el, model, options){
+    function Controller(el, model, options){
         this.element = el;
         
         this.options = options = options || {};
@@ -423,28 +438,90 @@ define(function(require){
 
         this.cache = {};
         this.cacheTimer = null;
+
+        this.dependences = {};
         
         var self = this,
-            _model = model,
             modelType = $.type(model),
             Model;
         
-        if( typeof model != 'function' ){
+        if( modelType != 'function' ){
 
             Model = function(){
-                this.$data = _model;
+                if( !model ){
+                    return;
+                }
+                this.$data = model;
                 this.$key = options.$key;
-                //this.$array = options.$array;
 
                 if( modelType == 'object' ){
-                    for( var i in _model ){
-                        this[i] = _model[i];
+                    for( var i in model ){
+                        this[i] = model[i];
                     }
                 }
             }
         }else{
             Model = function(){
-                model(this);
+
+                //获取参数列表
+                var This = this,
+                    dependences = model.toString().match(/^function\s*\(([\w\$,\s]+)\)/),
+                    name = self.options.name,
+                    deps = [];
+
+                dependences = dependences && dependences[1].split(',');
+
+                dependences = dependences ? dependences.map(function(dep){
+                    dep = $.trim(dep);
+                    if( dep=='$scope' ){
+                        return This;
+                    }else{
+                        var mod =  Module.get(dep, {scope:self, name:name});
+                        if( mod ){
+                            deps.push(mod);
+                            return mod.value;
+                        }                        
+                    }
+                }) : [];
+
+                model.apply(null, dependences);
+
+
+                var i,j,m, depInit, n=deps.length,dep, q=0, diff;
+
+                for( i in This ){
+
+                    m = This[i];
+
+                    for( j=0; j<n; j++ ){
+
+                        dep = deps[j];
+                        if( dep.value===m ){
+
+                            // 获取保存$scope上引用该依赖的属性名称
+                            dep.subscriber[name].key = i;
+
+                            if( !depInit ){
+                                self.dependences[i] = dep.modeName;
+                            }
+                            //diff = getDifferents(m, dep._value);
+                            //if( !diff.state ){
+                                //diff.items.forEach(function(item){
+                                    //exports.$set(dep.modeName+'.'+item, null, name);
+                                //})
+                            //}
+                            delete dep._value;
+                            q++;
+                            break;
+                        }
+                    }
+                    
+                    if( q==n ){//所有依赖都匹配完毕
+                        break;
+                    }                    
+                    depInit = 1;
+                }
+                
             }
         }
         Model.prototype.$set = function(key, value) {
@@ -469,7 +546,6 @@ define(function(require){
                     parent[name].apply(null, args);
                 }
                 self.apply(_key.splice(0, n-1).join('.'));
-                return;
             }else{
                 // var v = value, type = typeof value;
 
@@ -484,27 +560,28 @@ define(function(require){
                 //     eval($$str);
                 // }
                 parent[name] = value
-            }
-            self.apply(key);
+                self.apply(key);
+            }            
         }
 
-        this.model = new Model(this);
-        var parent = this.options.$parent || this;
+        this.model = new Model();
+        var parent = this.options.$parent// || this;
         
-        this.model.$parent = parent.model;
-        this.model.$parentScope = parent;
-        
+        if( parent ){
+            this.model.$parent = parent.model;
+            this.model.$parentScope = parent;
+        }
 
         /**
          * [nj-click="*"]绑定click事件
          * 
          */
         var $el = $(el);//转化为jQuery对象时会丢失文本节点
-        var clicks = $el.find('[nj-click]');
+        var clicks = $el.find('['+_config.click+']');
         
         clicks.each(function(){
             
-            var str = $(this).attr('nj-click');
+            var str = $(this).attr(_config.click);
             
             this.onclick = function(e){
                 e = e || window.event;
@@ -568,7 +645,7 @@ define(function(require){
             this.apply(i);
         }
     }
-    Module.prototype = {
+    Controller.prototype = {
         createModel : function(el, key){
             if( $data(el, '$modelBind') ){
                 return;
@@ -721,7 +798,7 @@ define(function(require){
                      * 一般为表单元素 （用户可输入的）匹配其value/checked值
                      */
                     if( node && node.nodeType==1 ){
-                        var model = node.getAttribute('nj-item');
+                        var model = node.getAttribute(_config.model);
                         model && self.createModel(node, model);
                     }
 
@@ -767,7 +844,7 @@ define(function(require){
             
             if( type==1 ){
 
-                var njEach = elementNode && node.getAttribute('nj-each');
+                var njEach = elementNode && node.getAttribute(_config.each);
 
                 if( njEach ){
                     var eachData = /^\s*([\$\w\|\s:'"]+)\s*$/.exec(njEach);
@@ -867,7 +944,7 @@ define(function(require){
                     // 这里拷贝一份模板的副本 否则ie在node.innerHTML清空后templete子元素会消失
                     templete = templete.map(function(n){
                         var _n = n.cloneNode(true);
-                        options.repeat && _n.nodeType==1 && _n.removeAttribute('nj-each');
+                        options.repeat && _n.nodeType==1 && _n.removeAttribute(_config.each);
                         return _n
                     })
 
@@ -879,7 +956,7 @@ define(function(require){
                         options : options,
                         parentNode : node.parentNode,
                         nextSibling : node.nextSibling,
-                        //保存子模型 new Module()
+                        //保存子模型 new Controller()
                         models : [],
                         arrayKey : eachData[0]
                     }
@@ -1004,17 +1081,18 @@ define(function(require){
         },        
         //notApply：需要过滤的元素
         apply : function(key, notApply){
-            if( !key || key=='function' || !this.model ){//this.model = new model()执行构造函数时 若函数里存在$set操作 此时this.model还未赋值
+            if( !key || key=='function' || !this.model ){//model()执行model函数时 若函数里存在$set操作 此时this.model还未赋值
                 return;
             }
             var self = this,
                 subscriber = this.subscriber[key] || [],
-                value = getAttribute(this.model, key),
+                value = getAttribute(this.model, key, false),
+                valueType = $.type(value),
             
                 //数组或关联数组监控对象
-                isArray = /array|object/.test($.type(value));
+                isArray = /array|object/.test(valueType);
 
-            // console.log(222,subscriber,key)
+            // console.log(222,key,subscriber,this.cache[key])
 
             //a.b为a.b.c的上级 上级更新 其所有下级也要同时更新
             for( var i in this.subscriber ){
@@ -1022,6 +1100,41 @@ define(function(require){
                     this.apply(i, notApply);
                 }
             }
+
+            if( this.cache[key]===undefined ){
+
+                // 缓存数据 避免连续多次更新相同key-value
+                this.cache[key] = {
+                    key : key,
+                    value : isArray ? $.extend(true,valueType=='array'?[]:{},value) : value
+                }
+
+                setTimeout(function(){
+                    delete self.cache[key];
+                }, 10)
+
+            }else{
+                // 比较数据是否发生变化
+                var diff = getDifferents(value, this.cache[key].value, valueType);
+                
+                if( diff.state ){
+                    return;
+                }
+            }
+
+            //更新 dependences
+            var keys = key.split('.'), deps = this.dependences;
+            if( keys.length>1 ){
+                keys = keys.slice(1, keys.length).join('.');
+                for( var i in deps ){
+                    if( key.indexOf(i+'.')==0 ){
+                        exports.$set(deps[i]+'.'+keys, value, self.options.name);
+                        break;
+                    }
+                }
+            }
+            
+
             //console.log(key, subscriber)
             if( !subscriber.length ){
                 return;
@@ -1059,35 +1172,18 @@ define(function(require){
         updateNode : function(item, key, value, isArray){
             var self = this, node = item.node, value, valueType;
             
+            if( $data(node, '$latest') ){
+                return;
+            }
+            
             value = value || getAttribute(this.model, key);
 
             valueType = $.type(value);
             isArray = isArray || /array|object/.test(valueType);
 
-            if( this.cache[key]===undefined ){
-
-                // 缓存数据 避免连续多次更新相同key-value
-                this.cache[key] = {
-                    key : key,
-                    node : node,
-                    value : isArray ? $.extend(true,valueType=='array'?[]:{},value) : value
-                };
-
-                setTimeout(function(){
-                    delete self.cache[key];
-                }, 1)
-
-            }else if( node===this.cache[key].node ){
-                // 比较数据是否发生变化
-                var diff = getDifferents(value, this.cache[key].value, valueType);
-                
-                if( diff.state && $data(node,'$nj_init') ){//无变化且已初始化的节点
-                    return;
-                }
-            }
-            
 
             if( isArray && node.$each && node.$each.arrayKey==key ){
+
                 self.applyArray(node, key);//更新each数组
                 return;
             }
@@ -1096,6 +1192,12 @@ define(function(require){
                 self.defaultSelected(node); 
                 return;
             }
+
+            // 防止节点更新过快
+            $data(node, '$latest', 1);
+            setTimeout(function(){
+                $data(node, '$latest', null);
+            }, 0)
 
             var type = node.nodeType;
             
@@ -1159,21 +1261,22 @@ define(function(require){
                 node[type==1||type==2?'value':'nodeValue'] = text;
 
                 //将该节点上想关联的key-value保存 避免重复更新同一节点(同一节点可能关联多个key)
-                //比如 {{a+b}} {{b+a}} 类似的文本节点 apply(a)后就没必要apply(b)
-                item.vars.length>1 && item.vars.forEach(function(k){
-                    if( k == key ){
-                        return;
-                    }
-                    var val = getAttribute(self.model, k);
-                    valueType = $.type(val);
-                    isArray = /array|object/.test(valueType);
+                //比如 {{a+b}} {{b+a}} {{b}} 类似的文本节点 apply(a)后就没必要apply(b)
+                return;
+                // item.vars.length>1 && item.vars.forEach(function(k){
+                //     if( k == key ){
+                //         return;
+                //     }
+                //     var val = getAttribute(self.model, k);
+                //     valueType = $.type(val);
+                //     isArray = /array|object/.test(valueType);
 
-                    self.cache[k] = {
-                        key : k,
-                        node : node,
-                        value : isArray ? $.extend(true,valueType=='array'?[]:{},val) : val
-                    };
-                })
+                //     self.cache[k] = {
+                //         key : k,
+                //         node : node,
+                //         value : isArray ? $.extend(true,valueType=='array'?[]:{},val) : val
+                //     };
+                // })
                 
             } 
         },
@@ -1398,7 +1501,7 @@ define(function(require){
                     
                 })
 
-                eachData.models.splice(dataType=='array'?i:eachData.models.length, 0, new Module(groupNodes, data , {
+                eachData.models.splice(dataType=='array'?i:eachData.models.length, 0, new Controller(groupNodes, data , {
                     $key : dataType=='array' ? parseInt(i) : i,
                     //关联父对象
                     $parent : self,
@@ -1482,7 +1585,7 @@ define(function(require){
         //设置select默认选中值
         defaultSelected : function(node){
                       
-            var $$sel = node.getAttribute('nj-item');
+            var $$sel = node.getAttribute(_config.model);
             with(this.model){
                 $$sel = eval('typeof '+$$sel)=='undefined' ? undefined : eval($$sel);
             }
@@ -1500,21 +1603,83 @@ define(function(require){
         }
     }
 
-    
-    
-    // $(function(){
-    //     var modules = $(document.body).find('[nj-module]');
-    //     modules.each(function(){
-    //         //new Module(this);
-    //     })
-    // })
-    
-    return {
-        module : function(name, model){
-            var el = $(document.body).find('[nj-module="'+name+'"]')[0];
-            return new Module(el, model).model;
+    /**
+     * [Module 实现controller间的数据共享]
+     * @param {[string]} name 
+     * @param {[function|object]} model 
+     */
+    function Module(name, model){
+
+        Module.items[name] = {
+            value : typeof model=='function' ? model() : model,
+            subscriber : {},
+            modeName : name
+        };
+
+    }
+    Module.items = {};
+
+    Module.get = function(name, controller){
+        var mod = Module.items[name]
+        if( !mod ){
+            return;
+        }
+        var dataType = $.type(mod.value),
+            _mod;
+
+        if( dataType=='object' ){
+            mod._value = $.extend(true, {}, mod.value);
+        }
+        //保存订阅对象
+        mod.subscriber[controller.name] = controller;
+        return mod;
+    }
+    Module.delay = null;
+    Module.set = function(key, value, notApply){
+        // 更新module 
+        // @key: moduleName.keyName
+        // @notApply : controllerName 主要用于内容使用
+        
+        var keys = key.split('.');
+        if( keys.length<2 ){
+            return;
+        }
+        var module = keys[0],
+            k = keys.slice(1, keys.length).join('.'),
+            mod = Module.items[module],
+            subscriber = mod.subscriber;
+
+        if( value != null ){//不更新value
+            new Function('mod', 'v', 'mod.'+k+'=v')(mod.value, value);
+        }
+
+        var i, sub;
+        for( i in subscriber ){
+            sub = subscriber[i];
+            // console.log(sub.scope.options.name);
+            sub.scope.options.name!=notApply && sub.scope.apply(sub.key+'.'+k);
         }
     }
+
+    var exports = {
+        controller : function(name, model){
+            var el = $(document.body).find('['+_config.controller+'="'+name+'"]')[0];
+            return new Controller(el, model, {name:name}).model;
+        },
+        module : function(name, model){
+            return new Module(name, model);
+        },
+        $set : function(key, value, notApply){
+            if( Module.delay ){
+                clearTimeout(Module.delay);
+            }
+            Module.delay = setTimeout(function(){
+                Module.set(key, value, notApply);
+            }, 1)
+        }
+    }
+    
+    return exports;
 })
 
 /**

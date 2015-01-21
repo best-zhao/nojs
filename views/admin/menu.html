@@ -5,7 +5,7 @@
 <div id="menu_manage" nj-module="menuManage">
     <span id="menu_items"></span>
     <span class="opt">
-        <a href="{{sid!=-1?'/a/menu/del/'+sid:''}}" nj-style="display:{{sid==-1?'none':''}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
+        <a href="/a/menu/del/{{menu.sid}}" nj-style="display:{{menu.sid==-1?'none':''}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>
     </span>
 </div>
 
@@ -41,7 +41,11 @@
 
 noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit,nj', function($,layer,tree,form, edit, nj){
     
-    var menuTree = {};
+    nj.module('menuTree', {sid:-1})
+
+    nj.controller('menuManage', function($scope, menuTree){
+        $scope.menu = menuTree;
+    })
     
     tree.key = {
         id : '_id',
@@ -78,7 +82,9 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit,nj', 
             level : 0
         }
         treeOptions.onSelect = function(id, data){
-            pid = id;
+            //pid = id;
+            nj.$set('menuTree.sid', id);
+
             //pid select
             var options = $.extend({
                 name : ['menu[pid]'],
@@ -102,11 +108,6 @@ noJS.use('$,lib/nojs/mods/layer,lib/nojs/mods/tree,lib/nojs/mods/form,edit,nj', 
         }
         tree.select(el, treeOptions);
         
-        el.find('select').attr('nj-item', 'sid');
-        nj.module('menuManage', function($scope){
-            $scope.menu = menuTree;
-            $scope.sid = -1;
-        })
     }
 
     var Form = new form({

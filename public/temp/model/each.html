@@ -6,15 +6,7 @@
 <title>each</title>
 <link rel="stylesheet" href="/css/nojs/ui.css">
 <script src="/js/lib/nojs/noJS.js" id="nojs"></script>
-<script>
-noJS.config({
-    base : '/src/',
-    alias : {
-        '$' : 'lib/jquery/jquery',
-        'ui' : 'lib/nojs/ui'
-    }
-})
-</script>
+<script src="/js/conf.js"></script>
 </head>
 <body>
 <style>
@@ -39,7 +31,7 @@ noJS.config({
 
     <p class="gray9 mb10">orderBy:
     <select name="" nj-item="order" multiple>
-        <option value="">empty</option>
+        <option value="$key">empty</option>
         <option value="value">value</option>
         <option value="name">name</option>
     </select>
@@ -52,8 +44,7 @@ noJS.config({
 <script>
 noJS.use('$,ui,nj', function($,ui,nj){
 
-    nj.module('arrayEach', function($scope){
-
+    nj.controller('arrayEach', function($scope){
         $scope.browser = $.browser.msie && parseInt($.browser.version)<=8 ? true : false;
 
         $scope.list1 = [
@@ -75,7 +66,7 @@ noJS.use('$,ui,nj', function($,ui,nj){
         }
 
         $scope.listStr = function(){
-            return JSON.stringify($scope.list1);
+            return JSON.stringify($scope.list);
         }
 
     })    
