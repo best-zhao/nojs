@@ -25,11 +25,18 @@
 </div>
 
 <div nj-module="modUser" class="nj_module">
+    <span class="lab_list">
+        <label for="">c1<input type="checkbox" name="c[]" value="1" nj-item="c"></label>
+        <label for="">c2<input type="checkbox" name="c[]" value="2" nj-item="c"></label>
+    </span>
+    {{c}}<br />
 
-    <p><span class="gray9">user.name:</span> {{user2.name}}</p>
+    <input type="radio" nj-item="rd" name="rd" value="123">
+    <input type="radio" nj-item="rd" name="rd" value="345">
+    {{rd}}
+    <!-- <p><span class="gray9">user.name:</span> {{user2.name}}</p> -->
     <!-- <p><span class="gray9">user.a:</span> {{user2.a}}</p> -->
 </div>
-
 
 
 <script type="text/templete" id="nj_tmpl">
@@ -41,38 +48,41 @@
 
 <script>
 noJS.use('$,ui,nj', function($,ui,nj){
+    
+    // nj.module('user', function(){
+    //     function user(){
+    //         this.name = 'aa';
+    //     }
+    //     return new user();
+    // })
 
-    nj.module('user', function(){
-        function user(){
-            this.name = 'aa';
-        }
-        return new user();
-    })
+    // nj.controller('modSelect', function($scope, user){
+    //     setTimeout(function(){
+    //         $scope.$set('user1.name', 1);
+    //     }, 1000)
+    //     $scope.user1 = user;
 
-    nj.controller('modSelect', function($scope, user){
+    //     $scope.items = [
+    //         {name:1,value:1}, {name:2,value:2}
+    //     ]
+    //     $scope.names = 'nolure';
+    //     $scope.sels = $scope.items[0];
+
+    //     $scope.values = function(){
+    //         // console.log('value:', $scope.sels)
+    //         return $scope.sels && $scope.sels.value 
+    //     }
+    // })
+
+    nj.controller('modUser', function($scope){
+        //$scope.user2 = user;
         setTimeout(function(){
-            $scope.$set('user1.name', 1);
-        }, 1000)
-        $scope.user1 = user;
-
-        $scope.items = [
-            {name:1,value:1}, {name:2,value:2}
-        ]
-        $scope.names = 'nolure';
-        $scope.sels = $scope.items[0];
-
-        $scope.values = function(){
-            // console.log('value:', $scope.sels)
-            return $scope.sels && $scope.sels.value 
-        }
-    })
-
-    nj.controller('modUser', function($scope, user){
-        $scope.user2 = user;
-        setTimeout(function(){
-            //$scope.$set('user2.name', 2);
+            $scope.$set('c', 1);
         }, 2000)
-        $scope.user2.name = 22;
+        //$scope.user2.name = 22;
+        $scope.rd = 345
+
+
     });
 
     setTimeout(function(){

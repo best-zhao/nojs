@@ -434,11 +434,13 @@ define(function(require){
         
         this.options = options = options || {};
         
+        //订阅列表
         this.subscriber = {};
 
         this.cache = {};
         this.cacheTimer = null;
 
+        //依赖列表
         this.dependences = {};
         
         var self = this,
@@ -572,6 +574,8 @@ define(function(require){
             this.model.$parentScope = parent;
         }
 
+        this.models = {};
+
         /**
          * [nj-click="*"]绑定click事件
          * 
@@ -644,6 +648,8 @@ define(function(require){
         for( var i in this.subscriber ){
             this.apply(i);
         }
+
+        this.ready = true;
     }
     Controller.prototype = {
         createModel : function(el, key){
@@ -662,7 +668,12 @@ define(function(require){
             
             if( !isFormElement ){
                 return;
-            }    
+            }
+
+            if( !this.models[key] ){
+                this.models[key] = [];
+            }
+            this.models[key].push(el);
 
             //el本身也是订阅者
             this.pushSubscriber(el, key, {
@@ -685,10 +696,17 @@ define(function(require){
             if( el.type=='text' && getAttribute(self.model, key)===undefined ){
                 new Function('a','b','a.'+key+'=b')(self.model, '');
             }
-            
-            if( el.type=='radio' ){//设置选中的radio默认值
-                if( el.checked ){                    
+
+            if( checkbox ){
+
+                console.log(el.name, /\[\]$/.test(el.name))
+
+            }else if( el.type=='radio' ){//设置选中的radio默认值
+
+                if( el.checked ){
                     new Function('a','b','a.'+key+'=b')(self.model, el.value);
+                }else if( getAttribute(self.model, key) == el.value ){
+                    el.checked = true;
                 }
             }else if( selectNode && !$data(el, '$eachNode') ){
 
@@ -713,9 +731,9 @@ define(function(require){
                 ){
 
                     setTimeout(function(){
-                        var val = v[checkbox ? 'checked' : 'value']
+                        var val = v.value
                             //$$str = checkbox ? (_key+'='+val) : (_key+'="'+val.replace(/\\/g,'\\\\')+'"');
-
+                        
                         //val = checkbox ? val : val.replace(/\\/g,'\\\\');
 
                         //同步关联select selectedOptions对象
@@ -748,6 +766,7 @@ define(function(require){
                             //     eval(v.$selectedKey+'=['+$selectedOptions+']');
                             // }
                         }
+                        
                         new Function('a','b','a.'+key+'=b;if(a.$data){a.$data.'+key+'=b}')(self.model, val);
 
                         // with(self.model){
@@ -1092,7 +1111,7 @@ define(function(require){
                 //数组或关联数组监控对象
                 isArray = /array|object/.test(valueType);
 
-            // console.log(222,key,subscriber,this.cache[key])
+            // console.log(222,key,value,subscriber)
 
             //a.b为a.b.c的上级 上级更新 其所有下级也要同时更新
             for( var i in this.subscriber ){
@@ -1135,24 +1154,23 @@ define(function(require){
             }
             
 
-            //console.log(key, subscriber)
             if( !subscriber.length ){
                 return;
             }
 
-            //console.log(this.model.order)
             //数组子项发生变化时 需更新数组本身 一般为用户表单输入数据
             if( this.model.$key!==undefined && this.model.$parentScope!==this && key.indexOf('$')<0 && notApply ){
                 // console.log(isArray,key, this.model.$parent.list[0], notApply)
                 this.model.$parentScope.apply(this.options.$arrayName, notApply);
             }
 
-            //监控数组发生变化时
-            // if( key=='$array' && isArray && !subscriber.length ){
-            //     //console.log(this.model.$parentScope.subscriber[this.options.$arrayName])
-            //     this.model.$parentScope.apply(this.options.$arrayName)
-            //     return;
-            // }
+            
+            //model -> view
+            if( !notApply && this.ready && this.models[key] ){
+                this.models[key].forEach(function(node){
+                    node.value==value && (node.checked=true)
+                })
+            }
 
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
@@ -1162,11 +1180,11 @@ define(function(require){
                     return;
                 }
                 var node = item.node;
-                if( node===notApply || node.type=='radio' ){
+                if( node===notApply || node.type=='radio' || node.type=='checkbox' ){
                     return;
                 }
                 
-                self.updateNode(item, key, value, isArray);          
+                self.updateNode(item, key, value, isArray);
             })            
         },
         updateNode : function(item, key, value, isArray){
@@ -1200,6 +1218,8 @@ define(function(require){
             }, 0)
 
             var type = node.nodeType;
+
+            //console.log(node, node.type)
             
             if( item.writeAll ){
                 node.value = value;
