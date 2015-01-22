@@ -1180,7 +1180,10 @@ define(function(require){
                     return;
                 }
                 var node = item.node;
-                if( node===notApply || node.type=='radio' || node.type=='checkbox' ){
+                if( node===notApply ){
+                    return;
+                }
+                if( notApply && (node.type=='radio' || node.type=='checkbox') ){
                     return;
                 }
                 
