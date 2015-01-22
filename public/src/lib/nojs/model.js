@@ -1166,7 +1166,7 @@ define(function(require){
 
             
             //model -> view
-            if( !notApply && this.ready && this.models[key] ){
+            if( this.ready && !notApply && this.models[key] ){
                 this.models[key].forEach(function(node){
                     node.value==value && (node.checked=true)
                 })
@@ -1180,10 +1180,8 @@ define(function(require){
                     return;
                 }
                 var node = item.node;
-                if( node===notApply ){
-                    return;
-                }
-                if( notApply && (node.type=='radio' || node.type=='checkbox') ){
+                
+                if( notApply && (node===notApply || node.type=='radio' || node.type=='checkbox') ){
                     return;
                 }
                 
