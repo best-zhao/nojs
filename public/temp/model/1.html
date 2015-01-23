@@ -19,11 +19,11 @@ noJS.config({
 <style>
     .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
 </style>
-<div nj-module="arrayEach" class="nj_module">
+<div nj-controller="arrayEach" class="nj_module">
     <textarea cols="60" rows="4" style="vertical-align:top">{{ JSON.stringify(list) }}--{{ order }}</textarea>
     
     <p class="gray9 mb10">orderBy:
-    <select name="" nj-item="order">
+    <select name="" nj-model="order">
         <option value="name">name</option>
         <option value="value">value</option>
     </select>
@@ -32,7 +32,7 @@ noJS.config({
     <ul nj-each="list|orderBy:order">
         <li>{{$key}}  {{name}} 
             {{JSON.stringify($data)}}
-            <input type="text" nj-item="name" />
+            <input type="text" nj-model="name" />
 
             <a href="" 
                 style="color:{{$parent.list.length<2?'#ccc':''}}"
@@ -53,17 +53,17 @@ noJS.config({
     <a href="javascript:void(0)" nj-click="list1[++key] = [key, 33, 44]">add list1</a>
 </div>
 
-<div nj-module="myModule" class="nj_module">
+<div nj-controller="myModule" class="nj_module">
     <div>
         <textarea data-name="{{name}}">{{name}}+abc</textarea>
     </div>
-    <input type="text" nj-item="name" value="" />
+    <input type="text" nj-model="name" value="" />
     <div data-class="{{name}}">name:{{arr.x.b+1}} - {{name1}}</div>
 
-    <input type="radio" name="njRadio" nj-item="checked" checked="checked" value="1">
-    <input type="radio" name="njRadio" nj-item="checked" value="2">{{checked}}
+    <input type="radio" name="njRadio" nj-model="checked" checked="checked" value="1">
+    <input type="radio" name="njRadio" nj-model="checked" value="2">{{checked}}
     <a nj-href="{{checked>1}}">12</a>
-    <select name="" multiple1 nj-disabled="{{checked>1}}" size="" nj-item="arr.y">
+    <select name="" multiple1 nj-disabled="{{checked>1}}" size="" nj-model="arr.y">
         <option value="">..</option>
         <optgroup label="{{label}}" nj-each="select|repeat:true">
             <option value="{{value}}" nj-each="options|repeat:true">{{name}}</option>
@@ -72,14 +72,14 @@ noJS.config({
     <div><span class="gray9">selectOptions:</span> <code>{{JSON.stringify(arr.y)}}</code></div>
 </div>
 
-<div nj-module="clickToggle" class="nj_module">
+<div nj-controller-auto class="nj_module">
     <button type="button" nj-click="toggle =! toggle">open</button>
     <div class="{{toggle?'':'d_hide'}}">isopen:{{toggle}} details……</div>
 </div>
 
 <script>
 noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
-
+    nj.start();
     nj.controller('arrayEach', function($scope){
         $scope.list = [
             {name:1}, {name:2}

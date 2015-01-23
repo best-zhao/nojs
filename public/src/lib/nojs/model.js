@@ -16,8 +16,8 @@ define(function(require){
         endSymbol : '}}',
 
         //一些主要的指令名称
-        controller : 'nj-module',
-        model : 'nj-item',
+        controller : 'nj-controller',
+        model : 'nj-model',
         each : 'nj-each',
 
         //相关事件
@@ -1202,7 +1202,7 @@ define(function(require){
             //model -> view
             if( this.ready && !notApply && this.models[key] ){
                 this.models[key].forEach(function(node){
-                    if( node.value==value || isArray && value.indexOf(node.value)>=0 ){
+                    if( node.value==value || valueType=='array' && value.indexOf(node.value)>=0 ){
                         node.checked = true;
                     }
                 })
@@ -1721,6 +1721,15 @@ define(function(require){
     }
 
     var exports = {
+        start : function(){
+            var auto = _config.controller+'-auto',
+                autoController = $(document.body).find('['+auto+']');
+
+            autoController.each(function(){
+                // console.log($(this).attr(auto))
+                new Controller(this);
+            })
+        },
         controller : function(name, model){
             var el = $(document.body).find('['+_config.controller+'="'+name+'"]')[0];
             return new Controller(el, model, {name:name}).model;

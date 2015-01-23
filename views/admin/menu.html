@@ -2,7 +2,7 @@
 
 <h1><%=title%></h1>
 
-<div id="menu_manage" nj-module="menuManage">
+<div id="menu_manage" nj-controller="menuManage">
     <span id="menu_items"></span>
     <span class="opt">
         <a href="/a/menu/del/{{menu.sid}}" nj-style="display:{{menu.sid==-1?'none':''}}" class="nj_ico gray3" title="删除节点">&#xe609;</a>

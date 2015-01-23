@@ -12,25 +12,25 @@
 <style>
     .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
 </style>
-<div nj-module="arrayEach" class="nj_module">
+<div nj-controller="arrayEach" class="nj_module">
     <textarea cols="100" rows="3" style="vertical-align:top">{{ listStr() }}--</textarea>
     {{browser}}
     <ul nj-each="list1">
         <li>{{11+$key}}   name:{{name}}, items:{{$parent.list1.length}} 
-            <input type="text" nj-item="name">
+            <input type="text" nj-model="name">
             <a href="" nj-click="$parent.list1.length>1 && $parent.list1.splice($key,1)">remove</a>
         </li>
     </ul> <br />
 
     <ul>
         <li nj-each="list|orderBy:order|repeat:true">
-            {{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-item="name">
+            {{$key}}  name:{{name}}, value:{{value}} <input type="text" nj-model="name">
             <a href="" nj-click="delete $parent.list[$key]">remove</a>
         </li>
     </ul> 
 
     <p class="gray9 mb10">orderBy:
-    <select name="" nj-item="order" multiple>
+    <select name="" nj-model="order" multiple>
         <option value="$key">empty</option>
         <option value="value">value</option>
         <option value="name">name</option>

@@ -12,9 +12,9 @@
 <style>
     .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
 </style>
-<div nj-module="modSelect" class="nj_module">
+<div nj-controller="modSelect" class="nj_module">
 
-    <select name="" nj-item="sels">
+    <select name="" nj-model="sels">
         <option value="empty">empty</option>
         <option value="{{value}}" nj-each="items|repeat:true">{{ name }}</option>
     </select>
@@ -24,22 +24,22 @@
 
 </div>
 
-<div nj-module="modUser" class="nj_module">
+<div nj-controller="modUser" class="nj_module">
     <span class="lab_list">
-        <label for="">c1<input type="checkbox" name="c[]" value="1" nj-item="c"></label>
-        <label for="">c2<input type="checkbox" name="c[]" value="2"  nj-item="c"></label>
+        <label for="">c1<input type="checkbox" name="c[]" value="1" nj-model="c"></label>
+        <label for="">c2<input type="checkbox" name="c[]" value="2"  nj-model="c"></label>
     </span>
     {{JSON.stringify(c)}}<br />
 
-    <input type="radio" nj-item="rd" name="rd" value="123">
-    <input type="radio" nj-item="rd" name="rd" checked value="345">
+    <input type="radio" nj-model="rd" name="rd" value="123">
+    <input type="radio" nj-model="rd" name="rd" checked value="345">
     {{rd}}
     <p><span class="gray9">user.name:</span> {{user2.name}}</p>
     <p><span class="gray9">user.a:</span> {{user2.a}}</p>
     
 </div>
 
-<div nj-module="modTest" class="nj_module">
+<div nj-controller="modTest" class="nj_module">
     {{user3.name}}
     <button nj-click="user3.name++" type="button" class="nj_btn">usre.name++</button>
 </div>
@@ -55,7 +55,7 @@
 <script>
 noJS.use('$,ui,nj', function($,ui,nj){
     
-    nj.module('user', function(){
+    var user = nj.module('user', function(){
         function user(){
             this.name = 'aa';
         }
