@@ -648,7 +648,6 @@ define(function(require){
         for( var i in this.subscriber ){
             this.apply(i);
         }
-
         this.ready = true;
     }
     Controller.prototype = {
@@ -670,11 +669,6 @@ define(function(require){
                 return;
             }
 
-            if( !this.models[key] ){
-                this.models[key] = [];
-            }
-            this.models[key].push(el);
-
             //el本身也是订阅者
             this.pushSubscriber(el, key, {
                 /*
@@ -686,27 +680,61 @@ define(function(require){
             });
             $data(el, '$scope', this.model);
 
-            var checkbox = el.type=='checkbox',
-                selectNode = /^select/.test(el.type),
-                eventName = checkbox||selectNode||el.type=='radio' ? 'change' : 'input',
+            var nodeType = el.type,
+                checkbox = nodeType=='checkbox',
+                selectNode = /^select/.test(nodeType),
+                eventName = checkbox||selectNode||nodeType=='radio' ? 'change' : 'input',
                 _key = key,
-                $$str;  
+                value = getAttribute(self.model, key);  
+
+            if( !this.models[key] ){
+                var arr = [];
+                arr.nodeType = nodeType;
+                this.models[key] = arr;
+            }
+
+            this.models[key].push(el);
 
             //未定义的key设置空字符串
-            if( el.type=='text' && getAttribute(self.model, key)===undefined ){
+            if( nodeType=='text' && value===undefined ){
                 new Function('a','b','a.'+key+'=b')(self.model, '');
             }
 
             if( checkbox ){
+                var valueType = $.type(value);
+                //this.models[key].group = this.models[key].group || [];
+                this.models[key].group = valueType=='array' && true;
 
-                console.log(el.name, /\[\]$/.test(el.name))
+                if( this.models[key].length>1 ){
+                    this.models[key].group = true;
+                    if( value==undefined ){
+                        value = [];
+                    }else if( valueType != 'array' ){
+                        value = [value];
+                    }
+                    new Function('a','b','a.'+key+'=b')(self.model, value);
+                }
 
-            }else if( el.type=='radio' ){//设置选中的radio默认值
-
-                if( el.checked ){
-                    new Function('a','b','a.'+key+'=b')(self.model, el.value);
-                }else if( getAttribute(self.model, key) == el.value ){
+                valueType = $.type(value);
+                
+                if( el.checked ){//view -> model
+                    if( valueType=='array' ){
+                        value.push(el.value);
+                    }else{
+                        value = el.value;
+                    }
+                    new Function('a','b','a.'+key+'=b')(self.model, value);
+                }else if( value==el.value || valueType=='array' && value.indexOf(el.value)>=0 ){//model -> view
                     el.checked = true;
+                }
+
+            }else if( nodeType=='radio' ){//设置选中的radio默认值
+
+                if( value == el.value ){
+                    el.checked = true;
+                }else if( el.checked && !value ){
+                    //radio value与checked同时存在时 以前者为准
+                    new Function('a','b','a.'+key+'=b')(self.model, el.value);
                 }
             }else if( selectNode && !$data(el, '$eachNode') ){
 
@@ -765,6 +793,12 @@ define(function(require){
                             // with(self.model){
                             //     eval(v.$selectedKey+'=['+$selectedOptions+']');
                             // }
+                        }else if( checkbox && self.models[key].group ){
+                            var checked = [];
+                            self.models[key].forEach(function(node){
+                                node.checked && checked.push(node.value);
+                            })
+                            val = checked;
                         }
                         
                         new Function('a','b','a.'+key+'=b;if(a.$data){a.$data.'+key+'=b}')(self.model, val);
@@ -794,7 +828,7 @@ define(function(require){
                 }
             }
             
-            if( el.type=='text' && ie8 ){
+            if( nodeType=='text' && ie8 ){
                 eventName = 'keydown';
             }
             
@@ -990,7 +1024,7 @@ define(function(require){
                 }
 
                 //获取属性节点
-                //ie bug style属性包含{{}}的 ie会视为无效属性 自动去除 使用nj-style替换
+                //ie bug style属性包含{{}}的 ie会视为无效属性 自动去除 使用nj-style替换 类似属性均在$specialAttrs中
                 nodeToArray(node.attributes).forEach(function(n){
                     if( validNode.test(n.value) ){
                         //记录属性节点所在的元素节点
@@ -1143,7 +1177,7 @@ define(function(require){
 
             //更新 dependences
             var keys = key.split('.'), deps = this.dependences;
-            if( keys.length>1 ){
+            if( keys.length>1 && notApply!='once' ){
                 keys = keys.slice(1, keys.length).join('.');
                 for( var i in deps ){
                     if( key.indexOf(i+'.')==0 ){
@@ -1168,23 +1202,25 @@ define(function(require){
             //model -> view
             if( this.ready && !notApply && this.models[key] ){
                 this.models[key].forEach(function(node){
-                    node.value==value && (node.checked=true)
+                    if( node.value==value || isArray && value.indexOf(node.value)>=0 ){
+                        node.checked = true;
+                    }
                 })
             }
 
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
-
                 if( item.action && item.action.name=='orderBy' ){//数组排序
                     self.arrayOrder(value, item.action);
                     return;
                 }
                 var node = item.node;
-                
-                if( notApply && (node===notApply || node.type=='radio' || node.type=='checkbox') ){
+                if( node===notApply ){
                     return;
                 }
-                
+                if( (node.type=='radio' || node.type=='checkbox') ){
+                    return;
+                }
                 self.updateNode(item, key, value, isArray);
             })            
         },
@@ -1655,7 +1691,7 @@ define(function(require){
         mod.subscriber[controller.name] = controller;
         return mod;
     }
-    Module.delay = null;
+    Module.delay = {};
     Module.set = function(key, value, notApply){
         // 更新module 
         // @key: moduleName.keyName
@@ -1665,6 +1701,7 @@ define(function(require){
         if( keys.length<2 ){
             return;
         }
+        
         var module = keys[0],
             k = keys.slice(1, keys.length).join('.'),
             mod = Module.items[module],
@@ -1678,7 +1715,8 @@ define(function(require){
         for( i in subscriber ){
             sub = subscriber[i];
             // console.log(sub.scope.options.name);
-            sub.scope.options.name!=notApply && sub.scope.apply(sub.key+'.'+k);
+            // apply 中执行Module.set方法 会导致循环 使用notApply='once'来阻止
+            sub.scope.options.name!=notApply && sub.scope.apply(sub.key+'.'+k, 'once');
         }
     }
 
@@ -1691,11 +1729,12 @@ define(function(require){
             return new Module(name, model);
         },
         $set : function(key, value, notApply){
-            if( Module.delay ){
-                clearTimeout(Module.delay);
+            if( Module.delay[key] ){
+                clearTimeout(Module.delay[key]);
             }
-            Module.delay = setTimeout(function(){
+            Module.delay[key] = setTimeout(function(){
                 Module.set(key, value, notApply);
+                delete Module.delay[key];
             }, 1)
         }
     }
