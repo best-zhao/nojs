@@ -45,7 +45,7 @@
 noJS.use('$,ui,nj', function($,ui,nj){
 
     nj.controller('arrayEach', function($scope){
-        $scope.browser = $.browser.msie && parseInt($.browser.version)<=8 ? true : false;
+        $scope.browser = !!$.browser.mise + '' + $.browser.version;
 
         $scope.list1 = [
             {name:33,value:22,items:[0,1,2]}

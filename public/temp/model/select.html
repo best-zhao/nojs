@@ -11,6 +11,7 @@
 <body>
 <style>
     .nj_module{margin:20px;border:1px solid #e4e4e4;padding:20px;}
+    .lab_list label{margin-right:10px;}
 </style>
 <div nj-controller="modSelect" class="nj_module">
 
@@ -21,14 +22,18 @@
     {{ sels && JSON.stringify(sels) }} - {{values()}} - {{names+'_a'}}
 
     <p><span class="gray9">user.name:</span> {{user1.name}}</p>
+    <button nj-click="user1.name--;" type="button" class="nj_btn">user.name--</button>
 
 </div>
 
 <div nj-controller="modUser" class="nj_module">
+    <p><label><input type="checkbox" nj-model="checkAll">全选</label></p>
     <span class="lab_list">
-        <label for="">c1<input type="checkbox" name="c[]" value="1" nj-model="c"></label>
-        <label for="">c2<input type="checkbox" name="c[]" value="2"  nj-model="c"></label>
+        <label><input type="checkbox" name="c[]" value="1" nj-model="c">c1</label>
+        <label><input type="checkbox" name="c[]" value="2"  nj-model="c">c2</label>
+        <label><input type="checkbox" name="c[]" value="3"  nj-model="c">c3</label>
     </span>
+    length:{{c.$length}} {{JSON.stringify(c.$values)}}<br />
     {{JSON.stringify(c)}}<br />
 
     <input type="radio" nj-model="rd" name="rd" value="123">
@@ -40,8 +45,8 @@
 </div>
 
 <div nj-controller="modTest" class="nj_module">
-    {{user3.name}}
-    <button nj-click="user3.name++" type="button" class="nj_btn">usre.name++</button>
+    <p>{{user3.name}}</p>
+    <button nj-click="user3.name++;" type="button" class="nj_btn">user.name++</button>
 </div>
 
 
@@ -64,7 +69,7 @@ noJS.use('$,ui,nj', function($,ui,nj){
 
     nj.controller('modSelect', function($scope, user){
         setTimeout(function(){
-            $scope.$set('user1.name', 1);
+            // $scope.$set('user1.name', 1);
         }, 1000)
         $scope.user1 = user;
 
@@ -83,20 +88,28 @@ noJS.use('$,ui,nj', function($,ui,nj){
     nj.controller('modUser', function($scope,user){
         $scope.user2 = user;
         setTimeout(function(){
-            $scope.$set('c.push', '2');
+            //$scope.$set('c.push', '2');
             // $scope.$set('user2.name', 5);
+            // $scope.$set('rd', 123);
         }, 2000)
         $scope.user2.name = 22;
         $scope.c = ['1'];
         $scope.rd = 345;
+
+        $scope.c_change = function(){
+            $scope.checkAll = $scope.c.$length == $scope.c.length;
+        }
+        $scope.checkAll_change = function(){
+            $scope.c = $scope.checkAll ? $scope.c.$values : [];
+        }
     });
 
     nj.controller('modTest', function($scope,user){
-        $scope.user3 = user;        
+        $scope.user3 = user;
     });
 
     setTimeout(function(){
-         nj.$set('user.name', 6);
+         //nj.$set('user.name', 6);
     }, 3000)
 
 })

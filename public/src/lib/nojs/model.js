@@ -595,13 +595,14 @@ define(function(require){
                 self.model.$event = e;
 
                 with(self.model){
-                    eval('('+str+')');
+                    eval(str);
                     try{
                         
                     }catch(e){
                         //throw Error(e);
                     }
                 };
+
 
                 var keys = watchKey.map(function(k){
                     return k.key;
@@ -701,6 +702,7 @@ define(function(require){
             }
 
             if( checkbox ){
+
                 var valueType = $.type(value);
                 //this.models[key].group = this.models[key].group || [];
                 this.models[key].group = valueType=='array' && true;
@@ -713,7 +715,15 @@ define(function(require){
                         value = [value];
                     }
                     new Function('a','b','a.'+key+'=b')(self.model, value);
+
+                    
                 }
+
+                if( !this.models[key].$values ){
+                    //this.models[key].$values = [];
+                }
+                //this.models[key].$values.push(el.value);
+
 
                 valueType = $.type(value);
                 
@@ -726,6 +736,15 @@ define(function(require){
                     new Function('a','b','a.'+key+'=b')(self.model, value);
                 }else if( value==el.value || valueType=='array' && value.indexOf(el.value)>=0 ){//model -> view
                     el.checked = true;
+                }
+
+                //checkbox组合 保存 其总个数及 values
+                if( valueType=='array' ){
+                    value.$length = this.models[key].length;
+                    if( !value.$values ){
+                        value.$values = [];
+                    }
+                    value.$values.push(el.value);
                 }
 
             }else if( nodeType=='radio' ){//设置选中的radio默认值
@@ -793,12 +812,20 @@ define(function(require){
                             // with(self.model){
                             //     eval(v.$selectedKey+'=['+$selectedOptions+']');
                             // }
-                        }else if( checkbox && self.models[key].group ){
-                            var checked = [];
-                            self.models[key].forEach(function(node){
-                                node.checked && checked.push(node.value);
-                            })
-                            val = checked;
+                        }else if( checkbox  ){
+
+                            if( self.models[key].group ){
+                                var checked = [];
+                                self.models[key].forEach(function(node){
+                                    node.checked && checked.push(node.value);
+                                })
+                                val = checked;
+                            }else{
+
+                                //单个checkbox只返回选中状态
+                                val = v.checked;
+                            }
+                            
                         }
                         
                         new Function('a','b','a.'+key+'=b;if(a.$data){a.$data.'+key+'=b}')(self.model, val);
@@ -822,7 +849,17 @@ define(function(require){
                         var fnKey = key.split('.');
                         fnKey.push('change');
                         var fn = self.model[fnKey.join('_')];
-                        fn && fn.call(el, e);
+
+                        if( typeof fn=='function' ){
+                            fn.call(el, e);
+
+                            //apply函数中相关变量
+                            var vars = getFnVars(fn);
+                            vars.forEach(function(v){
+                                self.apply(v);
+                            })
+                        }
+                        
                     }, 0)
 
                 }
@@ -1145,14 +1182,6 @@ define(function(require){
                 //数组或关联数组监控对象
                 isArray = /array|object/.test(valueType);
 
-            // console.log(222,key,value,subscriber)
-
-            //a.b为a.b.c的上级 上级更新 其所有下级也要同时更新
-            for( var i in this.subscriber ){
-                if( i.indexOf(key+'.')==0 ){
-                    this.apply(i, notApply);
-                }
-            }
 
             if( this.cache[key]===undefined ){
 
@@ -1175,6 +1204,7 @@ define(function(require){
                 }
             }
 
+
             //更新 dependences
             var keys = key.split('.'), deps = this.dependences;
             if( keys.length>1 && notApply!='once' ){
@@ -1187,10 +1217,12 @@ define(function(require){
                 }
             }
             
+            // console.log(222,key,value)
 
             if( !subscriber.length ){
-                return;
+                //return;
             }
+
 
             //数组子项发生变化时 需更新数组本身 一般为用户表单输入数据
             if( this.model.$key!==undefined && this.model.$parentScope!==this && key.indexOf('$')<0 && notApply ){
@@ -1199,15 +1231,46 @@ define(function(require){
             }
 
             
-            //model -> view
-            if( this.ready && !notApply && this.models[key] ){
-                this.models[key].forEach(function(node){
-                    if( node.value==value || valueType=='array' && value.indexOf(node.value)>=0 ){
-                        node.checked = true;
-                    }
-                })
+            var modelNodes = this.models[key];
+
+            if( this.ready && modelNodes ){
+                var checkbox = modelNodes.nodeType=='checkbox';
+                //model -> view checkbox状态的更新
+                if(  !notApply ){
+
+                    var isGroup = modelNodes.group;
+                    modelNodes.forEach(function(node){
+                        if( !isGroup && checkbox ){
+                            node.checked = value;
+                            return;
+                        }
+
+                        node.checked = node.value==value || (valueType=='array' && value.indexOf(node.value)>=0);
+                    })
+
+                }
+
+
+                //checkbox group 外部状态更改后 重新赋值 $values $length
+                if( modelNodes.group && checkbox ){
+                    
+                    value.$values = modelNodes.map(function(n){
+                        return n.value;
+                    })
+                    value.$length = modelNodes.length;
+                }
+                
             }
 
+            //a.b为a.b.c的上级 上级更新 其所有下级也要同时更新
+            for( var i in this.subscriber ){
+                if( i.indexOf(key+'.')==0 ){
+                    this.apply(i, notApply);
+                }
+            }
+            
+            
+            
             //遍历所有订阅该属性的节点
             subscriber.forEach(function(item){
                 if( item.action && item.action.name=='orderBy' ){//数组排序
@@ -1238,7 +1301,6 @@ define(function(require){
 
 
             if( isArray && node.$each && node.$each.arrayKey==key ){
-
                 self.applyArray(node, key);//更新each数组
                 return;
             }
@@ -1363,8 +1425,20 @@ define(function(require){
             if( /^select|optgroup|option/.test(node.tagName.toLowerCase()) && nodeSelf.type ){
                 selectNode = nodeSelf;
             }
-            
+
             if( modelsLen ){
+
+                if( eachData.originArray!==array ){//赋值新数组时
+                    //清空原dom
+                    for( var i=0; i<modelsLen; i++ ){
+                        eachData.models[i].element.forEach(function(n){
+                            nodeSelf.removeChild(n);
+                        })
+                    }
+                    eachData.models = [];
+                    newArrayInit();
+                    return;
+                }
 
                 if( action=='order'){
                     // 获取最后一个子元素 
@@ -1519,29 +1593,37 @@ define(function(require){
                 return;
             }
 
-            var frag = document.createDocumentFragment();
-            
-            //遍历数组
-            //这里如果数组扩展了其他方法 需要过滤掉
-            for( var i in array ){
-                if( dataType=='array' && Array.prototype[i] ){
-                    continue;
+            //数组第一次初始化 或 对整个数组重新赋值
+            function newArrayInit(){
+                var frag = document.createDocumentFragment();
+                
+                //遍历数组
+                //这里如果数组扩展了其他方法 需要过滤掉
+                for( var i in array ){
+                    if( dataType=='array' && Array.prototype[i] ){
+                        continue;
+                    }
+                    addArray(array[i], i, frag);
                 }
-                addArray(array[i], i, frag);
+                eachData.originArray = array;//保留原数组的引用
+
+                if( eachData.options.repeat ){
+                    
+                    if( eachData.nextSibling ){
+
+                        nodeSelf.insertBefore(frag, eachData.nextSibling);
+                    }else{
+
+                        nodeSelf.appendChild(frag);
+                    }
+                }else{
+                    node.appendChild(frag);
+                }
+                
+                selectNode && self.defaultSelected(selectNode);
             }
 
-            if( eachData.options.repeat ){
-                
-                if( eachData.nextSibling ){
-                    nodeSelf.insertBefore(frag, eachData.nextSibling);
-                }else{
-                    nodeSelf.appendChild(frag);
-                }
-            }else{
-                node.appendChild(frag);
-            }
-            
-            selectNode && self.defaultSelected(selectNode);
+            newArrayInit();
 
             function addArray(data, i, frag){
                 //获取该组所有节点及子节点

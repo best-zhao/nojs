@@ -5,15 +5,7 @@
 <title>model</title>
 <link rel="stylesheet" href="/css/nojs/ui.css">
 <script src="/js/lib/nojs/noJS.js" id="nojs"></script>
-<script>
-noJS.config({
-    base : '/src/',
-    alias : {
-        '$' : 'lib/jquery/jquery',
-        'ui' : 'lib/nojs/ui'
-    }
-})
-</script>
+<script src="/js/conf.js"></script>
 </head>
 <body>
 <style>
@@ -78,20 +70,23 @@ noJS.config({
 </div>
 
 <script>
-noJS.use('$,ui,lib/nojs/model', function($,ui,nj){
+noJS.use('$,ui,nj', function($,ui,nj){
     nj.start();
     nj.controller('arrayEach', function($scope){
         $scope.list = [
             {name:1}, {name:2}
-        ]        
+        ]
         $scope.list1 = {
             '11' : [1,2,3],
             '12' : [4,5]
         }  
+
+        setTimeout(function(){
+            //$scope.$set('list', [{name:3}, {name:4}, {name:5}]);            
+        }, 1000)
         
         $scope.key = 12;        
     })
-
     nj.controller('myModule', function($scope,a,b){
         $scope.name = 'myname';
         $scope.select = [
